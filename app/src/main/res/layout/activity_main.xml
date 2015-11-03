@@ -30,7 +30,7 @@
             android:layout_marginTop="50dp"
             android:text="Manage Devices"
             android:id="@+id/connectButton"
-            android:onClick="connectClicked"/>
+            android:onClick="manageDevicesClicked"/>
 
 
         <TextView

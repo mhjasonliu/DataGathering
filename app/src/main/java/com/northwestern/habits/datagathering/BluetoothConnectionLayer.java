@@ -42,6 +42,10 @@ public class BluetoothConnectionLayer {
         }
     }
 
+    public static void refreshNearbyDevices() {
+        // TODO implement this method
+    }
+
 
 
     /* ********************************* FIELDS *********************************** */
