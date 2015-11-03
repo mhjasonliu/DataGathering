@@ -1,9 +1,11 @@
 package com.northwestern.habits.datagathering;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -12,7 +14,7 @@ import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeviceActivity extends AppCompatActivity {
+public class DeviceManagementActivity extends AppCompatActivity {
 
     private List<String> deviceList;
     private BluetoothConnectionLayer myBluetooth;
@@ -29,7 +31,6 @@ public class DeviceActivity extends AppCompatActivity {
         Intent intent = getIntent();
         myBluetooth = (BluetoothConnectionLayer)
                 intent.getSerializableExtra("bluetoothLayer");
-
 
         // Needed in order to update the listview
         ListView theList = (ListView) findViewById(R.id.deviceListView);
@@ -51,7 +52,7 @@ public class DeviceActivity extends AppCompatActivity {
      */
     public void refreshDevices(View view) {
         try {
-            deviceList = myBluetooth.pairedDeviceNames();
+            deviceList = BluetoothConnectionLayer.pairedDeviceNames();
         } catch (ConnectException e) {
             // There is no adapter. Set the list to say so
             deviceList.clear();
@@ -59,6 +60,7 @@ public class DeviceActivity extends AppCompatActivity {
         }
         listUpdater.notifyDataSetChanged();
     }
+
 
     /**
      * Allows user to select a device

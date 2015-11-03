@@ -34,8 +34,10 @@ public class MainActivity extends AppCompatActivity {
     public void connectClicked(View view) {
         Log.v(TAG, "Connect button clicked");
 
+        
+
         // Open a connection activity
-        Intent intent = new Intent(this, DeviceActivity.class);
+        Intent intent = new Intent(this, DeviceManagementActivity.class);
         intent.putExtra("bluetoothLayer", myBluetooth);
         // Give it the list of connected devices
 
@@ -43,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    /**
+     * Returns to the main activity
+     * @param item
+     * @return
+     */
 
 
 
