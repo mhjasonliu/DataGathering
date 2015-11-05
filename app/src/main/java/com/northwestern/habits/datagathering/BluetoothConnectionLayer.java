@@ -7,6 +7,7 @@ import android.util.ArraySet;
 import java.io.Serializable;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,12 +62,12 @@ public class BluetoothConnectionLayer {
     /**
      * Set of paired device names
      */
-    protected static Set<String> pairedDeviceNames;
+    protected static Set<String> pairedDeviceNames = new HashSet<>();
 
     /**
      * Set of all paired devices
      */
-    protected static Set<BluetoothDevice> pairedDevices;
+    protected static Set<BluetoothDevice> pairedDevices = new HashSet<>();
 
     /**
      * Set of connections

@@ -31,21 +31,21 @@ public class MainActivity extends AppCompatActivity {
 
         // Check for bluetooth connection
         BluetoothAdapter adapter = BluetoothConnectionLayer.getAdapter();
+        Log.v(TAG, "Checked the adapter: " + adapter.toString());
         if (adapter == null) {
             //TODO popup warning and cancel the activity
         } else {
             BluetoothConnectionLayer.refreshPairedDevices();
+            Log.v(TAG, "Refreshed paired devices.");
             BluetoothConnectionLayer.refreshNearbyDevices();
-            Intent newActivityIntent = new Intent(
-                    this, DeviceManagementActivity.class
-            );
+            Intent newActivityIntent = new Intent(this, DeviceManagementActivity.class);
             startActivity(newActivityIntent);
         }
 
     }
 
 
-
+    // TODO add a way to update the list of info
     /********************* STRUCTURES FOR BLUETOOTH DEVICES ************************/
 
 
