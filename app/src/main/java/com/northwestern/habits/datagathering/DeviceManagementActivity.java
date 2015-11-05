@@ -29,8 +29,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
         pairedDeviceList = (ListView) findViewById(R.id.pairedDeviceListView);
         // nearbyDeviceList = (ListView) findViewById(R.id.nearbyDeviceList);
 
-
-        // TODO fix the array adapter
         pairedListUpdater = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         pairedDeviceList.setAdapter(pairedListUpdater);
 
@@ -43,7 +41,11 @@ public class DeviceManagementActivity extends AppCompatActivity {
      * @param view to allow the refresh button to directly call this
      */
     public void refreshPairedDevices(View view) {
+        // Setup
         pairedListUpdater.clear();
+        BluetoothConnectionLayer.refreshPairedDevices();
+
+        // Store devices in the list view
         Iterator<String> nameIter = BluetoothConnectionLayer.pairedDeviceNames.iterator();
         while (nameIter.hasNext()) {
             pairedListUpdater.add(nameIter.next());

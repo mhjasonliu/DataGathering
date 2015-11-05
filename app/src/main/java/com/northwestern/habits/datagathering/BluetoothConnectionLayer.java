@@ -38,8 +38,8 @@ public class BluetoothConnectionLayer {
 
         } else {
             // No connection, clear everything
-            pairedDeviceNames = new LinkedHashSet<>();
-            pairedDevices = new LinkedHashSet<>();
+            pairedDeviceNames.clear();
+            pairedDevices.clear();
         }
     }
 
