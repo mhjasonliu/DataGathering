@@ -40,7 +40,6 @@ public class BluetoothConnectionLayer {
             }
         } else {
             // No connection, clear everything
-            // Commit
             pairedDevices.clear();
         }
     }
@@ -67,7 +66,10 @@ public class BluetoothConnectionLayer {
      */
     protected static HashMap<String, BluetoothDevice> pairedDevices = new HashMap<>();
 
-
+    /**
+     * Set of paired bands
+     * Keys are the mac addresses of the bands
+     */
 
 
 
