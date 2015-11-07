@@ -20,6 +20,8 @@
         </activity>
         <activity android:name=".DeviceManagementActivity" >
         </activity>
+        <activity android:name=".ManageConnectionActivity" >
+        </activity>
     </application>
 
 </manifest>

@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
                 BluetoothConnectionLayer.refreshPairedDevices();
                 Log.v(TAG, "Refreshed paired devices.");
                 BluetoothConnectionLayer.refreshNearbyDevices();
-                Intent newActivityIntent = new Intent(this, DeviceManagementActivity.class);
-                startActivity(newActivityIntent);
+                Intent devManagementIntent = new Intent(this, DeviceManagementActivity.class);
+                startActivity(devManagementIntent);
             }
         }
 

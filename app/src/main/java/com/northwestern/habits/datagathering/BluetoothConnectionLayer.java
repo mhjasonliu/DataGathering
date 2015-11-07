@@ -7,7 +7,9 @@ import android.util.ArraySet;
 import java.io.Serializable;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,16 +31,15 @@ public class BluetoothConnectionLayer {
 
         if (adapter != null) {
             // Get the list of devices and update pairedDevices
-            pairedDevices = adapter.getBondedDevices();
-
-            // Update names of paired devices
-            pairedDeviceNames.clear();
-            for (BluetoothDevice device : pairedDevices)
-                pairedDeviceNames.add(device.getName());
-
+            Iterator<BluetoothDevice> devIter = adapter.getBondedDevices().iterator();
+            BluetoothDevice curDevice;
+            pairedDevices.clear();
+            while (devIter.hasNext()) {
+                curDevice = devIter.next();
+                pairedDevices.put(curDevice.getAddress(), curDevice);
+            }
         } else {
             // No connection, clear everything
-            pairedDeviceNames.clear();
             pairedDevices.clear();
         }
     }
@@ -60,18 +61,11 @@ public class BluetoothConnectionLayer {
 
 
     /**
-     * Set of paired device names
-     */
-    protected static Set<String> pairedDeviceNames = new HashSet<>();
-
-    /**
      * Set of all paired devices
+     * Keys are the mac addresses of devices
      */
-    protected static Set<BluetoothDevice> pairedDevices = new HashSet<>();
+    protected static HashMap<String, BluetoothDevice> pairedDevices = new HashMap<>();
 
-    /**
-     * Set of connections
-     */
 
 
 
