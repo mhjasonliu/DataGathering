@@ -40,6 +40,7 @@ public class BluetoothConnectionLayer {
             }
         } else {
             // No connection, clear everything
+            // Commit
             pairedDevices.clear();
         }
     }
