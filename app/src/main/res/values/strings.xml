@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Data Gathering</string>
+    <string name="title_activity_band_connection_management">BandConnectionManagement</string>
 </resources>

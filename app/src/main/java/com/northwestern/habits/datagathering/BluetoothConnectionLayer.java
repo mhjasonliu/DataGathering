@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.util.ArraySet;
 
+import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 
 import java.io.Serializable;
@@ -46,6 +47,7 @@ public class BluetoothConnectionLayer {
         }
 
         // Refresh Bands
+        pairedBands = BandClientManager.getInstance().getPairedBands();
     }
 
     public static void refreshNearbyDevices() {
@@ -71,10 +73,9 @@ public class BluetoothConnectionLayer {
     protected static HashMap<String, BluetoothDevice> pairedDevices = new HashMap<>();
 
     /**
-     * Set of paired bands
-     * Keys are the mac addresses of the bands
+     * Array of paired bands
      */
-    protected static HashMap<String, BandInfo> pairedBands = new HashMap<>();
+    protected static BandInfo[] pairedBands;
 
 
     /* *********************************** PRIVATE METHODS ********************************* */

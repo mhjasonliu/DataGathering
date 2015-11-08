@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE"/>
+    <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -22,6 +22,11 @@
         <activity android:name=".DeviceManagementActivity" >
         </activity>
         <activity android:name=".ManageConnectionActivity" >
+        </activity>
+        <activity
+            android:name=".BandConnectionManagement"
+            android:label="@string/title_activity_band_connection_management"
+            android:theme="@style/AppTheme.NoActionBar" >
         </activity>
     </application>
 
