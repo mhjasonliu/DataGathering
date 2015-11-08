@@ -46,6 +46,12 @@ public class BluetoothConnectionLayer {
             pairedDevices.clear();
         }
 
+    }
+
+    /**
+     * Refreshes the array pairedBands
+     */
+    public static void refreshPairedBands() {
         // Refresh Bands
         pairedBands = BandClientManager.getInstance().getPairedBands();
     }
