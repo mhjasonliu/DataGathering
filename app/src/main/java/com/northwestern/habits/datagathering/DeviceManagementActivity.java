@@ -78,7 +78,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
                 // Start connection management using the mac address
                 Intent connectionIntent = new Intent(DeviceManagementActivity.this,
-                        BandConnectionManagement.class);
+                        ManageBandConnection.class);
                 connectionIntent.putExtra("Index", position);
                 startActivity(connectionIntent);
             }

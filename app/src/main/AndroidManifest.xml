@@ -23,10 +23,7 @@
         </activity>
         <activity android:name=".ManageConnectionActivity" >
         </activity>
-        <activity
-            android:name=".BandConnectionManagement"
-            android:label="@string/title_activity_band_connection_management"
-            android:theme="@style/AppTheme.NoActionBar" >
+        <activity android:name=".ManageBandConnection" >
         </activity>
     </application>
 
