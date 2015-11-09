@@ -58,9 +58,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
         refreshPairedDevices(findViewById(R.id.refreshButton));
 
 
-
-
-
         // Paired bands
         ListView pairedBandList = (ListView) findViewById(R.id.bandList);
 
@@ -86,6 +83,9 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         refreshPairedBands(findViewById(R.id.refreshButton));
     }
+
+
+
 
     /**
      * Searches for android devices, adding each one to the list view
