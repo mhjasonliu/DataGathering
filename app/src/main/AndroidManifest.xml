@@ -25,6 +25,12 @@
         </activity>
         <activity android:name=".ManageBandConnection" >
         </activity>
+
+        <service
+            android:name=".BandInfoService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>
