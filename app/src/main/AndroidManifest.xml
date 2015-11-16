@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE" />
 
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -27,9 +28,11 @@
         </activity>
 
         <service
-            android:name=".BandInfoService"
+            android:name=".BandDataService"
+            android:label="Band Data Service"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="false"
+            android:process=":BandData">
         </service>
     </application>
 
