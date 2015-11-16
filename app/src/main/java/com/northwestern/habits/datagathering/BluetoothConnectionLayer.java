@@ -2,27 +2,12 @@ package com.northwestern.habits.datagathering;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.os.AsyncTask;
-import android.util.ArraySet;
-import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
-import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
-import com.microsoft.band.ConnectionState;
-import com.microsoft.band.sensors.BandAccelerometerEvent;
-import com.microsoft.band.sensors.BandAccelerometerEventListener;
-import com.microsoft.band.sensors.SampleRate;
 
-import java.io.Serializable;
-import java.net.ConnectException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by William on 10/25/2015.
@@ -92,8 +77,10 @@ public class BluetoothConnectionLayer {
      */
     protected static BandInfo[] pairedBands;
 
-
-
+    /**
+    * Map of services streaming data for bands
+    */
+    protected static HashMap<BandInfo, BandDataService> bandServices;
 
 
 
