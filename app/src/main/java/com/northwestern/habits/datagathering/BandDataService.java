@@ -2,6 +2,8 @@ package com.northwestern.habits.datagathering;
 
 import android.app.Service;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -31,16 +33,51 @@ import java.util.HashMap;
 
 public class BandDataService extends Service {
 
-    BandInfo band = null;
-    BandClient client = null;
-    BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
-    HashMap<String, Boolean> modes = new HashMap<>();
+    private BandInfo band = null;
+    private BandClient client = null;
+    private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
+    private HashMap<String, Boolean> modes = new HashMap<>();
 
-    HashMap<BandInfo, BandClient> connectedBands = new HashMap<>();
+    private HashMap<BandInfo, BandClient> connectedBands = new HashMap<>();
+
+
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v("Data Service:", "Started the service.");
+
+        Log.v(TAG, "Testing database display");
+        // get the database helper
+        DataStorageContract.FeedReaderDbHelper mDbHelper =
+                new DataStorageContract.FeedReaderDbHelper(getApplicationContext());
+        // Get the readable databse
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        // Define a projection that specifies which columns from the database
+// you will actually use after this query.
+        String[] projection = {
+                DataStorageContract.FeedEntry._ID,
+                DataStorageContract.FeedEntry.COLUMN_NAME_ENTRY_ID,
+                DataStorageContract.FeedEntry.COLUMN_NAME_TITLE,
+                //FeedEntry.COLUMN_NAME_CONTENT
+        };
+
+// How you want the results sorted in the resulting Cursor
+        String sortOrder =
+                DataStorageContract.FeedEntry.COLUMN_NAME_ENTRY_ID + " DESC";
+        Cursor cursor = db.query(
+                DataStorageContract.FeedEntry.TABLE_NAME,  // The table to query
+                projection,                               // The columns to return
+                null,                                // The columns for the WHERE clause
+                null,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                sortOrder                                 // The sort order
+        );
+         new DataStorageContract.DisplayDatabaseTask().execute(cursor);
+
+
+
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();

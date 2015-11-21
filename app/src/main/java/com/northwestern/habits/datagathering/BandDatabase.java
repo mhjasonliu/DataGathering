@@ -72,4 +72,6 @@ public class BandDatabase extends SQLiteOpenHelper {
         // Case block for the types of sensors
 
     }
+
+
 }

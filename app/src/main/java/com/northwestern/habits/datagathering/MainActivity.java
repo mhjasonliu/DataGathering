@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
+import com.microsoft.band.BandException;
 import com.northwestern.habits.datagathering.DataStorageContract.FeedEntry;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         Log.v(TAG, "Created main activity");
 
         Log.v(TAG, "Creating database");
-        mDbHelper = new DataStorageContract.FeedReaderDbHelper(getBaseContext());
+        mDbHelper = new DataStorageContract.FeedReaderDbHelper(getApplicationContext());
     }
 
 
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     public SQLiteDatabase db;
     private int entryId = 0;
     DataStorageContract.FeedReaderDbHelper mDbHelper;
+    private Cursor cursor;
 
     public void onDeleteDatabase( View view ) {
         db = mDbHelper.getReadableDatabase();
@@ -123,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         String sortOrder =
                 FeedEntry.COLUMN_NAME_ENTRY_ID + " DESC";
 
-        Cursor cursor = db.query(
+        cursor = db.query(
                 FeedEntry.TABLE_NAME,  // The table to query
                 projection,                               // The columns to return
                 null,                                // The columns for the WHERE clause
@@ -133,15 +136,9 @@ public class MainActivity extends AppCompatActivity {
                 sortOrder                                 // The sort order
         );
 
-        Log.v(TAG, "About to log the entry id");
-        // Log the info
-        cursor.moveToFirst();
-        int id = cursor.getColumnIndexOrThrow(FeedEntry._ID);
-
-        while( !cursor.isAfterLast() ) {
-            Log.i(TAG, "Item ID is: " + cursor.getString(id));
-            cursor.moveToNext();
-        }
+        Log.v(TAG, "About to log the entry database stuff");
+        new DataStorageContract.DisplayDatabaseTask().execute(cursor);
     }
+
 
 }
