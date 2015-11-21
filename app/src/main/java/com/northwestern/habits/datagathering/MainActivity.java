@@ -2,15 +2,19 @@ package com.northwestern.habits.datagathering;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
 public class MainActivity extends AppCompatActivity {
+
+    public SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

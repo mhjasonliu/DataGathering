@@ -27,11 +27,22 @@
         <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
             android:text="Manage Devices"
             android:id="@+id/manageDevicesButton"
             android:onClick="manageDevicesClicked"/>
 
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DISPLAY DATABASE"
+            android:id="@+id/displayDbButton" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete Database"
+            android:id="@+id/deleteDbButton" />
 
         <TextView
             android:layout_width="fill_parent"

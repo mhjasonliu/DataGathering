@@ -103,8 +103,8 @@ public class BandDataService extends Service {
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
             if (event != null) {
-                Log.v(TAG, String.format(" X = %.3f \n Y = %.3f\n Z = %.3f", event.getAccelerationX(),
-                        event.getAccelerationY(), event.getAccelerationZ()));
+                Log.v(TAG, String.format(event.getTimestamp() + " X = %.3f \n Y = %.3f\n Z = %.3f",
+                        event.getAccelerationX(), event.getAccelerationY(), event.getAccelerationZ()));
             }
         }
     };
