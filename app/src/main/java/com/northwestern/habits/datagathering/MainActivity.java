@@ -1,7 +1,9 @@
 package com.northwestern.habits.datagathering;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,9 +14,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
+import com.northwestern.habits.datagathering.DataStorageContract.FeedEntry;
+
 public class MainActivity extends AppCompatActivity {
 
-    public SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Log.v(TAG, "Created main activity");
+
+        Log.v(TAG, "Creating database");
+        mDbHelper = new DataStorageContract.FeedReaderDbHelper(getBaseContext());
     }
 
 
@@ -71,9 +77,71 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // TODO add a way to update the list of info
-    /********************* STRUCTURES FOR BLUETOOTH DEVICES ************************/
+    /* ******************************** DATABASE TESTING ********************************* */
+    public SQLiteDatabase db;
+    private int entryId = 0;
+    DataStorageContract.FeedReaderDbHelper mDbHelper;
 
+    public void onDeleteDatabase( View view ) {
+        db = mDbHelper.getReadableDatabase();
 
+        mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion()+1);
+    }
+
+    public void onEnterDatabase(View view) {
+        // Gets the data repository in write mode
+        db = mDbHelper.getWritableDatabase();
+
+// Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(FeedEntry.COLUMN_NAME_ENTRY_ID, entryId);
+        entryId++;
+        values.put(FeedEntry.COLUMN_NAME_TITLE, "This is an entry!");
+        //values.put(FeedEntry.COLUMN_NAME_CONTENT, "More content, YaY!");
+
+// Insert the new row, returning the primary key value of the new row
+        long newRowId;
+        newRowId = db.insert(
+                FeedEntry.TABLE_NAME,
+                null,
+                values);
+    }
+
+    public void onReadDatabase(View view) {
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+// Define a projection that specifies which columns from the database
+// you will actually use after this query.
+        String[] projection = {
+                FeedEntry._ID,
+                FeedEntry.COLUMN_NAME_ENTRY_ID,
+                FeedEntry.COLUMN_NAME_TITLE,
+                //FeedEntry.COLUMN_NAME_CONTENT
+        };
+
+// How you want the results sorted in the resulting Cursor
+        String sortOrder =
+                FeedEntry.COLUMN_NAME_ENTRY_ID + " DESC";
+
+        Cursor cursor = db.query(
+                FeedEntry.TABLE_NAME,  // The table to query
+                projection,                               // The columns to return
+                null,                                // The columns for the WHERE clause
+                null,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                sortOrder                                 // The sort order
+        );
+
+        Log.v(TAG, "About to log the entry id");
+        // Log the info
+        cursor.moveToFirst();
+        int id = cursor.getColumnIndexOrThrow(FeedEntry._ID);
+
+        while( !cursor.isAfterLast() ) {
+            Log.i(TAG, "Item ID is: " + cursor.getString(id));
+            cursor.moveToNext();
+        }
+    }
 
 }

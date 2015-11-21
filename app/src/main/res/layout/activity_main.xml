@@ -36,13 +36,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="DISPLAY DATABASE"
-            android:id="@+id/displayDbButton" />
+            android:id="@+id/displayDbButton"
+            android:onClick="onReadDatabase"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Entry to database"
+            android:id="@+id/addEntryButton"
+            android:layout_gravity="center_horizontal"
+            android:onClick="onEnterDatabase"/>
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Delete Database"
-            android:id="@+id/deleteDbButton" />
+            android:id="@+id/deleteDbButton"
+            android:onClick="onDeleteDatabase"/>
 
         <TextView
             android:layout_width="fill_parent"
