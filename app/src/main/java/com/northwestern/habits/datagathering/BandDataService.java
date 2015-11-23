@@ -56,17 +56,17 @@ public class BandDataService extends Service {
         // Define a projection that specifies which columns from the database
 // you will actually use after this query.
         String[] projection = {
-                DataStorageContract.FeedEntry._ID,
-                DataStorageContract.FeedEntry.COLUMN_NAME_ENTRY_ID,
-                DataStorageContract.FeedEntry.COLUMN_NAME_TITLE,
-                //FeedEntry.COLUMN_NAME_CONTENT
+                DataStorageContract.UserTable._ID,
+                DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID,
+                DataStorageContract.UserTable.COLUMN_NAME_TITLE,
+                //UserTable.COLUMN_NAME_CONTENT
         };
 
 // How you want the results sorted in the resulting Cursor
         String sortOrder =
-                DataStorageContract.FeedEntry.COLUMN_NAME_ENTRY_ID + " DESC";
+                DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID + " DESC";
         Cursor cursor = db.query(
-                DataStorageContract.FeedEntry.TABLE_NAME,  // The table to query
+                DataStorageContract.UserTable.TABLE_NAME,  // The table to query
                 projection,                               // The columns to return
                 null,                                // The columns for the WHERE clause
                 null,                            // The values for the WHERE clause
