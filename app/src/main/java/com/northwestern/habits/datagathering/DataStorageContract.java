@@ -8,8 +8,6 @@ import android.os.AsyncTask;
 import android.provider.BaseColumns;
 import android.util.Log;
 
-import java.security.PublicKey;
-
 /**
  * Created by William on 11/12/2015.
  */
@@ -19,16 +17,15 @@ public final class DataStorageContract {
     public DataStorageContract() {}
 
     /* Inner class that defines the table contents */
-    public static abstract class FeedEntry implements BaseColumns {
-        public static final String TABLE_NAME = "entry";
+    public static abstract class UserTable implements BaseColumns {
+        public static final String TABLE_NAME = "user";
         public static final String COLUMN_NAME_ENTRY_ID = "entryid";
         public static final String COLUMN_NAME_TITLE = "title";
         public static final String COLUMN_NAME_CONTENT = "content";
-        public static final String COLUMN_NAME_UPDATED = "updated";
         private static final String TEXT_TYPE = " TEXT";
         private static final String COMMA_SEP = ",";
         private static final String SQL_CREATE_ENTRIES =
-                "CREATE TABLE " + FeedEntry.TABLE_NAME + " (" +
+                "CREATE TABLE " + UserTable.TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY," +
                         COLUMN_NAME_ENTRY_ID + TEXT_TYPE + COMMA_SEP +
                         COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
@@ -36,7 +33,7 @@ public final class DataStorageContract {
                 " )";
 
         private static final String SQL_DELETE_ENTRIES =
-                "DROP TABLE IF EXISTS " + FeedEntry.TABLE_NAME;
+                "DROP TABLE IF EXISTS " + UserTable.TABLE_NAME;
     }
 
     public static class FeedReaderDbHelper extends SQLiteOpenHelper {
@@ -48,12 +45,12 @@ public final class DataStorageContract {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL(FeedEntry.SQL_CREATE_ENTRIES);
+            db.execSQL(UserTable.SQL_CREATE_ENTRIES);
         }
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             // This database is only a cache for online data, so its upgrade policy is
             // to simply to discard the data and start over
-            db.execSQL(FeedEntry.SQL_DELETE_ENTRIES);
+            db.execSQL(UserTable.SQL_DELETE_ENTRIES);
             onCreate(db);
         }
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -66,8 +63,8 @@ public final class DataStorageContract {
             Cursor cursor = params[0];
             // Log the info
             cursor.moveToFirst();
-            int id = cursor.getColumnIndexOrThrow(FeedEntry._ID);
-            int entryTitle = cursor.getColumnIndexOrThrow(FeedEntry.COLUMN_NAME_TITLE);
+            int id = cursor.getColumnIndexOrThrow(UserTable._ID);
+            int entryTitle = cursor.getColumnIndexOrThrow(UserTable.COLUMN_NAME_TITLE);
 
             while( !cursor.isAfterLast() ) {
                 Log.i("", "Item ID is: " + cursor.getString(id));

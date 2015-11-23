@@ -5,18 +5,12 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 
-import com.microsoft.band.BandException;
-import com.northwestern.habits.datagathering.DataStorageContract.FeedEntry;
+import com.northwestern.habits.datagathering.DataStorageContract.UserTable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -97,15 +91,15 @@ public class MainActivity extends AppCompatActivity {
 
 // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
-        values.put(FeedEntry.COLUMN_NAME_ENTRY_ID, entryId);
+        values.put(DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID, entryId);
         entryId++;
-        values.put(FeedEntry.COLUMN_NAME_TITLE, "This is an entry!");
-        //values.put(FeedEntry.COLUMN_NAME_CONTENT, "More content, YaY!");
+        values.put(UserTable.COLUMN_NAME_TITLE, "This is an entry!");
+        //values.put(UserTable.COLUMN_NAME_CONTENT, "More content, YaY!");
 
 // Insert the new row, returning the primary key value of the new row
         long newRowId;
         newRowId = db.insert(
-                FeedEntry.TABLE_NAME,
+                DataStorageContract.UserTable.TABLE_NAME,
                 null,
                 values);
     }
@@ -116,18 +110,18 @@ public class MainActivity extends AppCompatActivity {
 // Define a projection that specifies which columns from the database
 // you will actually use after this query.
         String[] projection = {
-                FeedEntry._ID,
-                FeedEntry.COLUMN_NAME_ENTRY_ID,
-                FeedEntry.COLUMN_NAME_TITLE,
-                //FeedEntry.COLUMN_NAME_CONTENT
+                DataStorageContract.UserTable._ID,
+                UserTable.COLUMN_NAME_ENTRY_ID,
+                DataStorageContract.UserTable.COLUMN_NAME_TITLE,
+                //UserTable.COLUMN_NAME_CONTENT
         };
 
 // How you want the results sorted in the resulting Cursor
         String sortOrder =
-                FeedEntry.COLUMN_NAME_ENTRY_ID + " DESC";
+                DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID + " DESC";
 
         cursor = db.query(
-                FeedEntry.TABLE_NAME,  // The table to query
+                UserTable.TABLE_NAME,  // The table to query
                 projection,                               // The columns to return
                 null,                                // The columns for the WHERE clause
                 null,                            // The values for the WHERE clause
