@@ -63,5 +63,11 @@
             android:text="Start Streaming"
             android:id="@+id/streamButton"
             android:onClick="onStreamClick"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/userIdField"
+            android:text="Jim" />
     </LinearLayout>
 </RelativeLayout>

@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -40,44 +41,17 @@ public class BandDataService extends Service {
 
     private HashMap<BandInfo, BandClient> connectedBands = new HashMap<>();
 
+    private DataStorageContract.BluetoothDbHelper mDbHelper;
 
+    private String userName;
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v("Data Service:", "Started the service.");
+        Log.v(TAG, "Started the service.");
 
-        Log.v(TAG, "Testing database display");
-        // get the database helper
-        DataStorageContract.FeedReaderDbHelper mDbHelper =
-                new DataStorageContract.FeedReaderDbHelper(getApplicationContext());
-        // Get the readable databse
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        // Define a projection that specifies which columns from the database
-// you will actually use after this query.
-        String[] projection = {
-                DataStorageContract.UserTable._ID,
-                DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID,
-                DataStorageContract.UserTable.COLUMN_NAME_TITLE,
-                //UserTable.COLUMN_NAME_CONTENT
-        };
-
-// How you want the results sorted in the resulting Cursor
-        String sortOrder =
-                DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID + " DESC";
-        Cursor cursor = db.query(
-                DataStorageContract.UserTable.TABLE_NAME,  // The table to query
-                projection,                               // The columns to return
-                null,                                // The columns for the WHERE clause
-                null,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                sortOrder                                 // The sort order
-        );
-         new DataStorageContract.DisplayDatabaseTask().execute(cursor);
-
-
-
+        Log.v(TAG, "Retrieving database");
+        mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();
@@ -92,6 +66,9 @@ public class BandDataService extends Service {
             modes.put("barometer", extras.getBoolean("barometer"));
             modes.put("gsr", extras.getBoolean("gsr"));
             modes.put("heart rate", extras.getBoolean("heart rate"));
+
+            // Set the user and device
+            userName = extras.getString("userName");
         }
 
 
@@ -132,7 +109,7 @@ public class BandDataService extends Service {
         return null;
     }
 
-    private final String TAG = "Remote thread: ";
+    private final String TAG = "Band Service";
 
         /* *********** Event Listeners ************ */
 
@@ -142,6 +119,60 @@ public class BandDataService extends Service {
             if (event != null) {
                 Log.v(TAG, String.format(event.getTimestamp() + " X = %.3f \n Y = %.3f\n Z = %.3f",
                         event.getAccelerationX(), event.getAccelerationY(), event.getAccelerationZ()));
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+                String[] projection = new String[] {
+                        DataStorageContract.UserTable._ID,
+                        DataStorageContract.UserTable.COLUMN_NAME_USER_NAME
+                };
+
+                int userId = -1, devId = -1, sensorId = -1;
+                int smallestAvailableUserId = 0;
+                // Check if the user exists
+                Cursor cursor = readDb.query(
+                        DataStorageContract.UserTable.TABLE_NAME,
+                        projection,
+                        null,
+                        null,
+                        null,
+                        null,
+                        DataStorageContract.UserTable._ID + " DESC"
+                );
+                cursor.moveToFirst();
+
+
+                int userNameCol = cursor.getColumnIndexOrThrow(
+                        DataStorageContract.UserTable.COLUMN_NAME_USER_NAME);
+                int userIdCol = cursor.getColumnIndexOrThrow(
+                        DataStorageContract.UserTable._ID);
+
+                while ( !cursor.isAfterLast() && userId == -1) {
+
+
+                    if (userName == cursor.getString(userNameCol)) {
+                        // Found user in table.
+                        userId = cursor.getInt(userIdCol);
+                    } else if (cursor.getInt(userIdCol) == smallestAvailableUserId) {
+                        smallestAvailableUserId++;
+                    }
+                    cursor.moveToNext();
+                }
+
+                if ( userId == -1 ) {
+                    // Write the user into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, userName);
+                    values.put(DataStorageContract.UserTable._ID, smallestAvailableUserId);
+                    writeDb.insert(
+                            DataStorageContract.UserTable.TABLE_NAME,
+
+                    );
+                }
+
+
+                // Check if the accelerometer exists
             }
         }
     };

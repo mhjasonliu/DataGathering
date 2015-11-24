@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         Log.v(TAG, "Created main activity");
 
         Log.v(TAG, "Creating database");
-        mDbHelper = new DataStorageContract.FeedReaderDbHelper(getApplicationContext());
+        mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
     }
 
 
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     /* ******************************** DATABASE TESTING ********************************* */
     public SQLiteDatabase db;
     private int entryId = 0;
-    DataStorageContract.FeedReaderDbHelper mDbHelper;
+    DataStorageContract.BluetoothDbHelper mDbHelper;
     private Cursor cursor;
 
     public void onDeleteDatabase( View view ) {
@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion()+1);
     }
 
+/*
     public void onEnterDatabase(View view) {
         // Gets the data repository in write mode
         db = mDbHelper.getWritableDatabase();
@@ -103,35 +104,13 @@ public class MainActivity extends AppCompatActivity {
                 null,
                 values);
     }
+*/
+
 
     public void onReadDatabase(View view) {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-// Define a projection that specifies which columns from the database
-// you will actually use after this query.
-        String[] projection = {
-                DataStorageContract.UserTable._ID,
-                UserTable.COLUMN_NAME_ENTRY_ID,
-                DataStorageContract.UserTable.COLUMN_NAME_TITLE,
-                //UserTable.COLUMN_NAME_CONTENT
-        };
-
-// How you want the results sorted in the resulting Cursor
-        String sortOrder =
-                DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID + " DESC";
-
-        cursor = db.query(
-                UserTable.TABLE_NAME,  // The table to query
-                projection,                               // The columns to return
-                null,                                // The columns for the WHERE clause
-                null,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                sortOrder                                 // The sort order
-        );
-
-        Log.v(TAG, "About to log the entry database stuff");
-        new DataStorageContract.DisplayDatabaseTask().execute(cursor);
+        new DataStorageContract.DisplayDatabaseTask().execute(db);
     }
 
 

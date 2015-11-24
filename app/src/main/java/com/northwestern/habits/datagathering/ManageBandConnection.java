@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
@@ -37,7 +38,6 @@ public class ManageBandConnection extends AppCompatActivity {
 
     private final String TAG = "ManageBandConnection";
 
-    private Button streamButton;
     private int index;
 
 
@@ -53,8 +53,6 @@ public class ManageBandConnection extends AppCompatActivity {
             Log.v(TAG, "Loaded band info");
         }
 
-        streamButton = (Button) findViewById(R.id.streamButton);
-
     }
 
     public void onStreamClick(View view) {
@@ -68,12 +66,9 @@ public class ManageBandConnection extends AppCompatActivity {
         managementIntent.putExtra("gsr", (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
         managementIntent.putExtra("heart rate", (Boolean) ((CheckBox) findViewById(R.id.heartRateBox)).isChecked());
 
+        managementIntent.putExtra("userId", ((EditText) findViewById(R.id.userIdField)).getText().toString());
 
         startService(managementIntent);
     }
-
-
-
-
 
 }
