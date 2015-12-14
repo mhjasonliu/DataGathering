@@ -4,8 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.hardware.Sensor;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.provider.BaseColumns;
 import android.util.Log;
@@ -23,14 +21,15 @@ public final class DataStorageContract {
     private static final String TEXT_TYPE = " TEXT";
     private static final String INT_TYPE = " INTEGER";
     private static final String FLOAT_TYPE = " FLOAT";
+    private static final String DATETIME_TYPE = " DATETIME";
     private static final String COMMA_SEP = ",";
 
     /**
      * Class that defines user table
      */
     public static abstract class UserTable implements BaseColumns {
-        public static final String TABLE_NAME = " user";
-        public static final String COLUMN_NAME_USER_NAME = " name";
+        public static final String TABLE_NAME = "user";
+        public static final String COLUMN_NAME_USER_NAME = "name";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
@@ -42,10 +41,10 @@ public final class DataStorageContract {
     }
 
     public static abstract class DeviceTable implements BaseColumns {
-        public static final String TABLE_NAME = " devices";
-        public static final String COLUMN_NAME_USER_ID = " user_id";
-        public static final String COLUMN_NAME_TYPE = " type";
-        public static final String COLUMN_NAME_MAC = " mac";
+        public static final String TABLE_NAME = "devices";
+        public static final String COLUMN_NAME_USER_ID = "user_id";
+        public static final String COLUMN_NAME_TYPE = "type";
+        public static final String COLUMN_NAME_MAC = "mac";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
@@ -58,9 +57,9 @@ public final class DataStorageContract {
     }
 
     public static abstract class SensorTable implements BaseColumns {
-        public static final String TABLE_NAME = " sensors";
-        public static final String COLUMN_NAME_DEVICE_ID = " device_id";
-        public static final String COLUMN_NAME_TYPE = " type";
+        public static final String TABLE_NAME = "sensors";
+        public static final String COLUMN_NAME_DEVICE_ID = "device_id";
+        public static final String COLUMN_NAME_TYPE = "type";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
@@ -71,33 +70,21 @@ public final class DataStorageContract {
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
 
-    private static abstract class AccelerometerTable implements BaseColumns {
-        public static final String TABLE_NAME = " accelerometer_data";
-        public static final String COLUMN_NAME_SENSOR_ID = " sensor_id";
-        public static final String COLUMN_NAME_YEAR = " year";
-        public static final String COLUMN_NAME_MONTH = " month";
-        public static final String COLUMN_NAME_DAY = " day";
-        public static final String COLUMN_NAME_HOUR = " hour";
-        public static final String COLUMN_NAME_MIN = " minute";
-        public static final String COLUMN_NAME_SEC = " second";
-        public static final String COLUMN_NAME_MS = " milisecond";
-        public static final String COLUMN_NAME_X = " x";
-        public static final String COLUMN_NAME_Y = " y";
-        public static final String COLUMN_NAME_Z = " z";
+    public static abstract class AccelerometerTable implements BaseColumns {
+        public static final String TABLE_NAME = "accelerometer_data";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_X = "x";
+        public static final String COLUMN_NAME_Y = "y";
+        public static final String COLUMN_NAME_Z = "z";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
                         COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_YEAR + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_MONTH + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_DAY + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_HOUR + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_MIN + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_SEC + INT_TYPE +COMMA_SEP +
-                        COLUMN_NAME_MS + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
                         COLUMN_NAME_X + FLOAT_TYPE + COMMA_SEP +
                         COLUMN_NAME_Y + FLOAT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_Z + FLOAT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_Z + FLOAT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -116,6 +103,7 @@ public final class DataStorageContract {
             db.execSQL(UserTable.SQL_CREATE_ENTRIES);
             db.execSQL(DeviceTable.SQL_CREATE_ENTRIES);
             db.execSQL(SensorTable.SQL_CREATE_ENTRIES);
+            Log.v("", AccelerometerTable.SQL_CREATE_ENTRIES);
             db.execSQL(AccelerometerTable.SQL_CREATE_ENTRIES);
         }
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -125,7 +113,9 @@ public final class DataStorageContract {
             db.execSQL(DeviceTable.SQL_DELETE_ENTRIES);
             db.execSQL(SensorTable.SQL_DELETE_ENTRIES);
             db.execSQL(AccelerometerTable.SQL_DELETE_ENTRIES);
+            Log.v("Db", "Deleted tables");
             onCreate(db);
+            Log.v("DB", "created new database");
         }
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             onUpgrade(db, oldVersion, newVersion);
@@ -135,6 +125,8 @@ public final class DataStorageContract {
     public static class DisplayDatabaseTask extends AsyncTask<SQLiteDatabase, Void, Void> {
         @Override
         protected Void doInBackground(SQLiteDatabase... params) {
+            Log.v("", "Displaying database");
+
             SQLiteDatabase db = params[0];
             Cursor userCursor;
             String[] projection = {
@@ -158,11 +150,11 @@ public final class DataStorageContract {
             int userNameCol = userCursor.getColumnIndexOrThrow(UserTable.COLUMN_NAME_USER_NAME);
             int devIdCol, devTypeCol, devMacCol;
             int sensIdCol, sensTypeCol;
-            int accIdCol, accYearCol, accMonthCol, accDayCol, accHrCol, accMinCol,
-                    accSecCol, accMsCol, accXCol, accYCol, accZCol;
+            int accIdCol, accDateCol, accXCol, accYCol, accZCol;
 
             int userId, devId, sensId;
             // Loop over users
+            Log.v("", "Logging users");
             while( !userCursor.isAfterLast() ) {
                 userId = userCursor.getInt(idCol);
                 Log.i("", "User ID is: " + Integer.toString(userId));
@@ -226,13 +218,7 @@ public final class DataStorageContract {
 
                         projection = new String[] {
                                 AccelerometerTable._ID,
-                                AccelerometerTable.COLUMN_NAME_YEAR,
-                                AccelerometerTable.COLUMN_NAME_MONTH,
-                                AccelerometerTable.COLUMN_NAME_DAY,
-                                AccelerometerTable.COLUMN_NAME_HOUR,
-                                AccelerometerTable.COLUMN_NAME_MIN,
-                                AccelerometerTable.COLUMN_NAME_SEC,
-                                AccelerometerTable.COLUMN_NAME_MS,
+                                AccelerometerTable.COLUMN_NAME_DATETIME,
                                 AccelerometerTable.COLUMN_NAME_X,
                                 AccelerometerTable.COLUMN_NAME_Y,
                                 AccelerometerTable.COLUMN_NAME_Z
@@ -245,38 +231,18 @@ public final class DataStorageContract {
                                 new String[] { Integer.toString(sensId) },
                                 null,
                                 null,
-                                AccelerometerTable.COLUMN_NAME_YEAR + " DESC," +
-                                        AccelerometerTable.COLUMN_NAME_MONTH + " DESC," +
-                                        AccelerometerTable.COLUMN_NAME_DAY + " DESC," +
-                                        AccelerometerTable.COLUMN_NAME_HOUR + " DESC," +
-                                        AccelerometerTable.COLUMN_NAME_MIN + " DESC," +
-                                        AccelerometerTable.COLUMN_NAME_SEC + " DESC," +
-                                        AccelerometerTable.COLUMN_NAME_MS + " DESC"
+                                AccelerometerTable.COLUMN_NAME_DATETIME + " ASC"
                         );
 
                         accCursor.moveToFirst();
-                        accYearCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_YEAR);
-                        accMonthCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_MONTH);
-                        accDayCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_DAY);
-                        accHrCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_HOUR);
-                        accMinCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_MIN);
-                        accSecCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_SEC);
-                        accMsCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_MS);
+                        accDateCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_DATETIME);
                         accXCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_X);
                         accYCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_Y);
                         accZCol = accCursor.getColumnIndexOrThrow(AccelerometerTable.COLUMN_NAME_Z);
                         accIdCol = accCursor.getColumnIndexOrThrow(AccelerometerTable._ID);
                         while ( !accCursor.isAfterLast() ) {
                             Log.i("", "Accelerometer data id: " + accCursor.getInt(accIdCol));
-                            Log.i("", "Date: " + accCursor.getInt(accMonthCol) +
-                                    "/" + accCursor.getInt(accDayCol) +
-                                            "/" + accCursor.getInt(accYearCol)
-                            );
-                            Log.i("", "Time: " + accCursor.getInt(accHrCol) + ":" +
-                                    accCursor.getInt(accMinCol) + ":" +
-                                            accCursor.getInt(accSecCol) + ":" +
-                                            accCursor.getInt(accMsCol)
-                            );
+                            Log.i("", "Date and time: " + accCursor.getString(accDateCol));
                             Log.i("", "X: " + accCursor.getInt(accXCol) +
                             "Y: " + accCursor.getInt(accYCol) + "Z: " + accCursor.getInt(accZCol));
 

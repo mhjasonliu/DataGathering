@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private Cursor cursor;
 
     public void onDeleteDatabase( View view ) {
-        db = mDbHelper.getReadableDatabase();
+        db = mDbHelper.getWritableDatabase();
 
         mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion()+1);
     }
@@ -110,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
     public void onReadDatabase(View view) {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
+        Log.v(TAG, "displaying database");
         new DataStorageContract.DisplayDatabaseTask().execute(db);
     }
 
