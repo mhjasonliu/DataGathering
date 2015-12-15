@@ -57,12 +57,28 @@
             android:id="@+id/heartRateBox"
             android:checked="false" />
 
-        <Button
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start Streaming"
-            android:id="@+id/streamButton"
-            android:onClick="onStreamClick"/>
+            android:layout_gravity="center_horizontal">
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Start Streaming"
+                android:id="@+id/streamButton"
+                android:onClick="onStreamClick"/>
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Stop streaming"
+                android:id="@+id/stopStreamButton"
+                android:onClick="onStopStreamClick"/>
+        </LinearLayout>
 
         <EditText
             android:layout_width="match_parent"

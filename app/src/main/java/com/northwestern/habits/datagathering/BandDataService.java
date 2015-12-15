@@ -50,6 +50,9 @@ public class BandDataService extends Service {
 
     private String userName;
 
+    // Maps of listeners
+    private HashMap<BandClient, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
+
 
     // Types
     private String T_BAND2 = "Microsoft_Band_2";
@@ -71,7 +74,6 @@ public class BandDataService extends Service {
 
             } else {
                 int index = extras.getInt("index");
-                Log.v(TAG, "Index is " + Integer.toString(index));
                 band = pairedBands[index];
                 client = BandClientManager.getInstance().create(getBaseContext(), band);
                 modes.put("accelerometer", extras.getBoolean("accelerometer"));
@@ -84,32 +86,54 @@ public class BandDataService extends Service {
                 // Set the user and device
                 userName = extras.getString("userId");
 
-                if (connectedBands.containsKey(band)) {
-                    // Disconnect from band
-                    new disconnectClient().execute(connectedBands.get((band)));
-                    connectedBands.remove(band);
-                } else {
-                    // Request data
-                    if (modes.get("accelerometer")) {
-                        // Start an accelerometer task
-                        new AccelerometerSubscriptionTask().execute();
+                if (extras.getBoolean("stopStream")){
+                    Log.v(TAG, "Stop stream requested.");
+                    if (connectedBands.containsKey(band)) {
+                        // Unsubscribe from specified tasks
+                        if (modes.get("accelerometer")) {
+                            // Start an accelerometer task
+                            Log.v(TAG, "Unsubscribe from accelerometer");
+                            new AccelerometerUnsubscribe().execute();
+                        }
+
+                        if (modes.get("altimeter"))
+                            new AltimeterSubscriptionTask().execute();
+                        if (modes.get("ambient light"))
+                            new AmbientLightSubscriptionTask().execute();
+                        if (modes.get("barometer"))
+                            new BarometerSubscriptionTask().execute();
+                        if (modes.get("gsr"))
+                            new GsrSubscriptionTask().execute();
+                        if (modes.get("heart rate"))
+                            new HeartRateSubscriptionTask().execute();
                     }
+                } else {
+                    if (connectedBands.containsKey(band)) {
+                        // Disconnect from band
+                        new disconnectClient().execute(connectedBands.get((band)));
+                        connectedBands.remove(band);
+                    } else {
+                        // Request data
+                        if (modes.get("accelerometer")) {
+                            // Start an accelerometer task
+                            new AccelerometerSubscriptionTask().execute();
+                        }
 
-                    if (modes.get("altimeter"))
-                        new AltimeterSubscriptionTask().execute();
-                    if (modes.get("ambient light"))
-                        new AmbientLightSubscriptionTask().execute();
-                    if (modes.get("barometer"))
-                        new BarometerSubscriptionTask().execute();
-                    if (modes.get("gsr"))
-                        new GsrSubscriptionTask().execute();
-                    if (modes.get("heart rate"))
-                        new HeartRateSubscriptionTask().execute();
+                        if (modes.get("altimeter"))
+                            new AltimeterSubscriptionTask().execute();
+                        if (modes.get("ambient light"))
+                            new AmbientLightSubscriptionTask().execute();
+                        if (modes.get("barometer"))
+                            new BarometerSubscriptionTask().execute();
+                        if (modes.get("gsr"))
+                            new GsrSubscriptionTask().execute();
+                        if (modes.get("heart rate"))
+                            new HeartRateSubscriptionTask().execute();
 
 
-
-                    // Add the band to connected list
-                    connectedBands.put(band,client);
+                        // Add the band to connected list
+                        connectedBands.put(band, client);
+                    }
                 }
             }
         }
@@ -220,8 +244,8 @@ public class BandDataService extends Service {
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
-                            "Y: " + Double.toString(event.getAccelerationY()) +
-                            "Z: " + Double.toString(event.getAccelerationZ()));
+                        "Y: " + Double.toString(event.getAccelerationY()) +
+                        "Z: " + Double.toString(event.getAccelerationZ()));
                 Log.v(TAG, getDateTime());
 
                 ContentValues values = new ContentValues();
@@ -305,9 +329,12 @@ public class BandDataService extends Service {
             try {
                 if (getConnectedBandClient()) {
                     Log.v(TAG, "Band is connected.\n");
+                    BandAccelerometerEventListenerCustom aListener =
+                            new BandAccelerometerEventListenerCustom(band, userName);
                     client.getSensorManager().registerAccelerometerEventListener(
-                            new BandAccelerometerEventListenerCustom(band, userName),
-                            SampleRate.MS128);
+                            aListener,  SampleRate.MS128);
+
+                    accListeners.put(client, aListener);
 
                 } else {
                     Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
@@ -329,6 +356,28 @@ public class BandDataService extends Service {
 
             } catch (Exception e) {
                 Log.e(TAG, "Unknown error occurred when getting accelerometer data");
+            }
+            return null;
+        }
+    }
+
+
+    private class AccelerometerUnsubscribe extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+
+
+                if (getConnectedBandClient()) {
+                    Log.v(TAG, "Unregistering accelerometer listener");
+                    client.getSensorManager().unregisterAccelerometerEventListener(
+                            accListeners.get(client)
+                    );
+                    accListeners.remove(client);
+                    Log.v(TAG, "Removed client");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             return null;
         }
@@ -797,6 +846,7 @@ public class BandDataService extends Service {
             }
 
             connectedBands.clear();
+            accListeners.clear();
 
             return null;
         }

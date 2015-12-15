@@ -33,6 +33,26 @@ public class ManageBandConnection extends AppCompatActivity {
     public void onStreamClick(View view) {
         // Create the intent
         Intent managementIntent = new Intent(this, BandDataService.class);
+        managementIntent.putExtra("stopStream", false);
+        managementIntent.putExtra("index", index);
+        managementIntent.putExtra("accelerometer", (Boolean) ((CheckBox) findViewById(R.id.accelerometerBox)).isChecked());
+        managementIntent.putExtra("altimeter", (Boolean) ((CheckBox) findViewById(R.id.altimeterBox)).isChecked());
+        managementIntent.putExtra("ambient light", (Boolean) ((CheckBox) findViewById(R.id.ambientBox)).isChecked());
+        managementIntent.putExtra("barometer", (Boolean) ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
+        managementIntent.putExtra("gsr", (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
+        managementIntent.putExtra("heart rate", (Boolean) ((CheckBox) findViewById(R.id.heartRateBox)).isChecked());
+
+        managementIntent.putExtra("userId", ((EditText) findViewById(R.id.userIdField)).getText().toString());
+
+        managementIntent.putExtra("continueStudy", true);
+
+        startService(managementIntent);
+    }
+
+    public void onStopStreamClick (View viewl) {
+        // Create the intent
+        Intent managementIntent = new Intent(this, BandDataService.class);
+        managementIntent.putExtra("stopStream", true);
         managementIntent.putExtra("index", index);
         managementIntent.putExtra("accelerometer", (Boolean) ((CheckBox) findViewById(R.id.accelerometerBox)).isChecked());
         managementIntent.putExtra("altimeter", (Boolean) ((CheckBox) findViewById(R.id.altimeterBox)).isChecked());
