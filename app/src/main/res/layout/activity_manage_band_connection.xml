@@ -27,35 +27,40 @@
             android:layout_height="wrap_content"
             android:text="Altimeter"
             android:id="@+id/altimeterBox"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Ambient Light"
             android:id="@+id/ambientBox"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Barometer"
             android:id="@+id/barometerBox"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="GSR"
             android:id="@+id/gsrBox"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Heart Rate"
             android:id="@+id/heartRateBox"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <LinearLayout
             android:orientation="horizontal"
@@ -77,13 +82,13 @@
                 android:layout_height="wrap_content"
                 android:text="Stop streaming"
                 android:id="@+id/stopStreamButton"
-                android:onClick="onStopStreamClick"/>
+                android:onClick="onStopStreamClick"
+                android:enabled="false"/>
         </LinearLayout>
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/userIdField"
-            android:text="Jim" />
+            android:id="@+id/userIdField"/>
     </LinearLayout>
 </RelativeLayout>

@@ -26,7 +26,8 @@
         android:layout_height="wrap_content"
         android:text="Start Study"
         android:id="@+id/manageDevicesButton"
-        android:onClick="startStudyClicked"/>
+        android:onClick="startStudyClicked"
+        android:enabled="false"/>
 
 
     <Button
@@ -50,7 +51,8 @@
         android:layout_height="wrap_content"
         android:text="DISPLAY DATABASE"
         android:id="@+id/displayDbButton"
-        android:onClick="onReadDatabase"/>
+        android:onClick="onReadDatabase"
+        android:enabled="false"/>
 
     <Button
         android:layout_width="match_parent"
