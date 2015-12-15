@@ -34,6 +34,7 @@ import com.microsoft.band.sensors.SampleRate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 
 public class BandDataService extends Service {
@@ -63,49 +64,54 @@ public class BandDataService extends Service {
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();
         if (extras != null){
-            int index = extras.getInt("index");
-            Log.v(TAG, "Index is " + Integer.toString(index));
-            band = pairedBands[index];
-            client = BandClientManager.getInstance().create(getBaseContext(), band);
-            modes.put("accelerometer", extras.getBoolean("accelerometer"));
-            modes.put("altimeter", extras.getBoolean("altimeter"));
-            modes.put("ambient light", extras.getBoolean("ambient light"));
-            modes.put("barometer", extras.getBoolean("barometer"));
-            modes.put("gsr", extras.getBoolean("gsr"));
-            modes.put("heart rate", extras.getBoolean("heart rate"));
+            if (!extras.getBoolean("continueStudy")) {
+                Log.v(TAG, "Ending study");
+                // Unregister all clients
+                new StopAllStreams().execute();
 
-            // Set the user and device
-            userName = extras.getString("userId");
-        }
+            } else {
+                int index = extras.getInt("index");
+                Log.v(TAG, "Index is " + Integer.toString(index));
+                band = pairedBands[index];
+                client = BandClientManager.getInstance().create(getBaseContext(), band);
+                modes.put("accelerometer", extras.getBoolean("accelerometer"));
+                modes.put("altimeter", extras.getBoolean("altimeter"));
+                modes.put("ambient light", extras.getBoolean("ambient light"));
+                modes.put("barometer", extras.getBoolean("barometer"));
+                modes.put("gsr", extras.getBoolean("gsr"));
+                modes.put("heart rate", extras.getBoolean("heart rate"));
+
+                // Set the user and device
+                userName = extras.getString("userId");
+
+                if (connectedBands.containsKey(band)) {
+                    // Disconnect from band
+                    new disconnectClient().execute(connectedBands.get((band)));
+                    connectedBands.remove(band);
+                } else {
+                    // Request data
+                    if (modes.get("accelerometer")) {
+                        // Start an accelerometer task
+                        new AccelerometerSubscriptionTask().execute();
+                    }
+
+                    if (modes.get("altimeter"))
+                        new AltimeterSubscriptionTask().execute();
+                    if (modes.get("ambient light"))
+                        new AmbientLightSubscriptionTask().execute();
+                    if (modes.get("barometer"))
+                        new BarometerSubscriptionTask().execute();
+                    if (modes.get("gsr"))
+                        new GsrSubscriptionTask().execute();
+                    if (modes.get("heart rate"))
+                        new HeartRateSubscriptionTask().execute();
 
 
-        if (connectedBands.containsKey(band)) {
-            // Disconnect from band
-            client = connectedBands.get(band);
-            new disconnectClient().execute();
-            connectedBands.remove(band);
-        } else {
-            // Request data
-            if (modes.get("accelerometer")) {
-                // Start an accelerometer task
-                new AccelerometerSubscriptionTask().execute();
+
+                    // Add the band to connected list
+                    connectedBands.put(band,client);
+                }
             }
-
-            if (modes.get("altimeter"))
-                new AltimeterSubscriptionTask().execute();
-            if (modes.get("ambient light"))
-                new AmbientLightSubscriptionTask().execute();
-            if (modes.get("barometer"))
-                new BarometerSubscriptionTask().execute();
-            if (modes.get("gsr"))
-                new GsrSubscriptionTask().execute();
-            if (modes.get("heart rate"))
-                new HeartRateSubscriptionTask().execute();
-
-
-
-            // Add the band to connected list
-            connectedBands.put(band,client);
         }
         return Service.START_NOT_STICKY;
     }
@@ -154,10 +160,8 @@ public class BandDataService extends Service {
                 int userId, devId, sensId;
                 try {
                     userId = getUserId(uName, readDb);
-                    Log.v(TAG, "User found");
                 } catch (Resources.NotFoundException e) {
 
-                    Log.v(TAG, "User not found.");
                     // User not found, use lowest available
                     userId = getNewUser(readDb);
 
@@ -215,6 +219,10 @@ public class BandDataService extends Service {
                 Log.v(TAG, "User Id is: " + Integer.toString(userId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
+                            "Y: " + Double.toString(event.getAccelerationY()) +
+                            "Z: " + Double.toString(event.getAccelerationZ()));
+                Log.v(TAG, getDateTime());
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime());
@@ -524,9 +532,9 @@ public class BandDataService extends Service {
     }
 
 
-    private class disconnectClient extends AsyncTask<Void, Void, Void> {
+    private class disconnectClient extends AsyncTask<BandClient, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(BandClient... params) {
             try {
                 getConnectedBandClient();
             } catch (InterruptedException | BandException e) {
@@ -534,7 +542,7 @@ public class BandDataService extends Service {
             }
 
             try {
-                client.disconnect().await();
+                params[0].disconnect().await();
             } catch (InterruptedException | BandException e) {
                 e.printStackTrace();
             }
@@ -553,7 +561,7 @@ public class BandDataService extends Service {
 
         // Querry databse for the user name
         String[] projection = new String[] {
-        DataStorageContract.UserTable._ID,
+                DataStorageContract.UserTable._ID,
                 DataStorageContract.UserTable.COLUMN_NAME_USER_NAME
         };
 
@@ -760,4 +768,37 @@ public class BandDataService extends Service {
         return tmp;
     }
 
+
+    public class StopAllStreams extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            Iterator<BandInfo> bandIter = connectedBands.keySet().iterator();
+            BandInfo mBand;
+            while (bandIter.hasNext()) {
+                mBand = bandIter.next();
+                Log.v(TAG, "Disconnecting a band: " + mBand.getMacAddress());
+                try {
+                    try {
+                        getConnectedBandClient();
+                    } catch (InterruptedException | BandException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        connectedBands.get(mBand).disconnect().await();
+                    } catch (InterruptedException | BandException e) {
+                        e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    // The band was not connected, do nothing
+                    e.printStackTrace();
+                }
+                Log.v(TAG, "Removing the band");
+                Log.v(TAG, "Band removed.");
+            }
+
+            connectedBands.clear();
+
+            return null;
+        }
+    }
 }

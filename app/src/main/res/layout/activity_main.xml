@@ -24,10 +24,26 @@
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Manage Devices"
+        android:text="Start Study"
         android:id="@+id/manageDevicesButton"
-        android:onClick="manageDevicesClicked"/>
+        android:onClick="startStudyClicked"/>
 
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Manage Study"
+        android:id="@+id/manageStudyButton"
+        android:layout_gravity="center_horizontal"
+        android:onClick="manageStudyClicked"/>
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="End study"
+        android:id="@+id/endStudyButton"
+        android:layout_gravity="center_horizontal"
+        android:onClick="endStudyClicked"/>
 
     <Button
         android:layout_width="match_parent"

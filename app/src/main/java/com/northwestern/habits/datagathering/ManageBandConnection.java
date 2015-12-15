@@ -43,6 +43,8 @@ public class ManageBandConnection extends AppCompatActivity {
 
         managementIntent.putExtra("userId", ((EditText) findViewById(R.id.userIdField)).getText().toString());
 
+        managementIntent.putExtra("continueStudy", true);
+
         startService(managementIntent);
     }
 

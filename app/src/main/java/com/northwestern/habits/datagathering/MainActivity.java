@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,24 +32,64 @@ public class MainActivity extends AppCompatActivity {
     /******************************* BUTTON HANDLERS *******************************/
     private final int REQUEST_ENABLE_BT = 1;
 
-    public void manageDevicesClicked(View view) {
-        Log.v(TAG, "Device Management button clicked");
+    public void startStudyClicked(View view) {
+
+        if (btEnabled()) {
+            AlertDialog.Builder b = new AlertDialog.Builder(this);
+            b.setTitle("Please enter a unique study name (note, this will end the current study)");
+            final EditText input = new EditText(this);
+            b.setView(input);
+            b.setPositiveButton("Enter", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Intent devManagementIntent = new Intent(
+                            getApplicationContext(), DeviceManagementActivity.class);
+                    devManagementIntent.putExtra("name", input.getText().toString());
+                    devManagementIntent.putExtra("continueStudy", false);
+                    startActivity(devManagementIntent);
+                }
+            });
+            b.setNegativeButton("CANCEL", null);
+            b.create().show();
+        }
+    }
+
+    public void manageStudyClicked(View view) {
+
+        if (btEnabled()) {
+            Intent devManagementIntent = new Intent(
+                    getApplicationContext(), DeviceManagementActivity.class);
+            devManagementIntent.putExtra("continueStudy", true);
+            startActivity(devManagementIntent);
+        }
+    }
+
+    public void endStudyClicked(View view) {
+        // Start Service with end study intent
+        Intent endStudyIntent = new Intent(this,
+                BandDataService.class);
+        endStudyIntent.putExtra("continueStudy", false);
+        startService(endStudyIntent);
+    }
+
+    private boolean btEnabled() {
+        Log.v(TAG, "Continue Study button clicked");
 
         // Check for bluetooth connection
         BluetoothAdapter adapter = BluetoothConnectionLayer.getAdapter();
         Log.v(TAG, "Checked bluetooth adapter: ");
         if (adapter == null) {
             new AlertDialog.Builder(this)
-                .setTitle("No Bluetooth")
-                .setMessage("There is no bluetooth adapter for this device. To manage bluetooth" +
-                    "device connections, please run this app on a device with bluetooth support.")
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        // continue with delete
-                    }
-                })
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show();
+                    .setTitle("No Bluetooth")
+                    .setMessage("There is no bluetooth adapter for this device. To manage bluetooth" +
+                            "device connections, please run this app on a device with bluetooth support.")
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // continue with delete
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
 
             Log.v(TAG, "No adapter found");
         } else {
@@ -60,15 +101,12 @@ public class MainActivity extends AppCompatActivity {
 
             Log.v(TAG, "About to check enabled again");
             if (adapter.isEnabled()) {
-                BluetoothConnectionLayer.refreshPairedDevices();
-                Log.v(TAG, "Refreshed paired devices.");
-                BluetoothConnectionLayer.refreshNearbyDevices();
-                Intent devManagementIntent = new Intent(this, DeviceManagementActivity.class);
-                startActivity(devManagementIntent);
+                return true;
             }
         }
-
+        return false;
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -77,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 // Recall device management
-                manageDevicesClicked(findViewById(R.id.manageDevicesButton));
+                startStudyClicked(findViewById(R.id.manageDevicesButton));
             }
         }
     }
