@@ -85,6 +85,8 @@ public class DeviceManagementActivity extends AppCompatActivity {
         pairedMacAddresses.clear();
         pairedBandUpdater.clear();
 
+        BluetoothConnectionLayer.refreshPairedBands();
+
         BluetoothConnectionLayer.refreshPairedDevices();
 
         // Store devices in the list view
@@ -96,14 +98,13 @@ public class DeviceManagementActivity extends AppCompatActivity {
             if (BluetoothConnectionLayer.bandMap.containsKey(curDev.getAddress())) {
                 // Add to list of Bands
                 pairedBandUpdater.add(curDev.getName());
-                pairedBandUpdater.add(curDev.getAddress());
             } else {
                 // Add to list of generic devices
                 pairedListUpdater.add(curDev.getName());
-                pairedMacAddresses.add(curDev.getAddress());
             }
         }
 
+        Log.v(TAG, "Updated stuff");
         pairedBandUpdater.notifyDataSetChanged();
         pairedListUpdater.notifyDataSetChanged();
     }

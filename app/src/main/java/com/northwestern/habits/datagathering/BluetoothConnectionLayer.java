@@ -79,7 +79,7 @@ public class BluetoothConnectionLayer {
     /**
      * Map of MAC address to band info
      */
-    protected static HashMap<String, BandInfo> bandMap;
+    protected static HashMap<String, BandInfo> bandMap = new HashMap<>();
 
     /**
      * Array of paired bands
