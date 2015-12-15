@@ -1,26 +1,26 @@
 package com.northwestern.habits.datagathering;
 
 import android.bluetooth.BluetoothAdapter;
-import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.northwestern.habits.datagathering.DataStorageContract.UserTable;
-
 public class MainActivity extends AppCompatActivity {
+
+
+    private final String TAG = "Main activity"; //For logs
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Log.v(TAG, "Created main activity");
 
         Log.v(TAG, "Creating database");
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     /******************************* BUTTON HANDLERS *******************************/
-    private final String TAG = "Main activity"; //For logs
     private final int REQUEST_ENABLE_BT = 1;
 
     public void manageDevicesClicked(View view) {
@@ -37,9 +36,20 @@ public class MainActivity extends AppCompatActivity {
 
         // Check for bluetooth connection
         BluetoothAdapter adapter = BluetoothConnectionLayer.getAdapter();
-        Log.v(TAG, "Checked the adapter: ");
+        Log.v(TAG, "Checked bluetooth adapter: ");
         if (adapter == null) {
-            //TODO popup warning and cancel the activity
+            new AlertDialog.Builder(this)
+                .setTitle("No Bluetooth")
+                .setMessage("There is no bluetooth adapter for this device. To manage bluetooth" +
+                    "device connections, please run this app on a device with bluetooth support.")
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // continue with delete
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+
             Log.v(TAG, "No adapter found");
         } else {
             Log.v(TAG, "About to check enabled");
