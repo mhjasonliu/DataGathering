@@ -10,7 +10,8 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:weightSum="1">
 
         <GridLayout
             android:layout_width="match_parent"
@@ -20,9 +21,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:text="Paired devices"
-                android:id="@+id/bluetoothHeader"
-                android:layout_row="0"
+                android:text="Paired Bands"
+                android:id="@+id/bandHeader"
+                android:layout_row="1"
                 android:layout_column="0" />
 
             <Button
@@ -32,7 +33,7 @@
                 android:text="Refresh"
                 android:id="@+id/refreshButton"
                 android:layout_gravity="right"
-                android:layout_row="0"
+                android:layout_row="1"
                 android:layout_column="1"
                 android:onClick="refreshPairedDevices"/>
 
@@ -40,20 +41,23 @@
 
         <ListView
             android:layout_width="wrap_content"
-            android:layout_height="219dp"
-            android:id="@+id/pairedDeviceListView" />
+            android:layout_height="155dp"
+            android:id="@+id/bandList"
+            android:layout_weight="1.63" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Paired Bands"
-            android:id="@+id/bandHeader" />
+            android:text="Paired devices"
+            android:id="@+id/bluetoothHeader"
+            android:layout_row="1"
+            android:layout_column="0" />
 
         <ListView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/bandList" />
+            android:layout_height="219dp"
+            android:id="@+id/pairedDeviceListView" />
 
 
     </LinearLayout>

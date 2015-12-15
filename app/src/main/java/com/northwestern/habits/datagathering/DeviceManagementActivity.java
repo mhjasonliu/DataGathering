@@ -2,24 +2,19 @@ package com.northwestern.habits.datagathering;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.microsoft.band.BandClient;
-import com.microsoft.band.BandClientManager;
-import com.microsoft.band.BandInfo;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class DeviceManagementActivity extends AppCompatActivity {
 
-    private ListView nearbyDeviceList;
     private final String TAG = "Device activity";
 
     // Paired Devices
@@ -36,7 +31,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         Log.v(TAG, "Opened Device Management activity");
 
-        // Paired Devices
+        // List of Paired Devices
         ListView pairedDeviceList = (ListView) findViewById(R.id.pairedDeviceListView);
 
         pairedListUpdater = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -55,24 +50,17 @@ public class DeviceManagementActivity extends AppCompatActivity {
             }
         });
 
-        refreshPairedDevices(findViewById(R.id.refreshButton));
 
 
         // Paired bands
         ListView pairedBandList = (ListView) findViewById(R.id.bandList);
 
-        pairedBandUpdater = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        pairedBandUpdater = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         pairedBandList.setAdapter(pairedBandUpdater);
         pairedBandList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 //Paired band was selected
-                // get the band from the list of bands
-                BandClient band =
-                        BandClientManager.getInstance().create(
-                                DeviceManagementActivity.this, BluetoothConnectionLayer.pairedBands[position]
-                        );
-
                 // Start connection management using the mac address
                 Intent connectionIntent = new Intent(DeviceManagementActivity.this,
                         ManageBandConnection.class);
@@ -81,7 +69,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
             }
         });
 
-        refreshPairedBands(findViewById(R.id.refreshButton));
+        refreshPairedDevices(findViewById(R.id.refreshButton));
     }
 
 
@@ -95,6 +83,8 @@ public class DeviceManagementActivity extends AppCompatActivity {
         // Setup
         pairedListUpdater.clear();
         pairedMacAddresses.clear();
+        pairedBandUpdater.clear();
+
         BluetoothConnectionLayer.refreshPairedDevices();
 
         // Store devices in the list view
@@ -103,23 +93,20 @@ public class DeviceManagementActivity extends AppCompatActivity {
         BluetoothDevice curDev;
         while (devIter.hasNext()) {
             curDev = devIter.next();
-            pairedListUpdater.add(curDev.getName());
-            pairedMacAddresses.add(curDev.getAddress());
+            if (BluetoothConnectionLayer.bandMap.containsKey(curDev.getAddress())) {
+                // Add to list of Bands
+                pairedBandUpdater.add(curDev.getName());
+                pairedBandUpdater.add(curDev.getAddress());
+            } else {
+                // Add to list of generic devices
+                pairedListUpdater.add(curDev.getName());
+                pairedMacAddresses.add(curDev.getAddress());
+            }
         }
 
+        pairedBandUpdater.notifyDataSetChanged();
         pairedListUpdater.notifyDataSetChanged();
     }
 
-    /**
-     * Searches for paired bands, adding the name of each to the list view
-     */
-    public void refreshPairedBands(View view) {
-        // Setup
-        pairedBandUpdater.clear();
-        BluetoothConnectionLayer.refreshPairedBands();
-
-        for (BandInfo band : BluetoothConnectionLayer.pairedBands)
-            pairedBandUpdater.add(band.getName());
-    }
 
 }

@@ -43,11 +43,15 @@ public class BluetoothConnectionLayer {
     }
 
     /**
-     * Refreshes the array pairedBands
+     * Refreshes the array pairedBands and the hashmap bandMap
      */
     public static void refreshPairedBands() {
         // Refresh Bands
-        pairedBands = BandClientManager.getInstance().getPairedBands();
+        BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
+
+        for (BandInfo curBand :  pairedBands) {
+            bandMap.put(curBand.getMacAddress(), curBand);
+        }
     }
 
     public static void refreshNearbyDevices() {
@@ -73,29 +77,13 @@ public class BluetoothConnectionLayer {
     protected static HashMap<String, BluetoothDevice> pairedDevices = new HashMap<>();
 
     /**
-     * Array of paired bands
+     * Map of MAC address to band info
      */
-    protected static BandInfo[] pairedBands;
+    protected static HashMap<String, BandInfo> bandMap;
 
     /**
-    * Map of services streaming data for bands
-    */
-    protected static HashMap<BandInfo, BandDataService> bandServices;
-
-
-
-
-
-
-
-    /* *********************************** PRIVATE METHODS ********************************* */
-
-
-
-
-
-
-
-
+     * Array of paired bands
+     */
+    //protected static BandInfo[] pairedBands;
 
 }
