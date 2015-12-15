@@ -50,6 +50,9 @@ public class BandDataService extends Service {
     private String userName;
 
 
+    // Types
+    private String T_BAND2 = "Microsoft_Band_2";
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Started the service.");
@@ -142,11 +145,13 @@ public class BandDataService extends Service {
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
             if (event != null) {
 
+                String T_ACCEL = "Accelerometer";
+
                 SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId = -1, sensId = -1;
+                int userId, devId, sensId;
                 try {
                     userId = getUserId(uName, readDb);
                     Log.v(TAG, "User found");
@@ -154,7 +159,7 @@ public class BandDataService extends Service {
 
                     Log.v(TAG, "User not found.");
                     // User not found, use lowest available
-                    userId = getLowestUser(readDb);
+                    userId = getNewUser(readDb);
 
 
                     // Write the user into database, save the id
@@ -168,144 +173,50 @@ public class BandDataService extends Service {
                     );
                 }
 
-                Cursor cursor;
-                // See if devices has a device for the user
-                String[] projection = new String[] {
-                        DataStorageContract.DeviceTable._ID,
-                        DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID,
-                        DataStorageContract.DeviceTable.COLUMN_NAME_MAC
-                };
+                try {
+                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
 
-                cursor = readDb.query(
-                        DataStorageContract.DeviceTable.TABLE_NAME,
-                        projection,
-                        null,
-                        null,
-                        null,
-                        null,
-                        DataStorageContract.DeviceTable._ID + " ASC"
-                );
-                cursor.moveToFirst();
-
-                int devMacCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.DeviceTable.COLUMN_NAME_MAC);
-                int devIdCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.DeviceTable._ID);
-                int userIdCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID);
-                int smallestAvailableId = 0;
-
-                // Find the device wanted
-                while ( !cursor.isAfterLast() && devId == -1) {
-
-                    if (info.getMacAddress().equals(cursor.getString(devMacCol))
-                            && cursor.getInt(userIdCol) == userId) {
-                        // Found device in table.
-                        devId = cursor.getInt(devIdCol);
-                    } else if (cursor.getInt(devIdCol) == smallestAvailableId) {
-                        smallestAvailableId++;
-                    }
-                    cursor.moveToNext();
-                }
-
-                if ( devId == -1 ) {
-                    // Write the device into database, save the id
+                    // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
-                    values.put(DataStorageContract.DeviceTable._ID, smallestAvailableId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, "Microsoft_Band_2");
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
                             null,
                             values
                     );
-                    devId = smallestAvailableId;
                 }
 
-                // Check if the accelerometer exists
-                projection = new String[] {
-                        DataStorageContract.SensorTable._ID,
-                        DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID,
-                        DataStorageContract.SensorTable.COLUMN_NAME_TYPE
-                };
+                try {
+                    sensId = getSensorId(T_ACCEL, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
 
-                cursor = readDb.query(
-                        DataStorageContract.SensorTable.TABLE_NAME,
-                        projection,
-                        null,
-                        null,
-                        null,
-                        null,
-                        DataStorageContract.SensorTable._ID + " ASC"
-                );
-                cursor.moveToFirst();
-
-                int sensIdCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.SensorTable._ID);
-                devIdCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID);
-                int sensTypeCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.SensorTable.COLUMN_NAME_TYPE);
-                smallestAvailableId = 0;
-
-                // Find the sensor wanted
-                while ( !cursor.isAfterLast() && sensId == -1) {
-
-                    if (cursor.getString(sensTypeCol).equals("Accelerometer")
-                            && cursor.getInt(devIdCol) == devId) {
-                        // Found sensor in table.
-                        sensId = cursor.getInt(sensIdCol);
-                    } else if (cursor.getInt(sensIdCol) == smallestAvailableId) {
-                        smallestAvailableId++;
-                    }
-                    cursor.moveToNext();
-                }
-
-                if ( sensId == -1 ) {
-                    // Write the user into database, save the id
+                    // Write new sensor into database, save id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.SensorTable._ID, smallestAvailableId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, "Accelerometer");
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_ACCEL);
+
                     writeDb.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
                             null,
                             values
                     );
-                    sensId = smallestAvailableId;
                 }
 
-
-                cursor = readDb.query(
-                        DataStorageContract.AccelerometerTable.TABLE_NAME,
-                        new String[] { DataStorageContract.AccelerometerTable._ID },
-                        null,
-                        null,
-                        null,
-                        null,
-                        DataStorageContract.AccelerometerTable._ID + " DESC",
-                        "1"
-                );
-                cursor.moveToFirst();
-                int dataIdCol = cursor.getColumnIndexOrThrow(
-                        DataStorageContract.AccelerometerTable._ID);
-
-                int dataId;
-                try {
-                    dataId = cursor.getInt(dataIdCol) + 1;
-                } catch (Exception e) {
-                    dataId = 0;
-                }
-
+                // Add new entry to the Accelerometer table
                 Log.v(TAG, "User name is: " + uName);
                 Log.v(TAG, "User Id is: " + Integer.toString(userId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, "Data ID is: " + Integer.toString(dataId));
 
                 ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AccelerometerTable._ID, dataId);
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime());
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
@@ -314,8 +225,6 @@ public class BandDataService extends Service {
 
 
                 writeDb.insert(DataStorageContract.AccelerometerTable.TABLE_NAME, null, values);
-
-                cursor.close();
             }
 
         }
@@ -642,10 +551,6 @@ public class BandDataService extends Service {
      */
     private static int getUserId(String userName, SQLiteDatabase db) throws Resources.NotFoundException {
 
-        if (userName == null) {
-            userName = "null";
-        }
-
         // Querry databse for the user name
         String[] projection = new String[] {
         DataStorageContract.UserTable._ID,
@@ -668,22 +573,20 @@ public class BandDataService extends Service {
             throw new Resources.NotFoundException();
 
 
-        return cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.UserTable._ID));
+        int tmp = cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.UserTable._ID));
+        cursor.close();
+        return tmp;
     }
 
 
     /**
-     * Finds the lowest user _ID that is not being used
+     * Uses the next unused ID
      * @param db database to find the lowest user in
      * @return the lowest unused _ID
      */
-    private static int getLowestUser(SQLiteDatabase db) {
-
-        int smallestAvailableId = 0;
-
+    private static int getNewUser(SQLiteDatabase db) {
         String[] projection = new String[] {
                 DataStorageContract.UserTable._ID,
-                DataStorageContract.UserTable.COLUMN_NAME_USER_NAME
         };
 
         // Get the table of users
@@ -694,24 +597,167 @@ public class BandDataService extends Service {
                 null,
                 null,
                 null,
-                DataStorageContract.UserTable._ID + " ASC"
+                DataStorageContract.UserTable._ID + " DESC",
+                "1"
         );
         cursor.moveToFirst();
 
+        // First entry
+        if (cursor.getCount() == 0)
+            return 0;
+
+        // Cursor currently points at User entry with largest ID
         int userIdCol = cursor.getColumnIndexOrThrow(
                 DataStorageContract.UserTable._ID);
 
-        // Find the user wanted
-        while ( !cursor.isAfterLast() ) {
-
-            if (cursor.getInt(userIdCol) == smallestAvailableId) {
-                smallestAvailableId++;
-            } else {
-                return smallestAvailableId;
-            }
-            cursor.moveToNext();
-        }
-
-        return smallestAvailableId;
+        int tmp = cursor.getInt(userIdCol) + 1;
+        cursor.close();
+        return tmp;
     }
+
+    /**
+     * Gets the device id for the device specified
+     * @param mac address (physical) of the device
+     * @param user id of the user
+     * @param db database to query
+     * @throws android.content.res.Resources.NotFoundException
+     * @return id of the device
+     */
+    private static int getDevId(String mac, int user, SQLiteDatabase db)
+            throws Resources.NotFoundException {
+        String[] projection = new String[] {
+                DataStorageContract.DeviceTable.COLUMN_NAME_MAC,
+                DataStorageContract.DeviceTable._ID,
+                DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID
+        };
+
+
+        Cursor cursor = db.query(
+                DataStorageContract.DeviceTable.TABLE_NAME,
+                projection,
+                DataStorageContract.DeviceTable.COLUMN_NAME_MAC + "=?" +
+                        " AND " +
+                        DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID + "=?",
+                new String[] { mac, Integer.toString(user)},
+                null,
+                null,
+                null
+        );
+
+        if (cursor.getCount() == 0)
+            throw new Resources.NotFoundException();
+
+        cursor.moveToFirst();
+
+        int tmp = cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.DeviceTable._ID));
+        cursor.close();
+        return tmp;
+    }
+
+    /**
+     * Gets the next largest ID for the device
+     * @param db to search
+     * @return int available ID in the device list
+     */
+    private static int getNewDev(SQLiteDatabase db) {
+        String[] projection = new String[] {
+                DataStorageContract.DeviceTable._ID
+        };
+
+        // Get the table of users
+        Cursor cursor = db.query(
+                DataStorageContract.DeviceTable.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                DataStorageContract.DeviceTable._ID + " DESC",
+                "1"
+        );
+        cursor.moveToFirst();
+
+        // First entry
+        if (cursor.getCount() == 0)
+            return 0;
+
+        // Cursor currently points at User entry with largest ID
+        int devIdCol = cursor.getColumnIndexOrThrow(
+                DataStorageContract.DeviceTable._ID);
+
+        int tmp = cursor.getInt(devIdCol) + 1;
+        cursor.close();
+        return tmp;
+    }
+
+    /**
+     * Gets the ID for the sensor associated with the device and sensor type
+     * @param type of sensor
+     * @param device ID in the SQLite db associated with the sensor
+     * @param db to query
+     * @throws android.content.res.Resources.NotFoundException
+     * @return ID of the sensor or not
+     */
+    private static int getSensorId(String type, int device, SQLiteDatabase db)
+            throws Resources.NotFoundException {
+        String[] projection = new String[] {
+                DataStorageContract.SensorTable.COLUMN_NAME_TYPE,
+                DataStorageContract.SensorTable._ID,
+                DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID
+        };
+
+
+        Cursor cursor = db.query(
+                DataStorageContract.SensorTable.TABLE_NAME,
+                projection,
+                DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID + "=?" +
+                        " AND " +
+                        DataStorageContract.SensorTable.COLUMN_NAME_TYPE + "=?",
+                new String[] { Integer.toString(device), type},
+                null,
+                null,
+                null
+        );
+
+        if (cursor.getCount() == 0)
+            throw new Resources.NotFoundException();
+
+        cursor.moveToFirst();
+
+        int tmp = cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.SensorTable._ID));
+        cursor.close();
+        return tmp;
+    }
+
+    private static int getNewSensor(SQLiteDatabase db) {
+        String[] projection = new String[] {
+                DataStorageContract.SensorTable._ID
+        };
+
+        // Get the table of users
+        Cursor cursor = db.query(
+                DataStorageContract.SensorTable.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                DataStorageContract.SensorTable._ID + " DESC",
+                "1"
+        );
+        cursor.moveToFirst();
+
+        // First entry
+        if (cursor.getCount() == 0)
+            return 0;
+
+        // Cursor currently points at User entry with largest ID
+        int sensIdCol = cursor.getColumnIndexOrThrow(
+                DataStorageContract.SensorTable._ID);
+
+        int tmp = cursor.getInt(sensIdCol) + 1;
+        cursor.close();
+        return tmp;
+    }
+
 }
