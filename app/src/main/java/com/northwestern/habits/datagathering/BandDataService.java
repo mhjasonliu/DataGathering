@@ -111,6 +111,7 @@ public class BandDataService extends Service {
                     if (connectedBands.containsKey(band)) {
                         // Disconnect from band
                         new disconnectClient().execute(connectedBands.get((band)));
+                        Log.v(TAG, "Disconnected from the band");
                         connectedBands.remove(band);
                     } else {
                         // Request data
@@ -265,6 +266,7 @@ public class BandDataService extends Service {
     private class CustomBandAltimeterEventListener implements BandAltimeterEventListener {
 
         public CustomBandAltimeterEventListener(BandInfo bandInfo, String name) {
+            super();
             uName = name;
             info = bandInfo;
         }
@@ -376,43 +378,391 @@ public class BandDataService extends Service {
     }
 
 
-    private BandAmbientLightEventListener mAmbientLightEventListener = new BandAmbientLightEventListener() {
+    private class CustomBandAmbientLightEventListener implements BandAmbientLightEventListener{
+        BandInfo info;
+        String uName;
+
+        public CustomBandAmbientLightEventListener(BandInfo bInfo, String name) {
+            super();
+            info = bInfo;
+            uName = name;
+        }
+
         @Override
         public void onBandAmbientLightChanged(final BandAmbientLightEvent event) {
             if (event != null) {
+                String T_AMBIENT = "Ambient";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int userId, devId, sensId;
+                try {
+                    userId = getUserId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // User not found, use lowest available
+                    userId = getNewUser(readDb);
+
+
+                    // Write the user into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
+                    values.put(DataStorageContract.UserTable._ID, userId);
+                    writeDb.insert(
+                            DataStorageContract.UserTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_AMBIENT, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_AMBIENT);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Brightness table
+                Log.v(TAG, "User name is: " + uName);
+                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Brightness = %d lux\n", event.getBrightness()));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.AmbientTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.AmbientTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.AmbientTable.COLUMN_NAME_BRIGHTNESS, event.getBrightness());
+
+
+                writeDb.insert(DataStorageContract.AmbientTable.TABLE_NAME, null, values);
             }
         }
-    };
+    }
 
-    private BandBarometerEventListener mBarometerEventListener = new BandBarometerEventListener() {
+    private class CustomBandBarometerEventListener implements BandBarometerEventListener {
+        BandInfo info;
+        String uName;
+
+        public CustomBandBarometerEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+        }
+
         @Override
         public void onBandBarometerChanged(final BandBarometerEvent event) {
             if (event != null) {
+                String T_BAROMETER = "Barometer";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int userId, devId, sensId;
+                try {
+                    userId = getUserId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // User not found, use lowest available
+                    userId = getNewUser(readDb);
+
+
+                    // Write the user into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
+                    values.put(DataStorageContract.UserTable._ID, userId);
+                    writeDb.insert(
+                            DataStorageContract.UserTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_BAROMETER, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_BAROMETER);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "User name is: " + uName);
+                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Air Pressure = %.3f hPa\n"
-                        + "Temperature = %.2f degrees Celsius", event.getAirPressure(), event.getTemperature()));
+                                + "Temperature = %.2f degrees Celsius", event.getAirPressure(),
+                        event.getTemperature()));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_PRESSURE, event.getAirPressure());
+                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_TEMP, event.getTemperature());
+
+
+                writeDb.insert(DataStorageContract.BarometerTable.TABLE_NAME, null, values);
+
             }
         }
-    };
+    }
 
-    private BandGsrEventListener mGsrEventListener = new BandGsrEventListener() {
+    private class CustomBandGsrEventListener implements BandGsrEventListener {
+        BandInfo info;
+        String uName;
+
+        public CustomBandGsrEventListener (BandInfo bandInfo, String name) {
+            info = bandInfo;
+            uName = name;
+        }
+
+
         @Override
         public void onBandGsrChanged(final BandGsrEvent event) {
             if (event != null) {
+                String T_Gsr = "GSR";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int userId, devId, sensId;
+                try {
+                    userId = getUserId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // User not found, use lowest available
+                    userId = getNewUser(readDb);
+
+
+                    // Write the user into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
+                    values.put(DataStorageContract.UserTable._ID, userId);
+                    writeDb.insert(
+                            DataStorageContract.UserTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_Gsr, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_Gsr);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "User name is: " + uName);
+                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Resistance = %d kOhms\n", event.getResistance()));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.GsrTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.GsrTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.GsrTable.COLUMN_NAME_RESISTANCE, event.getResistance());
+
+
+                writeDb.insert(DataStorageContract.GsrTable.TABLE_NAME, null, values);
             }
         }
-    };
+    }
 
-    private BandHeartRateEventListener mHeartRateEventListener = new BandHeartRateEventListener() {
+    private class CustomBandHeartRateEventListener implements BandHeartRateEventListener {
+
+        BandInfo info;
+        String uName;
+
+        public CustomBandHeartRateEventListener (BandInfo bandInfo, String name) {
+            info = bandInfo;
+            uName = name;
+        }
+
         @Override
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
             if (event != null) {
+                String T_HR = "heartRate";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int userId, devId, sensId;
+                try {
+                    userId = getUserId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // User not found, use lowest available
+                    userId = getNewUser(readDb);
+
+
+                    // Write the user into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
+                    values.put(DataStorageContract.UserTable._ID, userId);
+                    writeDb.insert(
+                            DataStorageContract.UserTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_HR, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_HR);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "User name is: " + uName);
+                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Heart Rate = %d beats per minute\n"
                         + "Quality = %s\n", event.getHeartRate(), event.getQuality()));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.HeartRateTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.HeartRateTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.HeartRateTable.COLUMN_NAME_HEART_RATE, event.getHeartRate());
+                values.put(DataStorageContract.HeartRateTable.COLUMN_NAME_QUALITY, event.getQuality().toString());
+
+
+                writeDb.insert(DataStorageContract.HeartRateTable.TABLE_NAME, null, values);
             }
         }
-    };
+    }
 
 
     /* ********* Tasks ******** */
@@ -523,7 +873,9 @@ public class BandDataService extends Service {
                     int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
-                        client.getSensorManager().registerAmbientLightEventListener(mAmbientLightEventListener);
+                        client.getSensorManager().registerAmbientLightEventListener(
+                                new CustomBandAmbientLightEventListener(band, userName)
+                        );
                     } else {
                         Log.e(TAG, "The Ambient Light sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
                     }
@@ -560,7 +912,9 @@ public class BandDataService extends Service {
                     int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
-                        client.getSensorManager().registerBarometerEventListener(mBarometerEventListener);
+                        client.getSensorManager().registerBarometerEventListener(
+                                new CustomBandBarometerEventListener(band, userName)
+                        );
                     } else {
                         Log.e(TAG, "The Barometer sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
                     }
@@ -597,7 +951,9 @@ public class BandDataService extends Service {
                     int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
-                        client.getSensorManager().registerGsrEventListener(mGsrEventListener);
+                        client.getSensorManager().registerGsrEventListener(
+                                new CustomBandGsrEventListener(band, userName)
+                        );
                     } else {
                         Log.e(TAG, "The Gsr sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
                     }
@@ -632,7 +988,9 @@ public class BandDataService extends Service {
             try {
                 if (getConnectedBandClient()) {
                     if (client.getSensorManager().getCurrentHeartRateConsent() == UserConsent.GRANTED) {
-                        client.getSensorManager().registerHeartRateEventListener(mHeartRateEventListener);
+                        client.getSensorManager().registerHeartRateEventListener(
+                                new CustomBandHeartRateEventListener(band, userName)
+                        );
                     } else {
                         Log.e(TAG, "You have not given this application consent to access heart rate data yet."
                                 + " Please press the Heart Rate Consent button.\n");

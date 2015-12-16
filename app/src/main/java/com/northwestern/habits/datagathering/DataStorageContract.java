@@ -176,7 +176,7 @@ public final class DataStorageContract {
 
     public static abstract class HeartRateTable implements BaseColumns {
 
-        public static final String TABLE_NAME = "altimeter_data";
+        public static final String TABLE_NAME = "heart_data";
         public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
         public static final String COLUMN_NAME_DATETIME = "date";
         public static final String COLUMN_NAME_HEART_RATE = "heart_rate";
@@ -196,7 +196,7 @@ public final class DataStorageContract {
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 3;
+        public static final int DATABASE_VERSION = 5;
         public static final String DATABASE_NAME = "Bluetooth.db";
 
         public BluetoothDbHelper(Context context) {
