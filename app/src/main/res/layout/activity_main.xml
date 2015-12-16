@@ -49,10 +49,10 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="DISPLAY DATABASE"
+        android:text="Send Database"
         android:id="@+id/displayDbButton"
         android:onClick="onReadDatabase"
-        android:enabled="false"/>
+        android:enabled="true"/>
 
     <Button
         android:layout_width="match_parent"

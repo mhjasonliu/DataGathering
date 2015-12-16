@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -36,7 +37,9 @@
         <service
             android:name=".ServerCommunicationService"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="true"
+            android:label="Server Communication Service"
+            android:process=":ServerCommunication">
         </service>
     </application>
 
