@@ -143,12 +143,14 @@ public final class DataStorageContract {
         public static final String TABLE_NAME = "barometer_table";
         public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
         public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_PRESSURE = "pressure";
         public static final String COLUMN_NAME_TEMP = "temp";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
                         COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_PRESSURE + FLOAT_TYPE + COMMA_SEP +
                         COLUMN_NAME_TEMP + FLOAT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
@@ -204,7 +206,6 @@ public final class DataStorageContract {
             db.execSQL(SensorTable.SQL_CREATE_ENTRIES);
             db.execSQL(AccelerometerTable.SQL_CREATE_ENTRIES);
             db.execSQL(AltimeterTable.SQL_CREATE_ENTRIES);
-            // AMBIENT, BAROMETER, GSR, HR
             db.execSQL(AmbientTable.SQL_CREATE_ENTRIES);
             db.execSQL(BarometerTable.SQL_CREATE_ENTRIES);
             db.execSQL(GsrTable.SQL_CREATE_ENTRIES);
