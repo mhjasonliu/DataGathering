@@ -29,10 +29,10 @@ import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
+import com.microsoft.band.sensors.BandSensorEvent;
 import com.microsoft.band.sensors.SampleRate;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -150,14 +150,13 @@ public class BandDataService extends Service {
 
         /* *********** Event Listeners ************ */
 
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
     /**
      * Helper that gets the date and time in proper format for database
      */
-    private String getDateTime() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
-        Date date = new Date();
-        return dateFormat.format(date);
+    private String getDateTime(BandSensorEvent event) {
+        return dateFormat.format(event.getTimestamp());
     }
 
     private class BandAccelerometerEventListenerCustom implements BandAccelerometerEventListener {
@@ -246,10 +245,10 @@ public class BandDataService extends Service {
                 Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
                         "Y: " + Double.toString(event.getAccelerationY()) +
                         "Z: " + Double.toString(event.getAccelerationZ()));
-                Log.v(TAG, getDateTime());
+                Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime());
+                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y, event.getAccelerationY());
