@@ -28,7 +28,7 @@
             android:text="Altimeter"
             android:id="@+id/altimeterBox"
             android:checked="false"
-            android:enabled="false"/>
+            android:enabled="true"/>
 
         <CheckBox
             android:layout_width="wrap_content"

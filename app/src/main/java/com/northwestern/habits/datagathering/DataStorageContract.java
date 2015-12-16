@@ -7,7 +7,9 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 /**
- * Created by William on 11/12/2015.
+ * Created by William Stogin on 11/12/2015.
+ *
+ * Holds constant strings for use with the database
  */
 public final class DataStorageContract {
     // To prevent someone from accidentally instantiating the contract class,
@@ -114,7 +116,7 @@ public final class DataStorageContract {
                         COLUMN_NAME_STEPS_DESCENDED + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_RATE + FLOAT_TYPE + COMMA_SEP +
                         COLUMN_NAME_STAIRS_ASCENDED + INT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_STAIRS_DESCENEDED + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_STAIRS_DESCENEDED + INT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -123,7 +125,7 @@ public final class DataStorageContract {
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 1;
+        public static final int DATABASE_VERSION = 2;
         public static final String DATABASE_NAME = "Bluetooth.db";
 
         public BluetoothDbHelper(Context context) {

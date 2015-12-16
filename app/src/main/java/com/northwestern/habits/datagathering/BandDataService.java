@@ -262,10 +262,88 @@ public class BandDataService extends Service {
     }
 
 
-    private BandAltimeterEventListener mAltimeterEventListener = new BandAltimeterEventListener() {
+    private class CustomBandAltimeterEventListener implements BandAltimeterEventListener {
+
+        public CustomBandAltimeterEventListener(BandInfo bandInfo, String name) {
+            uName = name;
+            info = bandInfo;
+        }
+
+        private String uName;
+        private BandInfo info;
+
         @Override
         public void onBandAltimeterChanged(final BandAltimeterEvent event) {
             if (event != null) {
+
+                String T_ALT = "Altimeter";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int userId, devId, sensId;
+                try {
+                    userId = getUserId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // User not found, use lowest available
+                    userId = getNewUser(readDb);
+
+
+                    // Write the user into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
+                    values.put(DataStorageContract.UserTable._ID, userId);
+                    writeDb.insert(
+                            DataStorageContract.UserTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_ALT, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_ALT);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Altimeter table
+                Log.v(TAG, "User name is: " + uName);
+                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Total Gain = %d cm\n", event.getTotalGain()) +
                         String.format("Total Loss = %d cm\n", event.getTotalLoss()) +
                         String.format("Stepping Gain = %d cm\n", event.getSteppingGain()) +
@@ -275,9 +353,27 @@ public class BandDataService extends Service {
                         String.format("Rate = %f cm/s\n", event.getRate()) +
                         String.format("Flights of Stairs Ascended = %d\n", event.getFlightsAscended()) +
                         String.format("Flights of Stairs Descended = %d\n", event.getFlightsDescended()));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_TOTAL_GAIN, event.getTotalGain());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_TOTAL_LOSS, event.getTotalLoss());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPPING_GAIN, event.getSteppingGain());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPPING_LOSS, event.getSteppingLoss());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPS_ASCENDED, event.getStepsAscended());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPS_DESCENDED, event.getStepsDescended());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_RATE, event.getRate());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_ASCENDED, event.getFlightsAscended());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_DESCENEDED, event.getFlightsDescended());
+
+
+                writeDb.insert(DataStorageContract.AltimeterTable.TABLE_NAME, null, values);
             }
         }
-    };
+
+    }
 
 
     private BandAmbientLightEventListener mAmbientLightEventListener = new BandAmbientLightEventListener() {
@@ -390,7 +486,7 @@ public class BandDataService extends Service {
                     int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
-                        client.getSensorManager().registerAltimeterEventListener(mAltimeterEventListener);
+                        client.getSensorManager().registerAltimeterEventListener(new CustomBandAltimeterEventListener(band, userName));
                     } else {
                         Log.e(TAG, "The Altimeter sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
                     }

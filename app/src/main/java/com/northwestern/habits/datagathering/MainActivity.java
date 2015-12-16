@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         Log.v(TAG, "displaying database");
-        new DataStorageContract.DisplayDatabaseTask().execute(db);
+        //new DataStorageContract.DisplayDatabaseTask().execute(db);
     }
 
 
