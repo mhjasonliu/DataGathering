@@ -25,15 +25,15 @@ public final class DataStorageContract {
     private static final String COMMA_SEP = ",";
 
     /**
-     * Class that defines user table
+     * Class that defines study table
      */
-    public static abstract class UserTable implements BaseColumns {
-        public static final String TABLE_NAME = "user";
-        public static final String COLUMN_NAME_USER_NAME = "name";
+    public static abstract class StudyTable implements BaseColumns {
+        public static final String TABLE_NAME = "study";
+        public static final String COLUMN_NAME_STUDY_ID = "name";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
-                        COLUMN_NAME_USER_NAME + TEXT_TYPE +
+                        COLUMN_NAME_STUDY_ID + TEXT_TYPE +
                 " )";
 
         private static final String SQL_DELETE_ENTRIES =
@@ -42,13 +42,13 @@ public final class DataStorageContract {
 
     public static abstract class DeviceTable implements BaseColumns {
         public static final String TABLE_NAME = "devices";
-        public static final String COLUMN_NAME_USER_ID = "user_id";
+        public static final String COLUMN_NAME_STUDY_ID = "study_id";
         public static final String COLUMN_NAME_TYPE = "type";
         public static final String COLUMN_NAME_MAC = "mac";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
-                        COLUMN_NAME_USER_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_STUDY_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_TYPE + TEXT_TYPE + COMMA_SEP +
                         COLUMN_NAME_MAC + TEXT_TYPE +
                         " )";
@@ -203,7 +203,7 @@ public final class DataStorageContract {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL(UserTable.SQL_CREATE_ENTRIES);
+            db.execSQL(StudyTable.SQL_CREATE_ENTRIES);
             db.execSQL(DeviceTable.SQL_CREATE_ENTRIES);
             db.execSQL(SensorTable.SQL_CREATE_ENTRIES);
             db.execSQL(AccelerometerTable.SQL_CREATE_ENTRIES);
@@ -216,7 +216,7 @@ public final class DataStorageContract {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             // This database is only a cache for online data, so its upgrade policy is
             // to simply to discard the data and start over
-            db.execSQL(UserTable.SQL_DELETE_ENTRIES);
+            db.execSQL(StudyTable.SQL_DELETE_ENTRIES);
             db.execSQL(DeviceTable.SQL_DELETE_ENTRIES);
             db.execSQL(SensorTable.SQL_DELETE_ENTRIES);
             db.execSQL(AccelerometerTable.SQL_DELETE_ENTRIES);

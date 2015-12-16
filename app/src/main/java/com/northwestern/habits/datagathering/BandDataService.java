@@ -39,6 +39,21 @@ import java.util.Locale;
 
 public class BandDataService extends Service {
 
+    public static final String ACCEL_REQ_EXTRA = "accelerometer";
+    public static final String ALT_REQ_EXTRA = "altimeter";
+    public static final String AMBIENT_REQ_EXTRA = "ambient";
+    public static final String BAROMETER_REQ_EXTRA = "barometer";
+    public static final String GSR_REQ_EXTRA = "gsr";
+    public static final String HEART_RATE_REQ_EXTRA = "heartRate";
+
+    public static final String INDEX_EXTRA = "index";
+    public static final String STUDY_ID_EXTRA = "study";
+
+    public static final String CONTINUE_STUDY_EXTRA = "continue study";
+    public static final String STOP_STREAM_EXTRA = "stop stream";
+
+
+
     private BandInfo band = null;
     private BandClient client = null;
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
@@ -48,7 +63,7 @@ public class BandDataService extends Service {
 
     private DataStorageContract.BluetoothDbHelper mDbHelper;
 
-    private String userName;
+    private String studyId;
 
     // Maps of listeners
     private HashMap<BandClient, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
@@ -67,44 +82,44 @@ public class BandDataService extends Service {
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();
         if (extras != null){
-            if (!extras.getBoolean("continueStudy")) {
+            if (!extras.getBoolean(CONTINUE_STUDY_EXTRA)) {
                 Log.v(TAG, "Ending study");
                 // Unregister all clients
                 new StopAllStreams().execute();
 
             } else {
-                int index = extras.getInt("index");
+                int index = extras.getInt(INDEX_EXTRA);
                 band = pairedBands[index];
                 client = BandClientManager.getInstance().create(getBaseContext(), band);
-                modes.put("accelerometer", extras.getBoolean("accelerometer"));
-                modes.put("altimeter", extras.getBoolean("altimeter"));
-                modes.put("ambient light", extras.getBoolean("ambient light"));
-                modes.put("barometer", extras.getBoolean("barometer"));
-                modes.put("gsr", extras.getBoolean("gsr"));
-                modes.put("heart rate", extras.getBoolean("heart rate"));
+                modes.put(ACCEL_REQ_EXTRA, extras.getBoolean(ACCEL_REQ_EXTRA));
+                modes.put(ALT_REQ_EXTRA, extras.getBoolean(ALT_REQ_EXTRA));
+                modes.put(AMBIENT_REQ_EXTRA, extras.getBoolean(AMBIENT_REQ_EXTRA));
+                modes.put(BAROMETER_REQ_EXTRA, extras.getBoolean(BAROMETER_REQ_EXTRA));
+                modes.put(GSR_REQ_EXTRA, extras.getBoolean(GSR_REQ_EXTRA));
+                modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
 
-                // Set the user and device
-                userName = extras.getString("userId");
+                // Set the study and device
+                studyId = extras.getString(STUDY_ID_EXTRA);
 
-                if (extras.getBoolean("stopStream")){
+                if (extras.getBoolean(STOP_STREAM_EXTRA)){
                     Log.v(TAG, "Stop stream requested.");
                     if (connectedBands.containsKey(band)) {
                         // Unsubscribe from specified tasks
-                        if (modes.get("accelerometer")) {
+                        if (modes.get(ACCEL_REQ_EXTRA)) {
                             // Start an accelerometer task
                             Log.v(TAG, "Unsubscribe from accelerometer");
                             new AccelerometerUnsubscribe().execute();
                         }
 
-                        if (modes.get("altimeter"))
+                        if (modes.get(ALT_REQ_EXTRA))
                             new AltimeterSubscriptionTask().execute();
-                        if (modes.get("ambient light"))
+                        if (modes.get(AMBIENT_REQ_EXTRA))
                             new AmbientLightSubscriptionTask().execute();
-                        if (modes.get("barometer"))
+                        if (modes.get(BAROMETER_REQ_EXTRA))
                             new BarometerSubscriptionTask().execute();
-                        if (modes.get("gsr"))
+                        if (modes.get(GSR_REQ_EXTRA))
                             new GsrSubscriptionTask().execute();
-                        if (modes.get("heart rate"))
+                        if (modes.get(HEART_RATE_REQ_EXTRA))
                             new HeartRateSubscriptionTask().execute();
                     }
                 } else {
@@ -115,20 +130,20 @@ public class BandDataService extends Service {
                         connectedBands.remove(band);
                     } else {
                         // Request data
-                        if (modes.get("accelerometer")) {
+                        if (modes.get(ACCEL_REQ_EXTRA)) {
                             // Start an accelerometer task
                             new AccelerometerSubscriptionTask().execute();
                         }
 
-                        if (modes.get("altimeter"))
+                        if (modes.get(ALT_REQ_EXTRA))
                             new AltimeterSubscriptionTask().execute();
-                        if (modes.get("ambient light"))
+                        if (modes.get(AMBIENT_REQ_EXTRA))
                             new AmbientLightSubscriptionTask().execute();
-                        if (modes.get("barometer"))
+                        if (modes.get(BAROMETER_REQ_EXTRA))
                             new BarometerSubscriptionTask().execute();
-                        if (modes.get("gsr"))
+                        if (modes.get(GSR_REQ_EXTRA))
                             new GsrSubscriptionTask().execute();
-                        if (modes.get("heart rate"))
+                        if (modes.get(HEART_RATE_REQ_EXTRA))
                             new HeartRateSubscriptionTask().execute();
 
 
@@ -181,35 +196,35 @@ public class BandDataService extends Service {
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId, sensId;
+                int studyId, devId, sensId;
                 try {
-                    userId = getUserId(uName, readDb);
+                    studyId = getStudyId(uName, readDb);
                 } catch (Resources.NotFoundException e) {
 
-                    // User not found, use lowest available
-                    userId = getNewUser(readDb);
+                    // study not found, use lowest available
+                    studyId = getNewStudy(readDb);
 
 
-                    // Write the user into database, save the id
+                    // Write the study into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
-                    values.put(DataStorageContract.UserTable._ID, userId);
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
                     writeDb.insert(
-                            DataStorageContract.UserTable.TABLE_NAME,
+                            DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                    devId = getDevId(info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
@@ -239,8 +254,8 @@ public class BandDataService extends Service {
                 }
 
                 // Add new entry to the Accelerometer table
-                Log.v(TAG, "User name is: " + uName);
-                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
@@ -284,35 +299,35 @@ public class BandDataService extends Service {
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId, sensId;
+                int studyId, devId, sensId;
                 try {
-                    userId = getUserId(uName, readDb);
+                    studyId = getStudyId(uName, readDb);
                 } catch (Resources.NotFoundException e) {
 
-                    // User not found, use lowest available
-                    userId = getNewUser(readDb);
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
 
 
-                    // Write the user into database, save the id
+                    // Write the study into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
-                    values.put(DataStorageContract.UserTable._ID, userId);
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
                     writeDb.insert(
-                            DataStorageContract.UserTable.TABLE_NAME,
+                            DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                    devId = getDevId(info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
@@ -342,8 +357,8 @@ public class BandDataService extends Service {
                 }
 
                 // Add new entry to the Altimeter table
-                Log.v(TAG, "User name is: " + uName);
-                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Total Gain = %d cm\n", event.getTotalGain()) +
@@ -397,35 +412,35 @@ public class BandDataService extends Service {
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId, sensId;
+                int studyId, devId, sensId;
                 try {
-                    userId = getUserId(uName, readDb);
+                    studyId = getStudyId(uName, readDb);
                 } catch (Resources.NotFoundException e) {
 
-                    // User not found, use lowest available
-                    userId = getNewUser(readDb);
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
 
 
-                    // Write the user into database, save the id
+                    // Write the study into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
-                    values.put(DataStorageContract.UserTable._ID, userId);
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
                     writeDb.insert(
-                            DataStorageContract.UserTable.TABLE_NAME,
+                            DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                    devId = getDevId(info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
@@ -455,8 +470,8 @@ public class BandDataService extends Service {
                 }
 
                 // Add new entry to the Brightness table
-                Log.v(TAG, "User name is: " + uName);
-                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Brightness = %d lux\n", event.getBrightness()));
@@ -492,35 +507,35 @@ public class BandDataService extends Service {
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId, sensId;
+                int studyId, devId, sensId;
                 try {
-                    userId = getUserId(uName, readDb);
+                    studyId = getStudyId(uName, readDb);
                 } catch (Resources.NotFoundException e) {
 
-                    // User not found, use lowest available
-                    userId = getNewUser(readDb);
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
 
 
-                    // Write the user into database, save the id
+                    // Write the study into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
-                    values.put(DataStorageContract.UserTable._ID, userId);
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
                     writeDb.insert(
-                            DataStorageContract.UserTable.TABLE_NAME,
+                            DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                    devId = getDevId(info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
@@ -550,8 +565,8 @@ public class BandDataService extends Service {
                 }
 
                 // Add new entry to the Barometer table
-                Log.v(TAG, "User name is: " + uName);
-                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Air Pressure = %.3f hPa\n"
@@ -591,35 +606,35 @@ public class BandDataService extends Service {
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId, sensId;
+                int studyId, devId, sensId;
                 try {
-                    userId = getUserId(uName, readDb);
+                    studyId = getStudyId(uName, readDb);
                 } catch (Resources.NotFoundException e) {
 
-                    // User not found, use lowest available
-                    userId = getNewUser(readDb);
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
 
 
-                    // Write the user into database, save the id
+                    // Write the study into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
-                    values.put(DataStorageContract.UserTable._ID, userId);
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
                     writeDb.insert(
-                            DataStorageContract.UserTable.TABLE_NAME,
+                            DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                    devId = getDevId(info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
@@ -649,8 +664,8 @@ public class BandDataService extends Service {
                 }
 
                 // Add new entry to the Barometer table
-                Log.v(TAG, "User name is: " + uName);
-                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Resistance = %d kOhms\n", event.getResistance()));
@@ -686,35 +701,35 @@ public class BandDataService extends Service {
                 SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
 
 
-                int userId, devId, sensId;
+                int studyId, devId, sensId;
                 try {
-                    userId = getUserId(uName, readDb);
+                    studyId = getStudyId(uName, readDb);
                 } catch (Resources.NotFoundException e) {
 
-                    // User not found, use lowest available
-                    userId = getNewUser(readDb);
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
 
 
-                    // Write the user into database, save the id
+                    // Write the study into database, save the id
                     ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.UserTable.COLUMN_NAME_USER_NAME, uName);
-                    values.put(DataStorageContract.UserTable._ID, userId);
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
                     writeDb.insert(
-                            DataStorageContract.UserTable.TABLE_NAME,
+                            DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), userId, readDb);
+                    devId = getDevId(info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
@@ -744,8 +759,8 @@ public class BandDataService extends Service {
                 }
 
                 // Add new entry to the Barometer table
-                Log.v(TAG, "User name is: " + uName);
-                Log.v(TAG, "User Id is: " + Integer.toString(userId));
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
                 Log.v(TAG, String.format("Heart Rate = %d beats per minute\n"
@@ -775,7 +790,7 @@ public class BandDataService extends Service {
                 if (getConnectedBandClient()) {
                     Log.v(TAG, "Band is connected.\n");
                     BandAccelerometerEventListenerCustom aListener =
-                            new BandAccelerometerEventListenerCustom(band, userName);
+                            new BandAccelerometerEventListenerCustom(band, studyId);
                     client.getSensorManager().registerAccelerometerEventListener(
                             aListener,  SampleRate.MS128);
 
@@ -836,7 +851,7 @@ public class BandDataService extends Service {
                     int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
-                        client.getSensorManager().registerAltimeterEventListener(new CustomBandAltimeterEventListener(band, userName));
+                        client.getSensorManager().registerAltimeterEventListener(new CustomBandAltimeterEventListener(band, studyId));
                     } else {
                         Log.e(TAG, "The Altimeter sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
                     }
@@ -874,7 +889,7 @@ public class BandDataService extends Service {
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
                         client.getSensorManager().registerAmbientLightEventListener(
-                                new CustomBandAmbientLightEventListener(band, userName)
+                                new CustomBandAmbientLightEventListener(band, studyId)
                         );
                     } else {
                         Log.e(TAG, "The Ambient Light sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
@@ -913,7 +928,7 @@ public class BandDataService extends Service {
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
                         client.getSensorManager().registerBarometerEventListener(
-                                new CustomBandBarometerEventListener(band, userName)
+                                new CustomBandBarometerEventListener(band, studyId)
                         );
                     } else {
                         Log.e(TAG, "The Barometer sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
@@ -952,7 +967,7 @@ public class BandDataService extends Service {
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
                         client.getSensorManager().registerGsrEventListener(
-                                new CustomBandGsrEventListener(band, userName)
+                                new CustomBandGsrEventListener(band, studyId)
                         );
                     } else {
                         Log.e(TAG, "The Gsr sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
@@ -989,7 +1004,7 @@ public class BandDataService extends Service {
                 if (getConnectedBandClient()) {
                     if (client.getSensorManager().getCurrentHeartRateConsent() == UserConsent.GRANTED) {
                         client.getSensorManager().registerHeartRateEventListener(
-                                new CustomBandHeartRateEventListener(band, userName)
+                                new CustomBandHeartRateEventListener(band, studyId)
                         );
                     } else {
                         Log.e(TAG, "You have not given this application consent to access heart rate data yet."
@@ -1053,26 +1068,26 @@ public class BandDataService extends Service {
     }
 
     /**
-     * Gets the _ID value for the user name in the database
-     * @param userName user name to search for
-     * @param db database to search for the user name
-     * @throws android.content.res.Resources.NotFoundException when user name cannot be found
+     * Gets the _ID value for the study in the database
+     * @param studyId study name to search for
+     * @param db database to search for the study name
+     * @throws android.content.res.Resources.NotFoundException when study name cannot be found
      * @return the integer _ID or
      */
-    private static int getUserId(String userName, SQLiteDatabase db) throws Resources.NotFoundException {
+    private static int getStudyId(String studyId, SQLiteDatabase db) throws Resources.NotFoundException {
 
-        // Querry databse for the user name
+        // Querry databse for the study name
         String[] projection = new String[] {
-                DataStorageContract.UserTable._ID,
-                DataStorageContract.UserTable.COLUMN_NAME_USER_NAME
+                DataStorageContract.StudyTable._ID,
+                DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID
         };
 
-        // Query for the specified userName
+        // Query for the specified studyId
         Cursor cursor = db.query(
-                DataStorageContract.UserTable.TABLE_NAME,
+                DataStorageContract.StudyTable.TABLE_NAME,
                 projection,
-                DataStorageContract.UserTable.COLUMN_NAME_USER_NAME + "=?",
-                new String[] { userName },
+                DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID + "=?",
+                new String[] { studyId },
                 null,
                 null,
                 null
@@ -1083,7 +1098,7 @@ public class BandDataService extends Service {
             throw new Resources.NotFoundException();
 
 
-        int tmp = cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.UserTable._ID));
+        int tmp = cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.StudyTable._ID));
         cursor.close();
         return tmp;
     }
@@ -1091,23 +1106,23 @@ public class BandDataService extends Service {
 
     /**
      * Uses the next unused ID
-     * @param db database to find the lowest user in
+     * @param db database to find the lowest study in
      * @return the lowest unused _ID
      */
-    private static int getNewUser(SQLiteDatabase db) {
+    private static int getNewStudy(SQLiteDatabase db) {
         String[] projection = new String[] {
-                DataStorageContract.UserTable._ID,
+                DataStorageContract.StudyTable._ID,
         };
 
-        // Get the table of users
+        // Get the table of studies
         Cursor cursor = db.query(
-                DataStorageContract.UserTable.TABLE_NAME,
+                DataStorageContract.StudyTable.TABLE_NAME,
                 projection,
                 null,
                 null,
                 null,
                 null,
-                DataStorageContract.UserTable._ID + " DESC",
+                DataStorageContract.StudyTable._ID + " DESC",
                 "1"
         );
         cursor.moveToFirst();
@@ -1116,11 +1131,11 @@ public class BandDataService extends Service {
         if (cursor.getCount() == 0)
             return 0;
 
-        // Cursor currently points at User entry with largest ID
-        int userIdCol = cursor.getColumnIndexOrThrow(
-                DataStorageContract.UserTable._ID);
+        // Cursor currently points at study entry with largest ID
+        int studyIdCol = cursor.getColumnIndexOrThrow(
+                DataStorageContract.StudyTable._ID);
 
-        int tmp = cursor.getInt(userIdCol) + 1;
+        int tmp = cursor.getInt(studyIdCol) + 1;
         cursor.close();
         return tmp;
     }
@@ -1128,17 +1143,17 @@ public class BandDataService extends Service {
     /**
      * Gets the device id for the device specified
      * @param mac address (physical) of the device
-     * @param user id of the user
+     * @param study id of the study
      * @param db database to query
      * @throws android.content.res.Resources.NotFoundException
      * @return id of the device
      */
-    private static int getDevId(String mac, int user, SQLiteDatabase db)
+    private static int getDevId(String mac, int study, SQLiteDatabase db)
             throws Resources.NotFoundException {
         String[] projection = new String[] {
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC,
                 DataStorageContract.DeviceTable._ID,
-                DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID
+                DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID
         };
 
 
@@ -1147,8 +1162,8 @@ public class BandDataService extends Service {
                 projection,
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC + "=?" +
                         " AND " +
-                        DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID + "=?",
-                new String[] { mac, Integer.toString(user)},
+                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?",
+                new String[] { mac, Integer.toString(study)},
                 null,
                 null,
                 null
@@ -1174,7 +1189,7 @@ public class BandDataService extends Service {
                 DataStorageContract.DeviceTable._ID
         };
 
-        // Get the table of users
+        // Get the table of studies
         Cursor cursor = db.query(
                 DataStorageContract.DeviceTable.TABLE_NAME,
                 projection,
@@ -1191,7 +1206,7 @@ public class BandDataService extends Service {
         if (cursor.getCount() == 0)
             return 0;
 
-        // Cursor currently points at User entry with largest ID
+        // Cursor currently points at Study entry with largest ID
         int devIdCol = cursor.getColumnIndexOrThrow(
                 DataStorageContract.DeviceTable._ID);
 
@@ -1244,7 +1259,7 @@ public class BandDataService extends Service {
                 DataStorageContract.SensorTable._ID
         };
 
-        // Get the table of users
+        // Get the table of studies
         Cursor cursor = db.query(
                 DataStorageContract.SensorTable.TABLE_NAME,
                 projection,
@@ -1261,7 +1276,7 @@ public class BandDataService extends Service {
         if (cursor.getCount() == 0)
             return 0;
 
-        // Cursor currently points at User entry with largest ID
+        // Cursor currently points at Study entry with largest ID
         int sensIdCol = cursor.getColumnIndexOrThrow(
                 DataStorageContract.SensorTable._ID);
 

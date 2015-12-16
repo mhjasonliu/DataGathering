@@ -140,15 +140,15 @@ public class MainActivity extends AppCompatActivity {
 
 // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
-        values.put(DataStorageContract.UserTable.COLUMN_NAME_ENTRY_ID, entryId);
+        values.put(DataStorageContract.StudyTable.COLUMN_NAME_ENTRY_ID, entryId);
         entryId++;
-        values.put(UserTable.COLUMN_NAME_TITLE, "This is an entry!");
-        //values.put(UserTable.COLUMN_NAME_CONTENT, "More content, YaY!");
+        values.put(StudyTable.COLUMN_NAME_TITLE, "This is an entry!");
+        //values.put(StudyTable.COLUMN_NAME_CONTENT, "More content, YaY!");
 
 // Insert the new row, returning the primary key value of the new row
         long newRowId;
         newRowId = db.insert(
-                DataStorageContract.UserTable.TABLE_NAME,
+                DataStorageContract.StudyTable.TABLE_NAME,
                 null,
                 values);
     }
