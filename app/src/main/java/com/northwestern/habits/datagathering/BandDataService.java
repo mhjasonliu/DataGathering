@@ -366,7 +366,7 @@ public class BandDataService extends Service {
                 values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPS_DESCENDED, event.getStepsDescended());
                 values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_RATE, event.getRate());
                 values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_ASCENDED, event.getFlightsAscended());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_DESCENEDED, event.getFlightsDescended());
+                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_DESCENDED, event.getFlightsDescended());
 
 
                 writeDb.insert(DataStorageContract.AltimeterTable.TABLE_NAME, null, values);
