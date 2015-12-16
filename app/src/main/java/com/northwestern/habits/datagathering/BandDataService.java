@@ -1,5 +1,6 @@
 package com.northwestern.habits.datagathering;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -54,12 +55,10 @@ public class BandDataService extends Service {
     private HashMap<BandClient, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
 
 
-    // Types
-    private String T_BAND2 = "Microsoft_Band_2";
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Started the service.");
+        startForeground(1, new Notification());
 
         Log.v(TAG, "Retrieving database");
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
@@ -137,7 +136,7 @@ public class BandDataService extends Service {
                 }
             }
         }
-        return Service.START_NOT_STICKY;
+        return Service.START_STICKY;
     }
 
     @Override
@@ -209,7 +208,8 @@ public class BandDataService extends Service {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_USER_ID, userId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    String t_BAND2 = "Microsoft_Band_2";
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, t_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
 
                     writeDb.insert(
