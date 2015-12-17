@@ -24,6 +24,9 @@ public class DeviceManagementActivity extends AppCompatActivity {
     // Paired Bands
     private ArrayAdapter<String> pairedBandUpdater;
 
+    // Bluetooth LE devices
+    private ArrayAdapter<String> BtLeUpdater;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
