@@ -13,6 +13,8 @@ public class ManageBandConnection extends AppCompatActivity {
 
     private final String TAG = "ManageBandConnection";
 
+    protected static final String INDEX_EXTRA = "index";
+
     private int index;
 
 
@@ -24,7 +26,7 @@ public class ManageBandConnection extends AppCompatActivity {
         // Extract the Band for the device
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            index = extras.getInt(BandDataService.INDEX_EXTRA);
+            index = extras.getInt(INDEX_EXTRA);
             Log.v(TAG, "Loaded band info");
         }
 

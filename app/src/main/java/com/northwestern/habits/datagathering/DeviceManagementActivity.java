@@ -6,26 +6,24 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ExpandableListView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 public class DeviceManagementActivity extends AppCompatActivity {
 
     private final String TAG = "Device activity";
 
     // Paired Devices
-    private ArrayAdapter<String> pairedListUpdater;
     private ArrayList<String> pairedMacAddresses = new ArrayList<>();
 
-    // Paired Bands
-    private ArrayAdapter<String> pairedBandUpdater;
-
-    // Bluetooth LE devices
-    private ArrayAdapter<String> BtLeUpdater;
+    ExpandableListAdapter listAdapter;
+    ExpandableListView expListView;
+    List<String> listDataHeader = new ArrayList<>();
+    HashMap<String, List<String>> listDataChild = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,83 +32,95 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         Log.v(TAG, "Opened Device Management activity");
 
-        // List of Paired Devices
-        ListView pairedDeviceList = (ListView) findViewById(R.id.pairedDeviceListView);
+        // get the listview
+        expListView = (ExpandableListView) findViewById(R.id.deviceListView);
 
-        pairedListUpdater = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        pairedDeviceList.setAdapter(pairedListUpdater);
-        pairedDeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Paired device was selected
-                // get the device mac address from the pairedDeviceList
-                String macAddress = pairedMacAddresses.get(position);
 
-                // Start connection management using the mac address
-                Intent connectionIntent = new Intent(DeviceManagementActivity.this,
-                        ManageConnectionActivity.class);
-                connectionIntent.putExtra("MAC", macAddress);
-                startActivity(connectionIntent);
+        listAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
+
+        // setting list adapter
+        expListView.setAdapter(listAdapter);
+        // preparing list data
+        prepareListData();
+
+        // Listview on child click listener
+        expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v,
+                                        int groupPosition, int childPosition, long id) {
+                switch (groupPosition) {
+                    case 0:{
+                        // Microsoft band selected
+                        // Start connection management using the mac address
+                        Intent connectionIntent = new Intent(DeviceManagementActivity.this,
+                                ManageBandConnection.class);
+                        connectionIntent.putExtra(ManageBandConnection.INDEX_EXTRA, childPosition);
+                        startActivity(connectionIntent);
+                        break;
+                    }case 1:{
+                        // LE device selected
+
+                        break;
+                    }case 2:{
+                        // Other bluetooth device selected
+
+                        break;
+                    }
+                }
+                return false;
             }
         });
-
-
-
-        // Paired bands
-        ListView pairedBandList = (ListView) findViewById(R.id.bandList);
-
-        pairedBandUpdater = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        pairedBandList.setAdapter(pairedBandUpdater);
-        pairedBandList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                //Paired band was selected
-                // Start connection management using the mac address
-                Intent connectionIntent = new Intent(DeviceManagementActivity.this,
-                        ManageBandConnection.class);
-                connectionIntent.putExtra("Index", position);
-                startActivity(connectionIntent);
-            }
-        });
-
-        refreshPairedDevices(findViewById(R.id.refreshButton));
     }
 
 
-
-
     /**
-     * Searches for android devices, adding each one to the list view
+     * Searches for bluetooth devices, adding each one to the list view
      * @param view to allow the refresh button to directly call this
      */
     public void refreshPairedDevices(View view) {
-        // Setup
-        pairedListUpdater.clear();
-        pairedMacAddresses.clear();
-        pairedBandUpdater.clear();
 
+    }
+
+    /*
+      * Preparing the list data
+      */
+    private void prepareListData() {
+        // Adding child data
+        listDataHeader.add("Microsoft Band 2");
+        listDataHeader.add("Low Energy Bluetooth Devices");
+        listDataHeader.add("Other Paired Bluetooth Devices");
+
+        // Adding child data
+        List<String> bandList = new ArrayList<>();
         BluetoothConnectionLayer.refreshPairedBands();
+        bandList.addAll(BluetoothConnectionLayer.bandMap.keySet());
+
 
         BluetoothConnectionLayer.refreshPairedDevices();
-
+        pairedMacAddresses.clear();
         // Store devices in the list view
         Iterator<BluetoothDevice> devIter =
                 BluetoothConnectionLayer.pairedDevices.values().iterator();
         BluetoothDevice curDev;
         while (devIter.hasNext()) {
             curDev = devIter.next();
-            if (BluetoothConnectionLayer.bandMap.containsKey(curDev.getAddress())) {
-                // Add to list of Bands
-                pairedBandUpdater.add(curDev.getName());
-            } else {
+            if (!BluetoothConnectionLayer.bandMap.containsKey(curDev.getAddress())) {
                 // Add to list of generic devices
-                pairedListUpdater.add(curDev.getName());
+                pairedMacAddresses.add(curDev.getName());
             }
         }
 
-        Log.v(TAG, "Updated stuff");
-        pairedBandUpdater.notifyDataSetChanged();
-        pairedListUpdater.notifyDataSetChanged();
-    }
+        List<String> leList = new ArrayList<>();
+        //TODO leList = getLeConnections();
 
+        List<String> pairedList = new ArrayList<>();
+        pairedList.addAll(pairedMacAddresses);
+
+        listDataChild.put(listDataHeader.get(0), bandList); // Header, Child data
+        listDataChild.put(listDataHeader.get(1), leList);
+        listDataChild.put(listDataHeader.get(2), pairedList);
+
+        listAdapter.notifyDataSetChanged();
+    }
 
 }
