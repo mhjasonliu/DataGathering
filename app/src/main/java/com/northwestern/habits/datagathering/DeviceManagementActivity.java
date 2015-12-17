@@ -86,9 +86,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
       */
     private void prepareListData() {
         // Adding child data
-        listDataHeader.add("Microsoft Band 2");
-        listDataHeader.add("Low Energy Bluetooth Devices");
-        listDataHeader.add("Other Paired Bluetooth Devices");
 
         // Adding child data
         List<String> bandList = new ArrayList<>();
@@ -116,11 +113,33 @@ public class DeviceManagementActivity extends AppCompatActivity {
         List<String> pairedList = new ArrayList<>();
         pairedList.addAll(pairedMacAddresses);
 
-        listDataChild.put(listDataHeader.get(0), bandList); // Header, Child data
+
+        listDataHeader.add("Microsoft Band 2 (" + Integer.toString(bandList.size()) + ")");
+        listDataHeader.add("Low Energy Bluetooth Devices(" + Integer.toString(leList.size()) + ")");
+        listDataHeader.add("Other Paired Bluetooth Devices(" + Integer.toString(pairedList.size()) + ")");
+
+        listDataChild.put(listDataHeader.get(0), bandList);
         listDataChild.put(listDataHeader.get(1), leList);
         listDataChild.put(listDataHeader.get(2), pairedList);
 
         listAdapter.notifyDataSetChanged();
     }
 
+//
+//    // Device scan callback.
+//    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+//            new BluetoothAdapter.LeScanCallback() {
+//                @Override
+//                public void onLeScan(final BluetoothDevice device, int rssi,
+//                                     byte[] scanRecord) {
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+////                            leDeviceList.addDevice(device);
+////                            leDeviceList.notifyDataSetChanged();
+//                        }
+//                    });
+//                }
+//            };
 }
