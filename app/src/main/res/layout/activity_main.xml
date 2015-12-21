@@ -63,20 +63,5 @@
         android:id="@+id/deleteDbButton"
         android:onClick="onDeleteDatabase"/>
 
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
-        android:id="@+id/connectionListHeader"
-        android:text="Connection log:"/>
-
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_marginLeft="25dp"
-        android:id="@+id/connectionLog"
-        android:text="No connections"/>
-
-
 
 </LinearLayout>
