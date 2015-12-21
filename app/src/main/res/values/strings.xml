@@ -2,4 +2,14 @@
     <string name="app_name">Data Gathering</string>
     <string name="title_activity_band_connection_management">BandConnectionManagement</string>
     <string name="title_activity_device_scan">DeviceScanActivity</string>
+
+
+    <string-array name="locations_array">
+        <item>inner-left</item>
+        <item>inner-right</item>
+        <item>outer-left</item>
+        <item>outer-right</item>
+    </string-array>
+
+
 </resources>

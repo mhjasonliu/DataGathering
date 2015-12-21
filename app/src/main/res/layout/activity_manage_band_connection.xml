@@ -15,6 +15,13 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Stream Types:"
+            android:id="@+id/textView4" />
+
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -62,6 +69,28 @@
             android:checked="false"
             android:enabled="true"/>
 
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="25dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Location:"
+            android:id="@+id/textView3"
+            android:layout_gravity="center_horizontal" />
+
+
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/locationSpinner"
+            android:spinnerMode="dialog" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"></FrameLayout>
+
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -86,9 +115,6 @@
                 android:enabled="false"/>
         </LinearLayout>
 
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/locationField"/>
+
     </LinearLayout>
 </RelativeLayout>

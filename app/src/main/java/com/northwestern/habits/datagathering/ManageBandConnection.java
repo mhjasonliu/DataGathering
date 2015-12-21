@@ -5,23 +5,29 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.EditText;
+import android.widget.Spinner;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.HeartRateConsentListener;
 
 
-public class ManageBandConnection extends AppCompatActivity implements HeartRateConsentListener {
+public class ManageBandConnection extends AppCompatActivity implements HeartRateConsentListener,
+        AdapterView.OnItemSelectedListener {
 
     private final String TAG = "ManageBandConnection";
 
     protected static final String INDEX_EXTRA = "index";
     protected static final String STUDY_NAME_EXTRA = "studyName";
 
+    private Spinner locationSpinner;
+
     private int index;
     private String studyName;
+    private String location = "inner-left";
     private boolean waitForHeartRate = false;
 
 
@@ -30,6 +36,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_band_connection);
 
+
         // Extract the Band for the device
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -37,6 +44,16 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
             studyName = extras.getString(STUDY_NAME_EXTRA);
             Log.v(TAG, "Loaded band info");
         }
+
+
+        // Prepare the spinner
+        locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.locations_array, android.R.layout.simple_spinner_item);
+// Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+// Apply the adapter to the spinner
+        locationSpinner.setAdapter(adapter);
 
     }
 
@@ -76,7 +93,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         intent.putExtra(BandDataService.GSR_REQ_EXTRA,
                 (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
         intent.putExtra(BandDataService.LOCATION_EXTRA,
-                ((EditText) findViewById(R.id.locationField)).getText().toString());
+                location);
         intent.putExtra(BandDataService.STUDY_ID_EXTRA, studyName);
 
         com.microsoft.band.sensors.BandSensorManager manager =
@@ -104,5 +121,15 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
     @Override
     public void userAccepted(boolean b) {
         Log.v(TAG, "User accepted heart rate request");
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        location = (String) parent.getItemAtPosition(position);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }
