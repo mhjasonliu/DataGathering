@@ -36,7 +36,6 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_band_connection);
 
-
         // Extract the Band for the device
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -50,9 +49,9 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.locations_array, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
+        // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
+        // Apply the adapter to the spinner
         locationSpinner.setAdapter(adapter);
 
     }
@@ -101,9 +100,11 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
                         BandClientManager.getInstance().getPairedBands()[index]).getSensorManager();
 
         if (((CheckBox) findViewById(R.id.heartRateBox)).isChecked()
-                && manager.getCurrentHeartRateConsent() != UserConsent.GRANTED) {
+                && manager.getCurrentHeartRateConsent() == UserConsent.GRANTED) {
             // Prevent calling before heart rate request
             waitForHeartRate = true;
+
+            intent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
 
             Log.v(TAG, "Waiting for heart rate request");
             // Get permission
@@ -111,7 +112,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
 
         } else {
-            intent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
+            intent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, false);
             waitForHeartRate = false;
         }
 

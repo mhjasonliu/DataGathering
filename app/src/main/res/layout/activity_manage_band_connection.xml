@@ -112,7 +112,7 @@
                 android:text="Stop streaming"
                 android:id="@+id/stopStreamButton"
                 android:onClick="onStopStreamClick"
-                android:enabled="false"/>
+                android:enabled="true"/>
         </LinearLayout>
 
 
