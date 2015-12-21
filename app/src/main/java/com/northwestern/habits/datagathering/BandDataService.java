@@ -1009,7 +1009,6 @@ public class BandDataService extends Service {
                     } else {
                         Log.e(TAG, "You have not given this application consent to access heart rate data yet."
                                 + " Please press the Heart Rate Consent button.\n");
-                        //TODO get permissions to record heartrate data
                     }
                 } else {
                     Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
@@ -1044,7 +1043,7 @@ public class BandDataService extends Service {
             return true;
         }
 
-        Log.v(TAG, "Band is connecting...\n");
+        Log.v(TAG, "Loading band connection client...\n");
         return ConnectionState.CONNECTED == client.connect().await();
     }
 
