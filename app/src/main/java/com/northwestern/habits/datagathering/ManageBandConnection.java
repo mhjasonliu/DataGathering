@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.EditText;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.UserConsent;
@@ -18,8 +17,10 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
     private final String TAG = "ManageBandConnection";
 
     protected static final String INDEX_EXTRA = "index";
+    protected static final String STUDY_NAME_EXTRA = "studyName";
 
     private int index;
+    private String studyName;
     private boolean waitForHeartRate = false;
 
 
@@ -32,6 +33,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             index = extras.getInt(INDEX_EXTRA);
+            studyName = extras.getString(STUDY_NAME_EXTRA);
             Log.v(TAG, "Loaded band info");
         }
 
@@ -67,6 +69,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         intent.putExtra(BandDataService.AMBIENT_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.ambientBox)).isChecked());
         intent.putExtra(BandDataService.BAROMETER_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
         intent.putExtra(BandDataService.GSR_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
+        intent.putExtra(BandDataService.STUDY_ID_EXTRA, studyName);
 
         com.microsoft.band.sensors.BandSensorManager manager =
                 BandClientManager.getInstance().create(this,
@@ -87,7 +90,6 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
             waitForHeartRate = false;
         }
 
-        intent.putExtra(BandDataService.STUDY_ID_EXTRA, ((EditText) findViewById(R.id.studyIdField)).getText().toString());
         return intent;
     }
 

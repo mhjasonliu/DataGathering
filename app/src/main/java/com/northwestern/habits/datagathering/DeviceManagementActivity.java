@@ -1,5 +1,6 @@
 package com.northwestern.habits.datagathering;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -41,6 +42,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
     List<String> listDataHeader = new ArrayList<>();
     HashMap<String, List<String>> listDataChild = new HashMap<>();
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +84,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
                         Intent connectionIntent = new Intent(DeviceManagementActivity.this,
                                 ManageBandConnection.class);
                         connectionIntent.putExtra(ManageBandConnection.INDEX_EXTRA, childPosition);
+                        connectionIntent.putExtra(ManageBandConnection.STUDY_NAME_EXTRA, studyName);
                         startActivity(connectionIntent);
                         break;
                     }

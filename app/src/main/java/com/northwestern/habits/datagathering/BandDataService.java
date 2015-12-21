@@ -63,7 +63,7 @@ public class BandDataService extends Service {
 
     private DataStorageContract.BluetoothDbHelper mDbHelper;
 
-    private String studyId;
+    private String studyName;
 
     // Maps of listeners
     private HashMap<BandClient, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
@@ -99,7 +99,8 @@ public class BandDataService extends Service {
                 modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
 
                 // Set the study and device
-                studyId = extras.getString(STUDY_ID_EXTRA);
+                studyName = extras.getString(STUDY_ID_EXTRA);
+                Log.v(TAG, "Study name is: " + studyName);
 
                 if (extras.getBoolean(STOP_STREAM_EXTRA)){
                     Log.v(TAG, "Stop stream requested.");
@@ -790,7 +791,7 @@ public class BandDataService extends Service {
                 if (getConnectedBandClient()) {
                     Log.v(TAG, "Band is connected.\n");
                     BandAccelerometerEventListenerCustom aListener =
-                            new BandAccelerometerEventListenerCustom(band, studyId);
+                            new BandAccelerometerEventListenerCustom(band, studyName);
                     client.getSensorManager().registerAccelerometerEventListener(
                             aListener,  SampleRate.MS128);
 
@@ -851,7 +852,7 @@ public class BandDataService extends Service {
                     int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
-                        client.getSensorManager().registerAltimeterEventListener(new CustomBandAltimeterEventListener(band, studyId));
+                        client.getSensorManager().registerAltimeterEventListener(new CustomBandAltimeterEventListener(band, studyName));
                     } else {
                         Log.e(TAG, "The Altimeter sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
                     }
@@ -889,7 +890,7 @@ public class BandDataService extends Service {
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
                         client.getSensorManager().registerAmbientLightEventListener(
-                                new CustomBandAmbientLightEventListener(band, studyId)
+                                new CustomBandAmbientLightEventListener(band, studyName)
                         );
                     } else {
                         Log.e(TAG, "The Ambient Light sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
@@ -928,7 +929,7 @@ public class BandDataService extends Service {
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
                         client.getSensorManager().registerBarometerEventListener(
-                                new CustomBandBarometerEventListener(band, studyId)
+                                new CustomBandBarometerEventListener(band, studyName)
                         );
                     } else {
                         Log.e(TAG, "The Barometer sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
@@ -967,7 +968,7 @@ public class BandDataService extends Service {
                     if (hardwareVersion >= 20) {
                         Log.v(TAG, "Band is connected.\n");
                         client.getSensorManager().registerGsrEventListener(
-                                new CustomBandGsrEventListener(band, studyId)
+                                new CustomBandGsrEventListener(band, studyName)
                         );
                     } else {
                         Log.e(TAG, "The Gsr sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
@@ -1004,7 +1005,7 @@ public class BandDataService extends Service {
                 if (getConnectedBandClient()) {
                     if (client.getSensorManager().getCurrentHeartRateConsent() == UserConsent.GRANTED) {
                         client.getSensorManager().registerHeartRateEventListener(
-                                new CustomBandHeartRateEventListener(band, studyId)
+                                new CustomBandHeartRateEventListener(band, studyName)
                         );
                     } else {
                         Log.e(TAG, "You have not given this application consent to access heart rate data yet."
