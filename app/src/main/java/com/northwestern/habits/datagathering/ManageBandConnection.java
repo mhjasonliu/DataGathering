@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.UserConsent;
@@ -64,11 +65,18 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
         Intent intent = new Intent(this, BandDataService.class);
         intent.putExtra(BandDataService.INDEX_EXTRA, index);
-        intent.putExtra(BandDataService.ACCEL_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.accelerometerBox)).isChecked());
-        intent.putExtra(BandDataService.ALT_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.altimeterBox)).isChecked());
-        intent.putExtra(BandDataService.AMBIENT_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.ambientBox)).isChecked());
-        intent.putExtra(BandDataService.BAROMETER_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
-        intent.putExtra(BandDataService.GSR_REQ_EXTRA, (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
+        intent.putExtra(BandDataService.ACCEL_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.accelerometerBox)).isChecked());
+        intent.putExtra(BandDataService.ALT_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.altimeterBox)).isChecked());
+        intent.putExtra(BandDataService.AMBIENT_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.ambientBox)).isChecked());
+        intent.putExtra(BandDataService.BAROMETER_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
+        intent.putExtra(BandDataService.GSR_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
+        intent.putExtra(BandDataService.LOCATION_EXTRA,
+                ((EditText) findViewById(R.id.locationField)).getText().toString());
         intent.putExtra(BandDataService.STUDY_ID_EXTRA, studyName);
 
         com.microsoft.band.sensors.BandSensorManager manager =

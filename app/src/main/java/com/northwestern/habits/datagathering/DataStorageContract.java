@@ -45,12 +45,14 @@ public final class DataStorageContract {
         public static final String COLUMN_NAME_STUDY_ID = "study_id";
         public static final String COLUMN_NAME_TYPE = "type";
         public static final String COLUMN_NAME_MAC = "mac";
+        public static final String COLUMN_NAME_LOCATION = "location";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
                         COLUMN_NAME_STUDY_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_TYPE + TEXT_TYPE + COMMA_SEP +
-                        COLUMN_NAME_MAC + TEXT_TYPE +
+                        COLUMN_NAME_MAC + TEXT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_LOCATION + TEXT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -196,7 +198,7 @@ public final class DataStorageContract {
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 6;
+        public static final int DATABASE_VERSION = 7;
         public static final String DATABASE_NAME = "Bluetooth.db";
 
         public BluetoothDbHelper(Context context) {

@@ -48,6 +48,7 @@ public class BandDataService extends Service {
 
     public static final String INDEX_EXTRA = "index";
     public static final String STUDY_ID_EXTRA = "study";
+    public static final String LOCATION_EXTRA = "location";
 
     public static final String CONTINUE_STUDY_EXTRA = "continue study";
     public static final String STOP_STREAM_EXTRA = "stop stream";
@@ -60,6 +61,7 @@ public class BandDataService extends Service {
     private HashMap<String, Boolean> modes = new HashMap<>();
 
     private HashMap<BandInfo, BandClient> connectedBands = new HashMap<>();
+    private HashMap<BandInfo, String> locations = new HashMap<>();
 
     private DataStorageContract.BluetoothDbHelper mDbHelper;
 
@@ -150,6 +152,7 @@ public class BandDataService extends Service {
 
                         // Add the band to connected list
                         connectedBands.put(band, client);
+                        locations.put(band, extras.getString(LOCATION_EXTRA));
                     }
                 }
             }
@@ -180,11 +183,13 @@ public class BandDataService extends Service {
 
         private BandInfo info;
         private String uName;
+        private String location;
 
         public BandAccelerometerEventListenerCustom(BandInfo mInfo, String name) {
             super();
             info = mInfo;
             uName = name;
+            location = locations.get(info);
         }
 
         @Override
@@ -218,7 +223,7 @@ public class BandDataService extends Service {
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
@@ -228,6 +233,7 @@ public class BandDataService extends Service {
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
@@ -285,10 +291,12 @@ public class BandDataService extends Service {
             super();
             uName = name;
             info = bandInfo;
+            location = locations.get(info);
         }
 
         private String uName;
         private BandInfo info;
+        private String location;
 
         @Override
         public void onBandAltimeterChanged(final BandAltimeterEvent event) {
@@ -321,7 +329,7 @@ public class BandDataService extends Service {
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
@@ -331,6 +339,7 @@ public class BandDataService extends Service {
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
@@ -395,13 +404,15 @@ public class BandDataService extends Service {
 
 
     private class CustomBandAmbientLightEventListener implements BandAmbientLightEventListener{
-        BandInfo info;
-        String uName;
+        private BandInfo info;
+        private String uName;
+        private String location;
 
         public CustomBandAmbientLightEventListener(BandInfo bInfo, String name) {
             super();
             info = bInfo;
             uName = name;
+            location = locations.get(info);
         }
 
         @Override
@@ -434,7 +445,7 @@ public class BandDataService extends Service {
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
@@ -444,6 +455,7 @@ public class BandDataService extends Service {
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
@@ -490,13 +502,15 @@ public class BandDataService extends Service {
     }
 
     private class CustomBandBarometerEventListener implements BandBarometerEventListener {
-        BandInfo info;
-        String uName;
+        private BandInfo info;
+        private String uName;
+        private String location;
 
         public CustomBandBarometerEventListener(BandInfo bandInfo, String name) {
             super();
             info = bandInfo;
             uName = name;
+            location = locations.get(info);
         }
 
         @Override
@@ -529,7 +543,7 @@ public class BandDataService extends Service {
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
@@ -539,6 +553,7 @@ public class BandDataService extends Service {
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
@@ -589,12 +604,14 @@ public class BandDataService extends Service {
     }
 
     private class CustomBandGsrEventListener implements BandGsrEventListener {
-        BandInfo info;
-        String uName;
+        private BandInfo info;
+        private String uName;
+        private String location;
 
         public CustomBandGsrEventListener (BandInfo bandInfo, String name) {
             info = bandInfo;
             uName = name;
+            location = locations.get(info);
         }
 
 
@@ -628,7 +645,7 @@ public class BandDataService extends Service {
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
@@ -638,6 +655,7 @@ public class BandDataService extends Service {
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
@@ -685,12 +703,14 @@ public class BandDataService extends Service {
 
     private class CustomBandHeartRateEventListener implements BandHeartRateEventListener {
 
-        BandInfo info;
-        String uName;
+        private BandInfo info;
+        private String uName;
+        private String location;
 
         public CustomBandHeartRateEventListener (BandInfo bandInfo, String name) {
             info = bandInfo;
             uName = name;
+            location = locations.get(info);
         }
 
         @Override
@@ -723,7 +743,7 @@ public class BandDataService extends Service {
                 }
 
                 try {
-                    devId = getDevId(info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
                 } catch (Resources.NotFoundException e) {
                     devId = getNewDev(readDb);
 
@@ -733,6 +753,7 @@ public class BandDataService extends Service {
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
                     writeDb.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
@@ -1148,22 +1169,23 @@ public class BandDataService extends Service {
      * @throws android.content.res.Resources.NotFoundException
      * @return id of the device
      */
-    private static int getDevId(String mac, int study, SQLiteDatabase db)
+    private static int getDevId(String location, String mac, int study, SQLiteDatabase db)
             throws Resources.NotFoundException {
         String[] projection = new String[] {
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC,
                 DataStorageContract.DeviceTable._ID,
-                DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID
+                DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID,
+                DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION
         };
 
 
         Cursor cursor = db.query(
                 DataStorageContract.DeviceTable.TABLE_NAME,
                 projection,
-                DataStorageContract.DeviceTable.COLUMN_NAME_MAC + "=?" +
-                        " AND " +
-                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?",
-                new String[] { mac, Integer.toString(study)},
+                DataStorageContract.DeviceTable.COLUMN_NAME_MAC + "=?" + " AND " +
+                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?" +" AND " +
+                        DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION + "=?",
+                new String[] { mac, Integer.toString(study), location},
                 null,
                 null,
                 null
