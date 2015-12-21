@@ -127,7 +127,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         leAddressList.clear();
         leNameList.clear();
-        scanLeDevice(bluetoothLe, false);
+        scanLeDevice(bluetoothLe);
 
         List<String> pairedList = new ArrayList<>();
         pairedList.addAll(pairedMacAddresses);
@@ -155,7 +155,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
 
-    private void scanLeDevice(final boolean enable, final boolean disable) {
+    private void scanLeDevice(boolean enable) {
         if (BluetoothConnectionLayer.getAdapter().isOffloadedScanBatchingSupported()) {
             if (enable) {
                 new ScanTask().execute(enable);
@@ -172,17 +172,19 @@ public class DeviceManagementActivity extends AppCompatActivity {
     private class ScanTask extends AsyncTask<Boolean, Void, Void> {
         @Override
         protected Void doInBackground(Boolean... params) {
-            // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mScanning = false;
-                    mLeScanner.stopScan(mLeScanCallback);
-                }
-            }, SCAN_PERIOD);
+            if (!mScanning) {
+                // Stops scanning after a pre-defined scan period.
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mScanning = false;
+                        mLeScanner.stopScan(mLeScanCallback);
+                    }
+                }, SCAN_PERIOD);
 
-            mScanning = true;
-            mLeScanner.startScan(mLeScanCallback);
+                mScanning = true;
+                mLeScanner.startScan(mLeScanCallback);
+            }
             return null;
         }
     }

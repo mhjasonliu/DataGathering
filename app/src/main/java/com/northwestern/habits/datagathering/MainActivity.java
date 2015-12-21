@@ -5,9 +5,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -136,63 +136,54 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
         } else {
             onRequestPermissionsResult(MY_PERMISSIONS_REQUEST_COARSE_LOCATION,
-                    new String[]{}, new int[]{PackageManager.PERMISSION_GRANTED});
+                    new String[] {}, new int[]{PackageManager.PERMISSION_GRANTED});
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        Log.v(TAG, "Got permission result");
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+            Log.v(TAG, "Got permission result");
+            switch (requestCode) {
+                case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
+                    // If request is cancelled, the result arrays are empty.
+                    if (grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    Intent devManagementIntent = new Intent(
-                            getApplicationContext(), DeviceManagementActivity.class);
-                    devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
-                    devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, true);
-                    startActivity(devManagementIntent);
+                        Intent devManagementIntent = new Intent(
+                                getApplicationContext(), DeviceManagementActivity.class);
+                        devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
+                        devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, true);
+                        startActivity(devManagementIntent);
 
-                } else {
-                    // Start a device management activity without bluetooth le
+                    } else {
+                        // Start a device management activity without bluetooth le
 
-                    Intent devManagementIntent = new Intent(
-                            getApplicationContext(), DeviceManagementActivity.class);
-                    devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
-                    devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, false);
-                    startActivity(devManagementIntent);
+                        Intent devManagementIntent = new Intent(
+                                getApplicationContext(), DeviceManagementActivity.class);
+                        devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
+                        devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, false);
+                        startActivity(devManagementIntent);
 
+                    }
                 }
+                // other 'case' lines to check for other
+                // permissions this app might request
             }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
-        }
     }
 
 
     /* ******************************** DATABASE TESTING ********************************* */
     public SQLiteDatabase db;
-    private int entryId = 0;
     DataStorageContract.BluetoothDbHelper mDbHelper;
-    private Cursor cursor;
 
     public void onDeleteDatabase( View view ) {
         db = mDbHelper.getWritableDatabase();
 
-        mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion()+1);
+        mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion() + 1);
     }
 
 
-    public void onReadDatabase(View view) {
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-
-        Log.v(TAG, "displaying database");
-        //new DataStorageContract.DisplayDatabaseTask().execute(db);
-    }
 
 
 }
