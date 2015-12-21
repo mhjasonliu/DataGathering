@@ -58,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int whichButton) {
                 waitingToContinue = true;
 
+                // Kill the old study
+                endStudyClicked(endStudyButton);
+
                 editStudyButton.setEnabled(true);
                 endStudyButton.setEnabled(true);
 
