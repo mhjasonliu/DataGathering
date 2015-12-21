@@ -83,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
                 BandDataService.class);
         endStudyIntent.putExtra("continueStudy", false);
         startService(endStudyIntent);
+
+        endStudyButton.setEnabled(false);
+        editStudyButton.setEnabled(false);
     }
 
 
