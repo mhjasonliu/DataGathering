@@ -24,8 +24,10 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
     public static final String BT_LE_EXTRA = "le";
     public static final String CONT_STUDY_EXTRA = "continueStudy";
+    public static final String STUDY_NAME_EXTRA = "studyName";
 
-    private boolean continueStudy;
+    private String studyName = "Error: name passed incorrectly";
+    private boolean continueStudy = true;
 
     // Paired Devices
     private ArrayList<String> pairedMacAddresses = new ArrayList<>();
@@ -50,6 +52,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
         if (extras != null) {
             bluetoothLe = extras.getBoolean(BT_LE_EXTRA);
             continueStudy = extras.getBoolean(CONT_STUDY_EXTRA);
+            studyName = extras.getString(STUDY_NAME_EXTRA);
         }
 
 

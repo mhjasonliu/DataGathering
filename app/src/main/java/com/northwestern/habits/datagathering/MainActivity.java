@@ -14,6 +14,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
@@ -21,11 +22,22 @@ public class MainActivity extends AppCompatActivity {
 
     private final String TAG = "Main activity"; //For logs
 
+    private boolean waitingToContinue = false;
+    private Intent newStudyIntent;
+
+    private Button newStudyButton;
+    private Button editStudyButton;
+    private Button endStudyButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        newStudyButton = (Button) findViewById(R.id.startStudyButton);
+        editStudyButton = (Button) findViewById(R.id.manageStudyButton);
+        endStudyButton = (Button) findViewById(R.id.endStudyButton);
 
         Log.v(TAG, "Creating database");
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
@@ -38,17 +50,23 @@ public class MainActivity extends AppCompatActivity {
 
     public void startStudyClicked(View view) {
         AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle("Please enter a unique study name (note, this will end the current study)");
+        b.setTitle("Please enter a unique study name \n(note: this will end the current study)");
         final EditText input = new EditText(this);
         b.setView(input);
         b.setPositiveButton("Enter", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int whichButton) {
-                Intent devManagementIntent = new Intent(
+                waitingToContinue = true;
+
+                editStudyButton.setEnabled(true);
+                endStudyButton.setEnabled(true);
+
+                newStudyIntent = new Intent(
                         getApplicationContext(), DeviceManagementActivity.class);
-                devManagementIntent.putExtra("name", input.getText().toString());
-                devManagementIntent.putExtra("continueStudy", false);
-                startDevMgmtActivity(devManagementIntent);
+                newStudyIntent.putExtra(DeviceManagementActivity.STUDY_NAME_EXTRA,
+                        input.getText().toString());
+                newStudyIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, false);
+                startDevMgmtActivity();
             }
         });
         b.setNegativeButton("CANCEL", null);
@@ -56,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void manageStudyClicked(View view) {
-        startDevMgmtActivity(null);
+        startDevMgmtActivity();
     }
 
     public void endStudyClicked(View view) {
@@ -68,14 +86,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void startDevMgmtActivity( Intent intent ) {
-
-        if (intent != null ) {
-            Log.e(TAG, "StartDevMgmtActivity not implemented for that button.");
-        } else {
-            if (btEnabled()) {
-                locEnabled();
-            }
+    private void startDevMgmtActivity() {
+        if (btEnabled()) {
+            locEnabled();
         }
     }
 
@@ -120,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 // Recall startMgmtActivity
-                startDevMgmtActivity(null);
+                startDevMgmtActivity();
             }
         }
     }
@@ -131,45 +144,50 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-
+            // Coarse location permission not granted, request it
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
         } else {
+            // Permission was previously granted
             onRequestPermissionsResult(MY_PERMISSIONS_REQUEST_COARSE_LOCATION,
-                    new String[] {}, new int[]{PackageManager.PERMISSION_GRANTED});
+                    new String[]{}, new int[]{PackageManager.PERMISSION_GRANTED});
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[], @NonNull int[] grantResults) {
-            Log.v(TAG, "Got permission result");
-            switch (requestCode) {
-                case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
-                    // If request is cancelled, the result arrays are empty.
-                    if (grantResults.length > 0
-                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        Log.v(TAG, "Got permission result");
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                        Intent devManagementIntent = new Intent(
-                                getApplicationContext(), DeviceManagementActivity.class);
-                        devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
-                        devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, true);
-                        startActivity(devManagementIntent);
-
+                    if (waitingToContinue) {
+                        newStudyIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, true);
                     } else {
-                        // Start a device management activity without bluetooth le
-
-                        Intent devManagementIntent = new Intent(
+                        newStudyIntent = new Intent(
                                 getApplicationContext(), DeviceManagementActivity.class);
-                        devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
-                        devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, false);
-                        startActivity(devManagementIntent);
-
+                        newStudyIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
+                        newStudyIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, true);
                     }
+                    startActivity(newStudyIntent);
+
+                } else {
+                    // Start a device management activity without bluetooth le
+
+                    Intent devManagementIntent = new Intent(
+                            getApplicationContext(), DeviceManagementActivity.class);
+                    devManagementIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, true);
+                    devManagementIntent.putExtra(DeviceManagementActivity.BT_LE_EXTRA, false);
+                    startActivity(devManagementIntent);
+
                 }
-                // other 'case' lines to check for other
-                // permissions this app might request
             }
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
     }
 
 
