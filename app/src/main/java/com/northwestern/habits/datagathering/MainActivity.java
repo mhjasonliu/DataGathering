@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         // Start Service with end study intent
         Intent endStudyIntent = new Intent(this,
                 BandDataService.class);
-        endStudyIntent.putExtra("continueStudy", false);
+        endStudyIntent.putExtra(DeviceManagementActivity.CONT_STUDY_EXTRA, false);
         startService(endStudyIntent);
 
         endStudyButton.setEnabled(false);

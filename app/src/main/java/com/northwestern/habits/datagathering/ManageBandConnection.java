@@ -73,7 +73,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         Intent managementIntent = makeIntent();
 
         managementIntent.putExtra(BandDataService.STOP_STREAM_EXTRA, true);
-        managementIntent.putExtra("continueStudy", true);
+        managementIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
 
         startService(managementIntent);
     }
