@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +55,8 @@ public class DeviceManagementActivity extends AppCompatActivity {
             continueStudy = extras.getBoolean(CONT_STUDY_EXTRA);
             studyName = extras.getString(STUDY_NAME_EXTRA);
         }
+
+        ((TextView) findViewById(R.id.studyTextView)).setText("Managing Devices for Study:\n" + studyName);
 
 
         // get the listview

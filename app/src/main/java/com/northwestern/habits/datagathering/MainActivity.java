@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void endStudyClicked(View view) {
+        // TODO Add warning to confirm with user
+
         // Start Service with end study intent
         Intent endStudyIntent = new Intent(this,
                 BandDataService.class);
