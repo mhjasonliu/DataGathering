@@ -67,7 +67,8 @@
             android:text="Heart Rate"
             android:id="@+id/heartRateBox"
             android:checked="false"
-            android:enabled="true"/>
+            android:enabled="true"
+            android:onClick="onHeartRateClicked"/>
 
         <TextView
             android:layout_width="fill_parent"

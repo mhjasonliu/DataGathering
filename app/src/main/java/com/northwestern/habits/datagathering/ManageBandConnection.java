@@ -23,12 +23,9 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
     protected static final String INDEX_EXTRA = "index";
     protected static final String STUDY_NAME_EXTRA = "studyName";
 
-    private Spinner locationSpinner;
-
     private int index;
     private String studyName;
     private String location = "inner-left";
-    private boolean waitForHeartRate = false;
 
 
     @Override
@@ -46,7 +43,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
 
         // Prepare the spinner
-        locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
+        Spinner locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.locations_array, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
@@ -63,8 +60,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         managementIntent.putExtra(BandDataService.STOP_STREAM_EXTRA, false);
         managementIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
 
-        if (!waitForHeartRate)
-            startService(managementIntent);
+        startService(managementIntent);
     }
 
     public void onStopStreamClick (View viewl) {
@@ -95,33 +91,33 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
                 location);
         intent.putExtra(BandDataService.STUDY_ID_EXTRA, studyName);
 
+
+        if (((CheckBox) findViewById(R.id.heartRateBox)).isChecked())
+            intent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
+
+        return intent;
+    }
+
+    public void onHeartRateClicked (View view) {
+        // Check for heart rate consent
+
         com.microsoft.band.sensors.BandSensorManager manager =
                 BandClientManager.getInstance().create(this,
                         BandClientManager.getInstance().getPairedBands()[index]).getSensorManager();
 
-        if (((CheckBox) findViewById(R.id.heartRateBox)).isChecked()
-                && manager.getCurrentHeartRateConsent() == UserConsent.GRANTED) {
-            // Prevent calling before heart rate request
-            waitForHeartRate = true;
-
-            intent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
-
-            Log.v(TAG, "Waiting for heart rate request");
+        if (manager.getCurrentHeartRateConsent() != UserConsent.GRANTED) {
+            // Request heart rate consent
+            Log.v(TAG, "Requesting heart rate consent");
             // Get permission
             manager.requestHeartRateConsent(this, this);
-
-
-        } else {
-            intent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, false);
-            waitForHeartRate = false;
         }
-
-        return intent;
     }
 
     @Override
     public void userAccepted(boolean b) {
         Log.v(TAG, "User accepted heart rate request");
+        // Tick the heart rate box
+        ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(true);
     }
 
     @Override
@@ -131,6 +127,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-
+        // Clear the heart rate box
+        ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(false);
     }
 }
