@@ -54,7 +54,7 @@ public class BandDataService extends Service {
 
 
 
-    private BandInfo band = null;
+    //private BandInfo band = null;
     //private BandClient client = null;
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
     private HashMap<String, Boolean> modes = new HashMap<>();
@@ -93,7 +93,7 @@ public class BandDataService extends Service {
 
             } else {
                 int index = extras.getInt(INDEX_EXTRA);
-                band = pairedBands[index];
+                BandInfo band = pairedBands[index];
                 client = BandClientManager.getInstance().create(getBaseContext(), band);
                 modes.put(ACCEL_REQ_EXTRA, extras.getBoolean(ACCEL_REQ_EXTRA));
                 modes.put(ALT_REQ_EXTRA, extras.getBoolean(ALT_REQ_EXTRA));
@@ -137,7 +137,8 @@ public class BandDataService extends Service {
                         // Request data
                         if (modes.get(ACCEL_REQ_EXTRA)) {
                             // Start an accelerometer task
-                            new AccelerometerSubscriptionTask().execute();
+                            Log.v(TAG, "Starting accel task");
+                            new AccelerometerSubscriptionTask().execute(band);
                         }
 
                         if (modes.get(ALT_REQ_EXTRA))
@@ -807,68 +808,79 @@ public class BandDataService extends Service {
     /* ********* Tasks ******** */
 
     // Accelerometer
-    private class AccelerometerSubscriptionTask extends AsyncTask<Void, Void, Void> {
+    private class AccelerometerSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(BandInfo... params) {
             BandClient client = null;
-            try {
-                client = connectBandClient(client);
-                if (client.getConnectionState() == ConnectionState.CONNECTED) {
-                    accInfoToClient.put(band, client);
-                    Log.v(TAG, "Band is connected.\n");
-                    BandAccelerometerEventListenerCustom aListener =
-                            new BandAccelerometerEventListenerCustom(band, studyName);
-                    client.getSensorManager().registerAccelerometerEventListener(
-                            aListener,  SampleRate.MS128);
+            Log.v(TAG, "Params length is " + Integer.toString(params.length));
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                Log.v(TAG, "Got the band");
+                try {
+                    client = connectBandClient(band, client);
+                    Log.v(TAG, "Got client");
+                    if (client != null &&
+                            client.getConnectionState() == ConnectionState.CONNECTED) {
+                        Log.v(TAG, "Client is connected");
+                        accInfoToClient.put(band, client);
+                        Log.v(TAG, "Band is connected.\n");
+                        BandAccelerometerEventListenerCustom aListener =
+                                new BandAccelerometerEventListenerCustom(band, studyName);
+                        client.getSensorManager().registerAccelerometerEventListener(
+                                aListener, SampleRate.MS128);
 
-                    accListeners.put(band, aListener);
-                    Log.v(TAG, "Added " + band.toString() + " to acclisteners");
+                        accListeners.put(band, aListener);
+                        Log.v(TAG, "Added " + band.toString() + " to acclisteners");
 
-                } else {
-                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
+                    } else {
+                        Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting accelerometer data");
                 }
-            } catch (BandException e) {
-                String exceptionMessage;
-                switch (e.getErrorType()) {
-                    case UNSUPPORTED_SDK_VERSION_ERROR:
-                        exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
-                        break;
-                    case SERVICE_ERROR:
-                        exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
-                        break;
-                    default:
-                        exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                        break;
-                }
-                Log.e(TAG, exceptionMessage);
-
-            } catch (Exception e) {
-                Log.e(TAG, "Unknown error occurred when getting accelerometer data");
             }
             return null;
         }
     }
 
 
-    private class AccelerometerUnsubscribe extends AsyncTask<Void, Void, Void> {
+    private class AccelerometerUnsubscribe extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
-            try {
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
 
-                BandClient mClient = accInfoToClient.get(band);
-                mClient = connectBandClient(mClient);
-                if (mClient.getConnectionState() == ConnectionState.CONNECTED) {
-                    Log.v(TAG, "Unregistering accelerometer listener");
-                    mClient.getSensorManager().unregisterAccelerometerEventListener(
-                            accListeners.get(band)
-                    );
-                    Log.v(TAG, "unregistered for client: " + mClient.toString());
-                    Log.v(TAG, "unregistered listener: " + accListeners.get(band).toString());
-                    accListeners.remove(band);
-                    Log.v(TAG, "Removed client");
+                    BandClient mClient = accInfoToClient.get(band);
+                    mClient = connectBandClient(band, mClient);
+                    if (mClient.getConnectionState() == ConnectionState.CONNECTED) {
+                        Log.v(TAG, "Unregistering accelerometer listener");
+                        mClient.getSensorManager().unregisterAccelerometerEventListener(
+                                accListeners.get(band)
+                        );
+                        Log.v(TAG, "unregistered for client: " + mClient.toString());
+                        Log.v(TAG, "unregistered listener: " + accListeners.get(band).toString());
+                        accListeners.remove(band);
+                        Log.v(TAG, "Removed client");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
             return null;
         }
@@ -1067,7 +1079,7 @@ public class BandDataService extends Service {
     }
 
     // General
-    private BandClient connectBandClient(BandClient client) throws InterruptedException, BandException {
+    private BandClient connectBandClient(BandInfo band, BandClient client) throws InterruptedException, BandException {
         if (client == null) {
             client = BandClientManager.getInstance().create(getBaseContext(), band);
         } else if (ConnectionState.CONNECTED == client.getConnectionState()) {
@@ -1085,20 +1097,20 @@ public class BandDataService extends Service {
     private class disconnectClient extends AsyncTask<BandClient, Void, Void> {
         @Override
         protected Void doInBackground(BandClient... params) {
-            if (params.length > 0) {
-                BandClient client;
-                try {
-                    client = connectBandClient(params[0]);
-                    try {
-                        client.disconnect().await();
-                    } catch (InterruptedException | BandException e) {
-                        e.printStackTrace();
-                    }
-                } catch (InterruptedException | BandException e) {
-                    e.printStackTrace();
-                }
-
-            }
+//            if (params.length > 0) {
+//                BandClient client;
+//                try {
+//                    client = connectBandClient(params[0]);
+//                    try {
+//                        client.disconnect().await();
+//                    } catch (InterruptedException | BandException e) {
+//                        e.printStackTrace();
+//                    }
+//                } catch (InterruptedException | BandException e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
             return null;
         }
     }
@@ -1335,7 +1347,7 @@ public class BandDataService extends Service {
                 Log.v(TAG, "Disconnecting a band: " + mBand.getMacAddress());
                 try {
                     try {
-                        client = connectBandClient(client);
+                        client = connectBandClient(mBand, client);
                     } catch (InterruptedException | BandException e) {
                         e.printStackTrace();
                     }
