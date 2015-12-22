@@ -14,6 +14,7 @@ import android.util.Log;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandException;
+import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAccelerometerEvent;
@@ -114,8 +115,16 @@ public class BandDataService extends Service {
                     Log.v(TAG, "Stop stream requested.");
                     if (bandStreams.containsKey(band)) {
                         // Unsubscribe from specified tasks
-                        if (modes.get(ACCEL_REQ_EXTRA)) {
-                            // Start an accelerometer task
+                        if (modes.get(ACCEL_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                                bandStreams.get(band).contains(ACCEL_REQ_EXTRA)) {
+                            if (bandStreams.get(band).size() == 1) {
+                                // Only stream open for this band, remove from bandStreams
+                                bandStreams.remove(band);
+                            } else {
+                                // Other streams open, remove from list
+                                bandStreams.get(band).remove(ACCEL_REQ_EXTRA);
+                            }
+                            // Start an accelerometer unsubscribe task
                             Log.v(TAG, "Unsubscribe from accelerometer");
                             new AccelerometerUnsubscribe().execute(band);
                         }
@@ -872,29 +881,29 @@ public class BandDataService extends Service {
     private class AccelerometerUnsubscribe extends AsyncTask<BandInfo, Void, Void> {
         @Override
         protected Void doInBackground(BandInfo... params) {
-//
-//            Log.e(TAG, "Length of params " + Integer.toString(params.length));
-//            if (params.length > 0) {
-//                BandInfo band = params[0];
-//                try {
-//
-//                    BandClient mClient = bandClients.get(band);
-//                    mClient = connectBandClient(band, mClient);
-//                    if (mClient != null && mClient.getConnectionState() == ConnectionState.CONNECTED) {
-//                        Log.v(TAG, "Unregistering accelerometer listener");
-//
-//                        Log.v(TAG, "Client is " + mClient.toString());
-//                        Log.v(TAG, "Listener is " + accListeners.get(band).toString());
-//                        mClient.getSensorManager().unregisterAccelerometerEventListener(
-//                                accListeners.get(band)
-//                        );
-//                        accListeners.remove(band);
-//                        // TODO check if other listener maps have the band(?)
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (accClients.containsKey(band)) {
+
+                    BandClient client = accClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterAccelerometerEventListener(
+                                accListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        accListeners.remove(band);
+                        // Remove client from list
+                        accClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             return null;
         }
     }
