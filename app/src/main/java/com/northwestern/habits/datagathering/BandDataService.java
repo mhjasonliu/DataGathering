@@ -68,7 +68,8 @@ public class BandDataService extends Service {
     private String studyName;
 
     // Maps of listeners
-    private HashMap<BandClient, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
+    private HashMap<BandInfo, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
+    private HashMap<BandInfo, BandClient> accInfoToClient = new HashMap<>();
 
 
     // Types
@@ -810,13 +811,15 @@ public class BandDataService extends Service {
         protected Void doInBackground(Void... params) {
             try {
                 if (getConnectedBandClient()) {
+                    accInfoToClient.put(band, client);
                     Log.v(TAG, "Band is connected.\n");
                     BandAccelerometerEventListenerCustom aListener =
                             new BandAccelerometerEventListenerCustom(band, studyName);
                     client.getSensorManager().registerAccelerometerEventListener(
                             aListener,  SampleRate.MS128);
 
-                    accListeners.put(client, aListener);
+                    accListeners.put(band, aListener);
+                    Log.v(TAG, "Added " + band.toString() + " to acclisteners");
 
                 } else {
                     Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
@@ -849,13 +852,15 @@ public class BandDataService extends Service {
         protected Void doInBackground(Void... params) {
             try {
 
-
+                BandClient mClient = accInfoToClient.get(band);
                 if (getConnectedBandClient()) {
                     Log.v(TAG, "Unregistering accelerometer listener");
-                    client.getSensorManager().unregisterAccelerometerEventListener(
-                            accListeners.get(client)
+                    mClient.getSensorManager().unregisterAccelerometerEventListener(
+                            accListeners.get(band)
                     );
-                    accListeners.remove(client);
+                    Log.v(TAG, "unregistered for client: " + mClient.toString());
+                    Log.v(TAG, "unregistered listener: " + accListeners.get(band).toString());
+                    accListeners.remove(band);
                     Log.v(TAG, "Removed client");
                 }
             } catch (Exception e) {
