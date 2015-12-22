@@ -73,6 +73,23 @@ public class BandDataService extends Service {
     HashMap<BandInfo, BandClient> accClients = new HashMap<>();
 
 
+    HashMap<BandInfo, CustomBandAltimeterEventListener> altListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> altClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandAmbientLightEventListener> ambientListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> ambientClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandBarometerEventListener> barometerListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> barometerClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandGsrEventListener> gsrListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> gsrClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandHeartRateEventListener> heartRateListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> heartRateClients = new HashMap<>();
+
+
+
     // Types
     private String T_BAND2 = "Microsoft_Band_2";
 
@@ -82,8 +99,6 @@ public class BandDataService extends Service {
 
         Log.v(TAG, "Retrieving database");
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
-
-        BandClient client;
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();
@@ -115,7 +130,7 @@ public class BandDataService extends Service {
                     Log.v(TAG, "Stop stream requested.");
                     if (bandStreams.containsKey(band)) {
                         // Unsubscribe from specified tasks
-                        if (modes.get(ACCEL_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                        if (modes.get(ACCEL_REQ_EXTRA)  &&
                                 bandStreams.get(band).contains(ACCEL_REQ_EXTRA)) {
                             if (bandStreams.get(band).size() == 1) {
                                 // Only stream open for this band, remove from bandStreams
@@ -129,7 +144,20 @@ public class BandDataService extends Service {
                             new AccelerometerUnsubscribe().execute(band);
                         }
 
-                        if (modes.get(ALT_REQ_EXTRA))
+                        if (modes.get(ALT_REQ_EXTRA) &&
+                                bandStreams.get(band).contains(ALT_REQ_EXTRA)) {
+                            if (bandStreams.get(band).size() == 1) {
+                                // Only stream open for this band, remove from bandStreams
+                                bandStreams.remove(band);
+                            } else {
+                                // Other streams open, remove from list
+                                bandStreams.get(band).remove(ALT_REQ_EXTRA);
+                            }
+                            // Start an altimeter unsubscribe task
+                            Log.v(TAG, "Unsubscribe from altimeter");
+                            new AltimeterUnsubscribeTask().execute(band);
+                        }
+
                             new AltimeterSubscriptionTask().execute();
                         if (modes.get(AMBIENT_REQ_EXTRA))
                             new AmbientLightSubscriptionTask().execute();
@@ -162,8 +190,25 @@ public class BandDataService extends Service {
                         }
                     }
 
-                    if (modes.get(ALT_REQ_EXTRA))
-                        new AltimeterSubscriptionTask().execute();
+                    if (modes.get(ALT_REQ_EXTRA)){
+                        if (!bandStreams.containsKey(band)) {
+                            // Make a new list to put into the map with the band
+                            List<String> list = new LinkedList<>();
+                            list.add(ALT_REQ_EXTRA);
+
+                            // Add the band to the map
+                            bandStreams.put(band, list);
+
+                            // Start streaming
+                            new AltimeterSubscriptionTask().execute(band);
+                        } else if (!bandStreams.get(band).contains(ALT_REQ_EXTRA)) {
+                            // Add accelerometer to the list in the stream map
+                            bandStreams.get(band).add(ALT_REQ_EXTRA);
+
+                            // Start the stream
+                            new AltimeterSubscriptionTask().execute(band);
+                        }
+                    }
                     if (modes.get(AMBIENT_REQ_EXTRA))
                         new AmbientLightSubscriptionTask().execute();
                     if (modes.get(BAROMETER_REQ_EXTRA))
@@ -877,7 +922,6 @@ public class BandDataService extends Service {
         }
     }
 
-
     private class AccelerometerUnsubscribe extends AsyncTask<BandInfo, Void, Void> {
         @Override
         protected Void doInBackground(BandInfo... params) {
@@ -908,42 +952,89 @@ public class BandDataService extends Service {
         }
     }
 
-    private class AltimeterSubscriptionTask extends AsyncTask<Void, Void, Void> {
+
+    private class AltimeterSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
-//            try {
-//                if (connectBandClient()) {
-//                    int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
-//                    if (hardwareVersion >= 20) {
-//                        Log.v(TAG, "Band is connected.\n");
-//                        client.getSensorManager().registerAltimeterEventListener(new CustomBandAltimeterEventListener(band, studyName));
-//                    } else {
-//                        Log.e(TAG, "The Altimeter sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
-//                    }
-//                } else {
-//                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
-//                }
-//            } catch (BandException e) {
-//                String exceptionMessage;
-//                switch (e.getErrorType()) {
-//                    case UNSUPPORTED_SDK_VERSION_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
-//                        break;
-//                    case SERVICE_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
-//                        break;
-//                    default:
-//                        exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-//                        break;
-//                }
-//                Log.e(TAG, exceptionMessage);
-//
-//            } catch (Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                Log.v(TAG, "Got the band");
+                try {
+                    if (!altClients.containsKey(band)) {
+                        // No registered clients streaming accelerometer data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandAltimeterEventListener aListener =
+                                    new CustomBandAltimeterEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerAltimeterEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            altListeners.put(band, aListener);
+                            altClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting accelerometer data");
+                }
+            }
             return null;
         }
     }
+
+    private class AltimeterUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (altClients.containsKey(band)) {
+
+                    BandClient client = altClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterAltimeterEventListener(
+                                altListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        altListeners.remove(band);
+                        // Remove client from list
+                        altClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
 
     private class AmbientLightSubscriptionTask extends AsyncTask<Void, Void, Void> {
         @Override
