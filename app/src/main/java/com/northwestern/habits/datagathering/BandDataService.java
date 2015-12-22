@@ -128,46 +128,95 @@ public class BandDataService extends Service {
 
                 if (extras.getBoolean(STOP_STREAM_EXTRA)){
                     Log.v(TAG, "Stop stream requested.");
-                    if (bandStreams.containsKey(band)) {
-                        // Unsubscribe from specified tasks
-                        if (modes.get(ACCEL_REQ_EXTRA)  &&
-                                bandStreams.get(band).contains(ACCEL_REQ_EXTRA)) {
-                            if (bandStreams.get(band).size() == 1) {
-                                // Only stream open for this band, remove from bandStreams
-                                bandStreams.remove(band);
-                            } else {
-                                // Other streams open, remove from list
-                                bandStreams.get(band).remove(ACCEL_REQ_EXTRA);
-                            }
-                            // Start an accelerometer unsubscribe task
-                            Log.v(TAG, "Unsubscribe from accelerometer");
-                            new AccelerometerUnsubscribe().execute(band);
+                    // Unsubscribe from specified tasks
+                    if (modes.get(ACCEL_REQ_EXTRA)  && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(ACCEL_REQ_EXTRA)) {
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(ACCEL_REQ_EXTRA);
                         }
-
-                        if (modes.get(ALT_REQ_EXTRA) &&
-                                bandStreams.get(band).contains(ALT_REQ_EXTRA)) {
-                            if (bandStreams.get(band).size() == 1) {
-                                // Only stream open for this band, remove from bandStreams
-                                bandStreams.remove(band);
-                            } else {
-                                // Other streams open, remove from list
-                                bandStreams.get(band).remove(ALT_REQ_EXTRA);
-                            }
-                            // Start an altimeter unsubscribe task
-                            Log.v(TAG, "Unsubscribe from altimeter");
-                            new AltimeterUnsubscribeTask().execute(band);
-                        }
-
-                            new AltimeterSubscriptionTask().execute();
-                        if (modes.get(AMBIENT_REQ_EXTRA))
-                            new AmbientLightSubscriptionTask().execute();
-                        if (modes.get(BAROMETER_REQ_EXTRA))
-                            new BarometerSubscriptionTask().execute();
-                        if (modes.get(GSR_REQ_EXTRA))
-                            new GsrSubscriptionTask().execute();
-                        if (modes.get(HEART_RATE_REQ_EXTRA))
-                            new HeartRateSubscriptionTask().execute();
+                        // Start an accelerometer unsubscribe task
+                        Log.v(TAG, "Unsubscribe from accelerometer");
+                        new AccelerometerUnsubscribe().execute(band);
                     }
+
+                    if (modes.get(ALT_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(ALT_REQ_EXTRA)) {
+                        Log.v(TAG, "******************");
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(ALT_REQ_EXTRA);
+                        }
+                        // Start an altimeter unsubscribe task
+                        Log.v(TAG, "Unsubscribe from altimeter");
+                        new AltimeterUnsubscribeTask().execute(band);
+                    }
+
+                    if (modes.get(AMBIENT_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(AMBIENT_REQ_EXTRA)) {
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(AMBIENT_REQ_EXTRA);
+                        }
+                        // Start an altimeter unsubscribe task
+                        Log.v(TAG, "Unsubscribe from ambient light");
+                        new AmbientUnsubscribeTask().execute(band);
+                    }
+
+                    if (modes.get(BAROMETER_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(BAROMETER_REQ_EXTRA)) {
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(BAROMETER_REQ_EXTRA);
+                        }
+                        // Start an altimeter unsubscribe task
+                        Log.v(TAG, "Unsubscribe from barometer");
+                        new BarometerUnsubscribeTask().execute(band);
+                    }
+
+                    if (modes.get(GSR_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(GSR_REQ_EXTRA)) {
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(GSR_REQ_EXTRA);
+                        }
+                        // Start an altimeter unsubscribe task
+                        Log.v(TAG, "Unsubscribe from gsr");
+                        new GsrUnsubscribeTask().execute(band);
+                    }
+
+                    if (modes.get(HEART_RATE_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(HEART_RATE_REQ_EXTRA)) {
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(HEART_RATE_REQ_EXTRA);
+                        }
+                        // Start an altimeter unsubscribe task
+                        Log.v(TAG, "Unsubscribe from Heart Rate");
+                        new HeartRateUnsubscribeTask().execute(band);
+                    }
+
+
+
+
                 } else {
                     // Stop stream not requested: start requested streams if not already streaming
                     if (modes.get(ACCEL_REQ_EXTRA)) {
@@ -209,14 +258,87 @@ public class BandDataService extends Service {
                             new AltimeterSubscriptionTask().execute(band);
                         }
                     }
-                    if (modes.get(AMBIENT_REQ_EXTRA))
-                        new AmbientLightSubscriptionTask().execute();
-                    if (modes.get(BAROMETER_REQ_EXTRA))
-                        new BarometerSubscriptionTask().execute();
-                    if (modes.get(GSR_REQ_EXTRA))
-                        new GsrSubscriptionTask().execute();
-                    if (modes.get(HEART_RATE_REQ_EXTRA))
-                        new HeartRateSubscriptionTask().execute();
+
+                    if (modes.get(AMBIENT_REQ_EXTRA)){
+                        if (!bandStreams.containsKey(band)) {
+                            // Make a new list to put into the map with the band
+                            List<String> list = new LinkedList<>();
+                            list.add(AMBIENT_REQ_EXTRA);
+
+                            // Add the band to the map
+                            bandStreams.put(band, list);
+
+                            // Start streaming
+                            new AmbientLightSubscriptionTask().execute(band);
+                        } else if (!bandStreams.get(band).contains(AMBIENT_REQ_EXTRA)) {
+                            // Add accelerometer to the list in the stream map
+                            bandStreams.get(band).add(AMBIENT_REQ_EXTRA);
+
+                            // Start the stream
+                            new AmbientLightSubscriptionTask().execute(band);
+                        }
+                    }
+
+                    if (modes.get(BAROMETER_REQ_EXTRA)){
+                        if (!bandStreams.containsKey(band)) {
+                            // Make a new list to put into the map with the band
+                            List<String> list = new LinkedList<>();
+                            list.add(BAROMETER_REQ_EXTRA);
+
+                            // Add the band to the map
+                            bandStreams.put(band, list);
+
+                            // Start streaming
+                            new BarometerSubscriptionTask().execute(band);
+                        } else if (!bandStreams.get(band).contains(BAROMETER_REQ_EXTRA)) {
+                            // Add accelerometer to the list in the stream map
+                            bandStreams.get(band).add(BAROMETER_REQ_EXTRA);
+
+                            // Start the stream
+                            new BarometerUnsubscribeTask().execute(band);
+                        }
+                    }
+
+                    if (modes.get(GSR_REQ_EXTRA)){
+                        if (!bandStreams.containsKey(band)) {
+                            // Make a new list to put into the map with the band
+                            List<String> list = new LinkedList<>();
+                            list.add(GSR_REQ_EXTRA);
+
+                            // Add the band to the map
+                            bandStreams.put(band, list);
+
+                            // Start streaming
+                            new GsrSubscriptionTask().execute(band);
+                        } else if (!bandStreams.get(band).contains(GSR_REQ_EXTRA)) {
+                            // Add accelerometer to the list in the stream map
+                            bandStreams.get(band).add(GSR_REQ_EXTRA);
+
+                            // Start the stream
+                            new GsrSubscriptionTask().execute(band);
+                        }
+                    }
+
+                    if (modes.get(HEART_RATE_REQ_EXTRA)){
+                        Log.v(TAG, "HEart rate requested");
+                        if (!bandStreams.containsKey(band)) {
+                            // Make a new list to put into the map with the band
+                            List<String> list = new LinkedList<>();
+                            list.add(HEART_RATE_REQ_EXTRA);
+
+                            // Add the band to the map
+                            bandStreams.put(band, list);
+
+                            // Start streaming
+                            new HeartRateSubscriptionTask().execute(band);
+                        } else if (!bandStreams.get(band).contains(HEART_RATE_REQ_EXTRA)) {
+                            // Add accelerometer to the list in the stream map
+                            bandStreams.get(band).add(HEART_RATE_REQ_EXTRA);
+
+                            // Start the stream
+                            new HeartRateSubscriptionTask().execute(band);
+                        }
+                    }
 
                 }
             }
@@ -894,7 +1016,8 @@ public class BandDataService extends Service {
                             accListeners.put(band, aListener);
                             accClients.put(band, client);
                         } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
                         }
                     } else {
                         Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
@@ -903,10 +1026,13 @@ public class BandDataService extends Service {
                     String exceptionMessage;
                     switch (e.getErrorType()) {
                         case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
                             break;
                         case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
                             break;
                         default:
                             exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
@@ -977,19 +1103,23 @@ public class BandDataService extends Service {
                             altListeners.put(band, aListener);
                             altClients.put(band, client);
                         } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
                         }
                     } else {
-                        Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
+                        Log.w(TAG, "Multiple attempts to stream altimeter from this device ignored");
                     }
                 } catch (BandException e) {
                     String exceptionMessage;
                     switch (e.getErrorType()) {
                         case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
                             break;
                         case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
                             break;
                         default:
                             exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
@@ -998,7 +1128,7 @@ public class BandDataService extends Service {
                     Log.e(TAG, exceptionMessage);
 
                 } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting accelerometer data");
+                    Log.e(TAG, "Unknown error occurred when getting altimeter data");
                 }
             }
             return null;
@@ -1036,157 +1166,343 @@ public class BandDataService extends Service {
     }
 
 
-    private class AmbientLightSubscriptionTask extends AsyncTask<Void, Void, Void> {
+    private class AmbientLightSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
-//            try {
-//                if (connectBandClient()) {
-//                    int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
-//                    if (hardwareVersion >= 20) {
-//                        Log.v(TAG, "Band is connected.\n");
-//                        client.getSensorManager().registerAmbientLightEventListener(
-//                                new CustomBandAmbientLightEventListener(band, studyName)
-//                        );
-//                    } else {
-//                        Log.e(TAG, "The Ambient Light sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
-//                    }
-//                } else {
-//                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
-//                }
-//            } catch (BandException e) {
-//                String exceptionMessage;
-//                switch (e.getErrorType()) {
-//                    case UNSUPPORTED_SDK_VERSION_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
-//                        break;
-//                    case SERVICE_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
-//                        break;
-//                    default:
-//                        exceptionMessage = "Unknown error occurred: " + e.getMessage() + "\n";
-//                        break;
-//                }
-//                Log.e(TAG, exceptionMessage);
-//
-//            } catch (Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!ambientClients.containsKey(band)) {
+                        // No registered clients streaming accelerometer data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandAmbientLightEventListener aListener =
+                                    new CustomBandAmbientLightEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerAmbientLightEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            ambientListeners.put(band, aListener);
+                            ambientClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on " +
+                                    "and the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream ambient sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting ambient light data");
+                }
+            }
             return null;
         }
     }
 
-    private class BarometerSubscriptionTask extends AsyncTask<Void, Void, Void> {
+    private class AmbientUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
-//            try {
-//                if (connectBandClient()) {
-//                    int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
-//                    if (hardwareVersion >= 20) {
-//                        Log.v(TAG, "Band is connected.\n");
-//                        client.getSensorManager().registerBarometerEventListener(
-//                                new CustomBandBarometerEventListener(band, studyName)
-//                        );
-//                    } else {
-//                        Log.e(TAG, "The Barometer sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
-//                    }
-//                } else {
-//                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
-//                }
-//            } catch (BandException e) {
-//                String exceptionMessage;
-//                switch (e.getErrorType()) {
-//                    case UNSUPPORTED_SDK_VERSION_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
-//                        break;
-//                    case SERVICE_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
-//                        break;
-//                    default:
-//                        exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-//                        break;
-//                }
-//                Log.e(TAG, exceptionMessage);
-//
-//            } catch (Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (ambientClients.containsKey(band)) {
+
+                    BandClient client = ambientClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterAmbientLightEventListener(
+                                ambientListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        ambientListeners.remove(band);
+                        // Remove client from list
+                        ambientClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             return null;
         }
     }
 
-    private class GsrSubscriptionTask extends AsyncTask<Void, Void, Void> {
+
+    private class BarometerSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
-//            try {
-//                if (connectBandClient()) {
-//                    int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
-//                    if (hardwareVersion >= 20) {
-//                        Log.v(TAG, "Band is connected.\n");
-//                        client.getSensorManager().registerGsrEventListener(
-//                                new CustomBandGsrEventListener(band, studyName)
-//                        );
-//                    } else {
-//                        Log.e(TAG, "The Gsr sensor is not supported with your Band version. Microsoft Band 2 is required.\n");
-//                    }
-//                } else {
-//                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
-//                }
-//            } catch (BandException e) {
-//                String exceptionMessage;
-//                switch (e.getErrorType()) {
-//                    case UNSUPPORTED_SDK_VERSION_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
-//                        break;
-//                    case SERVICE_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
-//                        break;
-//                    default:
-//                        exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-//                        break;
-//                }
-//                Log.e(TAG, exceptionMessage);
-//
-//            } catch (Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!barometerClients.containsKey(band)) {
+                        // No registered clients streaming accelerometer data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandBarometerEventListener aListener =
+                                    new CustomBandBarometerEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerBarometerEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            barometerListeners.put(band, aListener);
+                            barometerClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
             return null;
         }
     }
 
-    private class HeartRateSubscriptionTask extends AsyncTask<Void, Void, Void> {
+    private class BarometerUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
-//            try {
-//                if (connectBandClient()) {
-//                    if (client.getSensorManager().getCurrentHeartRateConsent() == UserConsent.GRANTED) {
-//                        client.getSensorManager().registerHeartRateEventListener(
-//                                new CustomBandHeartRateEventListener(band, studyName)
-//                        );
-//                    } else {
-//                        Log.e(TAG, "You have not given this application consent to access heart rate data yet."
-//                                + " Please press the Heart Rate Consent button.\n");
-//                    }
-//                } else {
-//                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
-//                }
-//            } catch (BandException e) {
-//                String exceptionMessage;
-//                switch (e.getErrorType()) {
-//                    case UNSUPPORTED_SDK_VERSION_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService doesn't support your SDK Version. Please update to latest SDK.\n";
-//                        break;
-//                    case SERVICE_ERROR:
-//                        exceptionMessage = "Microsoft Health BandService is not available. Please make sure Microsoft Health is installed and that you have the correct permissions.\n";
-//                        break;
-//                    default:
-//                        exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-//                        break;
-//                }
-//                Log.e(TAG, exceptionMessage);
-//
-//            } catch (Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (barometerClients.containsKey(band)) {
+
+                    BandClient client = barometerClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterBarometerEventListener(
+                                barometerListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        barometerListeners.remove(band);
+                        // Remove client from list
+                        barometerClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    private class GsrSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!gsrClients.containsKey(band)) {
+                        // No registered clients streaming accelerometer data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandGsrEventListener aListener =
+                                    new CustomBandGsrEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerGsrEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            gsrListeners.put(band, aListener);
+                            gsrClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream gsr sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting gsr data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class GsrUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (gsrClients.containsKey(band)) {
+
+                    BandClient client = gsrClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterGsrEventListener(
+                                gsrListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        gsrListeners.remove(band);
+                        // Remove client from list
+                        gsrClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    private class HeartRateSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!heartRateClients.containsKey(band)) {
+                        // No registered clients streaming accelerometer data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandHeartRateEventListener aListener =
+                                    new CustomBandHeartRateEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerHeartRateEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            heartRateListeners.put(band, aListener);
+                            heartRateClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream heart rate sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting heart rate data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class HeartRateUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (heartRateClients.containsKey(band)) {
+
+                    BandClient client = heartRateClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterHeartRateEventListener(
+                                heartRateListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        heartRateListeners.remove(band);
+                        // Remove client from list
+                        heartRateClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             return null;
         }
     }
