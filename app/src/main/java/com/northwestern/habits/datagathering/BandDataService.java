@@ -25,6 +25,8 @@ import com.microsoft.band.sensors.BandAmbientLightEvent;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
 import com.microsoft.band.sensors.BandBarometerEvent;
 import com.microsoft.band.sensors.BandBarometerEventListener;
+import com.microsoft.band.sensors.BandCaloriesEvent;
+import com.microsoft.band.sensors.BandCaloriesEventListener;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandHeartRateEvent;
@@ -44,8 +46,16 @@ public class BandDataService extends Service {
     public static final String ALT_REQ_EXTRA = "altimeter";
     public static final String AMBIENT_REQ_EXTRA = "ambient";
     public static final String BAROMETER_REQ_EXTRA = "barometer";
+    public static final String CALORIES_REQ_EXTRA = "calories";
+    public static final String CONTACT_REQ_EXTRA = "contact";
+    public static final String DISTANCE_REQ_EXTRA = "distance";
     public static final String GSR_REQ_EXTRA = "gsr";
     public static final String HEART_RATE_REQ_EXTRA = "heartRate";
+    public static final String PEDOMETER_REQ_EXTRA = "pedometer";
+    public static final String SKIN_TEMP_REQ_EXTRA = "skinTemperature";
+    public static final String UV_REQ_EXTRA = "ultraViolet";
+
+
 
     public static final String INDEX_EXTRA = "index";
     public static final String STUDY_ID_EXTRA = "study";
@@ -81,6 +91,9 @@ public class BandDataService extends Service {
 
     HashMap<BandInfo, CustomBandBarometerEventListener> barometerListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> barometerClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandCaloriesEventListener> caloriesListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> caloriesClients = new HashMap<>();
 
     HashMap<BandInfo, CustomBandGsrEventListener> gsrListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> gsrClients = new HashMap<>();
@@ -185,7 +198,19 @@ public class BandDataService extends Service {
                         Log.v(TAG, "Unsubscribe from barometer");
                         new BarometerUnsubscribeTask().execute(band);
                     }
-
+                    if (modes.get(CALORIES_REQ_EXTRA) && bandStreams.containsKey(band) &&
+                            bandStreams.get(band).contains(CALORIES_REQ_EXTRA)) {
+                        if (bandStreams.get(band).size() == 1) {
+                            // Only stream open for this band, remove from bandStreams
+                            bandStreams.remove(band);
+                        } else {
+                            // Other streams open, remove from list
+                            bandStreams.get(band).remove(CALORIES_REQ_EXTRA);
+                        }
+                        // Start an altimeter unsubscribe task
+                        Log.v(TAG, "Unsubscribe from barometer");
+                        new CaloriesUnsubscribeTask().execute(band);
+                    }
                     if (modes.get(GSR_REQ_EXTRA) && bandStreams.containsKey(band) &&
                             bandStreams.get(band).contains(GSR_REQ_EXTRA)) {
                         if (bandStreams.get(band).size() == 1) {
@@ -263,7 +288,9 @@ public class BandDataService extends Service {
             case BAROMETER_REQ_EXTRA:
                 new BarometerSubscriptionTask().execute(band);
                 break;
-//            case calories
+            case CALORIES_REQ_EXTRA:
+                new CaloriesSubscriptionTask().execute(band);
+                break;
 //            case contact
 //            case distance
             case GSR_REQ_EXTRA:
@@ -724,6 +751,112 @@ public class BandDataService extends Service {
             }
         }
     }
+
+
+    private class CustomBandCaloriesEventListener implements BandCaloriesEventListener {
+        private BandInfo info;
+        private String uName;
+        private String location;
+
+        public CustomBandCaloriesEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandCaloriesChanged(final BandCaloriesEvent event) {
+            if (event != null) {
+                String T_CALORIES = "Calories";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_CALORIES, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_CALORIES);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, String.format("KiloCalories Burned = %.3d Calories", event.getCalories() ));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.CaloriesTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.CaloriesTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.CaloriesTable.COLUMN_NAME_CALORIES, event.getCalories());
+
+
+                writeDb.insert(DataStorageContract.CaloriesTable.TABLE_NAME, null, values);
+
+            }
+        }
+    }
+
+
+
+
+
+
 
     private class CustomBandGsrEventListener implements BandGsrEventListener {
         private BandInfo info;
@@ -1194,7 +1327,7 @@ public class BandDataService extends Service {
                 BandInfo band = params[0];
                 try {
                     if (!barometerClients.containsKey(band)) {
-                        // No registered clients streaming accelerometer data
+                        // No registered clients streaming barometer data
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
@@ -1271,6 +1404,98 @@ public class BandDataService extends Service {
             return null;
         }
     }
+
+    private class CaloriesSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!caloriesClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandCaloriesEventListener aListener =
+                                    new CustomBandCaloriesEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerCaloriesEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            caloriesListeners.put(band, aListener);
+                            caloriesClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class CaloriesUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (caloriesClients.containsKey(band)) {
+
+                    BandClient client = caloriesClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterCaloriesEventListener(
+                                caloriesListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        caloriesListeners.remove(band);
+                        // Remove client from list
+                        caloriesClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+
+
+
+
+
+
 
     private class GsrSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override

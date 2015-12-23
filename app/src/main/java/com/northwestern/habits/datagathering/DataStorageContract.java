@@ -159,6 +159,23 @@ public final class DataStorageContract {
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
 
+    public static abstract class CaloriesTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "calories_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_CALORIES = "calories";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_CALORIES + INT_TYPE + COMMA_SEP +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+
     public static abstract class GsrTable implements BaseColumns {
 
         public static final String TABLE_NAME = "gsr_data";
