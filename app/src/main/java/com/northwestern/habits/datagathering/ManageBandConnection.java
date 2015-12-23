@@ -134,9 +134,15 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
     @Override
     public void userAccepted(boolean b) {
-        Log.v(TAG, "User accepted heart rate request");
-        // Tick the heart rate box
-        ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(true);
+        if (b) {
+            Log.v(TAG, "User accepted heart rate request");
+            // Tick the heart rate box
+            ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(true);
+        } else {
+            Log.v(TAG, "User has rejected heart rate request");
+            // Untick the heart rate box
+            ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(false);
+        }
     }
 
     @Override
@@ -149,4 +155,5 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         // Clear the heart rate box
         ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(false);
     }
+
 }
