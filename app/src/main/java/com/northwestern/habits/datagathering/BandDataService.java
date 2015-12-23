@@ -172,88 +172,6 @@ public class BandDataService extends Service {
                 if (extras.getBoolean(STOP_STREAM_EXTRA)){
                     Log.v(TAG, "Stop stream requested.");
                     // Unsubscribe from specified tasks
-                    if (modes.get(ACCEL_REQ_EXTRA)  && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(ACCEL_REQ_EXTRA)) {
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(ACCEL_REQ_EXTRA);
-                        }
-                        // Start an accelerometer unsubscribe task
-                        Log.v(TAG, "Unsubscribe from accelerometer");
-                        new AccelerometerUnsubscribe().execute(band);
-                    }
-
-                    if (modes.get(ALT_REQ_EXTRA) && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(ALT_REQ_EXTRA)) {
-                        Log.v(TAG, "******************");
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(ALT_REQ_EXTRA);
-                        }
-                        // Start an altimeter unsubscribe task
-                        Log.v(TAG, "Unsubscribe from altimeter");
-                        new AltimeterUnsubscribeTask().execute(band);
-                    }
-
-                    if (modes.get(AMBIENT_REQ_EXTRA) && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(AMBIENT_REQ_EXTRA)) {
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(AMBIENT_REQ_EXTRA);
-                        }
-                        // Start an altimeter unsubscribe task
-                        Log.v(TAG, "Unsubscribe from ambient light");
-                        new AmbientUnsubscribeTask().execute(band);
-                    }
-
-                    if (modes.get(BAROMETER_REQ_EXTRA) && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(BAROMETER_REQ_EXTRA)) {
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(BAROMETER_REQ_EXTRA);
-                        }
-                        // Start an altimeter unsubscribe task
-                        Log.v(TAG, "Unsubscribe from barometer");
-                        new BarometerUnsubscribeTask().execute(band);
-                    }
-                    if (modes.get(CALORIES_REQ_EXTRA) && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(CALORIES_REQ_EXTRA)) {
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(CALORIES_REQ_EXTRA);
-                        }
-                        // Start an altimeter unsubscribe task
-                        Log.v(TAG, "Unsubscribe from barometer");
-                        new CaloriesUnsubscribeTask().execute(band);
-                    }
-                    if (modes.get(GSR_REQ_EXTRA) && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(GSR_REQ_EXTRA)) {
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(GSR_REQ_EXTRA);
-                        }
-                        // Start an altimeter unsubscribe task
-                        Log.v(TAG, "Unsubscribe from gsr");
-                        new GsrUnsubscribeTask().execute(band);
-                    }
 
                     if (modes.get(HEART_RATE_REQ_EXTRA) && bandStreams.containsKey(band) &&
                             bandStreams.get(band).contains(HEART_RATE_REQ_EXTRA)) {
@@ -269,7 +187,11 @@ public class BandDataService extends Service {
                         new HeartRateUnsubscribeTask().execute(band);
                     }
 
-
+                    for (String type : modes.keySet()) {
+                        if (modes.get(type)) {
+                            genericUnsubscribeFactory(type, band);
+                        }
+                    }
 
 
                 } else {
@@ -288,8 +210,66 @@ public class BandDataService extends Service {
     }
 
 
+    private  void genericUnsubscribeFactory(String request, BandInfo band) {
+        if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
+            if (bandStreams.get(band).size() == 1) {
+                // Only stream open for this band, remove from bandStreams
+                bandStreams.remove(band);
+            } else {
+                // Other streams open, remove from list
+                bandStreams.get(band).remove(request);
+            }
+            // Start an altimeter unsubscribe task
+            Log.v(TAG, "Unsubscribe from " + request);
+            new HeartRateUnsubscribeTask().execute(band);
+        }
 
-    private void genericSubscriptionFactory(String request, BandInfo band) {
+        // Unsubscribe from the appropriate stream
+        switch (request) {
+            case ACCEL_REQ_EXTRA:
+                new AccelerometerUnsubscribe().execute(band);
+                break;
+            case ALT_REQ_EXTRA:
+                new AltimeterUnsubscribeTask().execute(band);
+                break;
+            case AMBIENT_REQ_EXTRA:
+                new AmbientUnsubscribeTask().execute(band);
+                break;
+            case BAROMETER_REQ_EXTRA:
+                new BarometerUnsubscribeTask().execute(band);
+                break;
+            case CALORIES_REQ_EXTRA:
+                new CaloriesUnsubscribeTask().execute(band);
+                break;
+            case CONTACT_REQ_EXTRA:
+                new ContactUnsubscribeTask().execute(band);
+                break;
+            case DISTANCE_REQ_EXTRA:
+                new DistanceUnsubscribeTask().execute(band);
+                break;
+            case GSR_REQ_EXTRA:
+                new GsrUnsubscribeTask().execute(band);
+                break;
+            case GYRO_REQ_EXTRA:
+                new GyroUnsubscribeTask().execute(band);
+                break;
+            case HEART_RATE_REQ_EXTRA:
+                new HeartRateUnsubscribeTask().execute(band);
+                break;
+            case PEDOMETER_REQ_EXTRA:
+                new PedometerUnsubscribeTask().execute(band);
+                break;
+            case SKIN_TEMP_REQ_EXTRA:
+                new SkinTemperatureUnsubscribeTask().execute(band);
+                break;
+            case UV_REQ_EXTRA:
+                new UvUnsubscribeTask().execute(band);
+                break;
+            default:
+                Log.e(TAG, "Unknown subscription requested " + request);
+        }
+
+    } private void genericSubscriptionFactory(String request, BandInfo band) {
         Log.v(TAG, request + " requested");
         if (!bandStreams.containsKey(band)) {
             // Make a new list to put into the map with the band
