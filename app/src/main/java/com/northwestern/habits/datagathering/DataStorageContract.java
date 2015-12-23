@@ -176,6 +176,46 @@ public final class DataStorageContract {
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
 
+    public static abstract class ContactTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "contact_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_CONTACT_STATE = "contactState";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_CONTACT_STATE + TEXT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+    public static abstract class DistanceTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "distance_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_CURRENT_MOTION = "currentMotion";
+        public static final String COLUMN_NAME_PACE = "pace";
+        public static final String COLUMN_NAME_SPEED = "speed";
+        public static final String COLUMN_NAME_TOTAL_DISTANCE = "distance";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_CURRENT_MOTION + TEXT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_PACE + FLOAT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_SPEED + FLOAT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_TOTAL_DISTANCE + INT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+
+
     public static abstract class GsrTable implements BaseColumns {
 
         public static final String TABLE_NAME = "gsr_data";
@@ -188,6 +228,27 @@ public final class DataStorageContract {
                         COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
                         COLUMN_NAME_RESISTANCE + INT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+
+
+    public static abstract class GyroTable implements BaseColumns {
+        public static final String TABLE_NAME = "gyroscope_data";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_X = "x";
+        public static final String COLUMN_NAME_Y = "y";
+        public static final String COLUMN_NAME_Z = "z";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_X + FLOAT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_Y + FLOAT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_Z + FLOAT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -211,11 +272,61 @@ public final class DataStorageContract {
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
+    public static abstract class PedometerTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "pedometer_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_TOTAL_STEPS = "steps";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_TOTAL_STEPS + INT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+
+    public static abstract class SkinTemperatureTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "skin_temperature_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_TEMPERATURE_ = "temperature";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_TEMPERATURE_ + INT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+    public static abstract class UvTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "ultra_violet_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_INDEX_LEVEL = "uv";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_INDEX_LEVEL + TEXT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+
 
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 9;
+        public static final int DATABASE_VERSION = 10;
         public static final String DATABASE_NAME = "Bluetooth.db";
 
         public BluetoothDbHelper(Context context) {
@@ -230,8 +341,14 @@ public final class DataStorageContract {
             db.execSQL(AmbientTable.SQL_CREATE_ENTRIES);
             db.execSQL(BarometerTable.SQL_CREATE_ENTRIES);
             db.execSQL(CaloriesTable.SQL_CREATE_ENTRIES);
+            db.execSQL(ContactTable.SQL_CREATE_ENTRIES);
+            db.execSQL(DistanceTable.SQL_CREATE_ENTRIES);
             db.execSQL(GsrTable.SQL_CREATE_ENTRIES);
+            db.execSQL(GyroTable.SQL_CREATE_ENTRIES);
             db.execSQL(HeartRateTable.SQL_CREATE_ENTRIES);
+            db.execSQL(PedometerTable.SQL_CREATE_ENTRIES);
+            db.execSQL(SkinTemperatureTable.SQL_CREATE_ENTRIES);
+            db.execSQL(UvTable.SQL_CREATE_ENTRIES);
         }
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             // This database is only a cache for online data, so its upgrade policy is
@@ -243,8 +360,15 @@ public final class DataStorageContract {
             db.execSQL(AltimeterTable.SQL_DELETE_ENTRIES);
             db.execSQL(AmbientTable.SQL_DELETE_ENTRIES);
             db.execSQL(BarometerTable.SQL_DELETE_ENTRIES);
+            db.execSQL(CaloriesTable.SQL_DELETE_ENTRIES);
+            db.execSQL(ContactTable.SQL_DELETE_ENTRIES);
+            db.execSQL(DistanceTable.SQL_DELETE_ENTRIES);
             db.execSQL(GsrTable.SQL_DELETE_ENTRIES);
+            db.execSQL(GyroTable.SQL_DELETE_ENTRIES);
             db.execSQL(HeartRateTable.SQL_DELETE_ENTRIES);
+            db.execSQL(PedometerTable.SQL_DELETE_ENTRIES);
+            db.execSQL(SkinTemperatureTable.SQL_DELETE_ENTRIES);
+            db.execSQL(UvTable.SQL_DELETE_ENTRIES);
             Log.v("Db", "Deleted tables");
             onCreate(db);
             Log.v("DB", "created new database");
