@@ -85,6 +85,8 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
                 (Boolean) ((CheckBox) findViewById(R.id.ambientBox)).isChecked());
         intent.putExtra(BandDataService.BAROMETER_REQ_EXTRA,
                 (Boolean) ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
+        intent.putExtra(BandDataService.CALORIES_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.caloriesBox)).isChecked());
         intent.putExtra(BandDataService.GSR_REQ_EXTRA,
                 (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
         intent.putExtra(BandDataService.LOCATION_EXTRA,
