@@ -87,8 +87,25 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
                 (Boolean) ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
         intent.putExtra(BandDataService.CALORIES_REQ_EXTRA,
                 (Boolean) ((CheckBox) findViewById(R.id.caloriesBox)).isChecked());
+        intent.putExtra(BandDataService.CONTACT_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.contactBox)).isChecked());
+        intent.putExtra(BandDataService.DISTANCE_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.distanceBox)).isChecked());
         intent.putExtra(BandDataService.GSR_REQ_EXTRA,
                 (Boolean) ((CheckBox) findViewById(R.id.gsrBox)).isChecked());
+        intent.putExtra(BandDataService.GYRO_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.gyroBox)).isChecked());
+        intent.putExtra(BandDataService.PEDOMETER_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.pedometerBox)).isChecked());
+        intent.putExtra(BandDataService.CALORIES_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.caloriesBox)).isChecked());
+        intent.putExtra(BandDataService.SKIN_TEMP_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.skinTempBox)).isChecked());
+        intent.putExtra(BandDataService.UV_REQ_EXTRA,
+                (Boolean) ((CheckBox) findViewById(R.id.uvBox)).isChecked());
+
+
+
         intent.putExtra(BandDataService.LOCATION_EXTRA,
                 location);
         intent.putExtra(BandDataService.STUDY_ID_EXTRA, studyName);
