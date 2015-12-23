@@ -219,131 +219,66 @@ public class BandDataService extends Service {
 
                 } else {
                     // Stop stream not requested: start requested streams if not already streaming
-                    if (modes.get(ACCEL_REQ_EXTRA)) {
-                        if (!bandStreams.containsKey(band)) {
-                            // Make a new list to put into the map with the band
-                            List<String> list = new LinkedList<>();
-                            list.add(ACCEL_REQ_EXTRA);
 
-                            // Add the band to the map
-                            bandStreams.put(band, list);
-
-                            // Start streaming
-                            new AccelerometerSubscriptionTask().execute(band);
-                        } else if (!bandStreams.get(band).contains(ACCEL_REQ_EXTRA)) {
-                            // Add accelerometer to the list in the stream map
-                            bandStreams.get(band).add(ACCEL_REQ_EXTRA);
-
-                            // Start the stream
-                            new AccelerometerSubscriptionTask().execute(band);
+                    for ( String key : modes.keySet() ) {
+                        if (modes.get(key)) {
+                            genericSubscriptionFactory(key, band);
                         }
                     }
-
-                    if (modes.get(ALT_REQ_EXTRA)){
-                        if (!bandStreams.containsKey(band)) {
-                            // Make a new list to put into the map with the band
-                            List<String> list = new LinkedList<>();
-                            list.add(ALT_REQ_EXTRA);
-
-                            // Add the band to the map
-                            bandStreams.put(band, list);
-
-                            // Start streaming
-                            new AltimeterSubscriptionTask().execute(band);
-                        } else if (!bandStreams.get(band).contains(ALT_REQ_EXTRA)) {
-                            // Add accelerometer to the list in the stream map
-                            bandStreams.get(band).add(ALT_REQ_EXTRA);
-
-                            // Start the stream
-                            new AltimeterSubscriptionTask().execute(band);
-                        }
-                    }
-
-                    if (modes.get(AMBIENT_REQ_EXTRA)){
-                        if (!bandStreams.containsKey(band)) {
-                            // Make a new list to put into the map with the band
-                            List<String> list = new LinkedList<>();
-                            list.add(AMBIENT_REQ_EXTRA);
-
-                            // Add the band to the map
-                            bandStreams.put(band, list);
-
-                            // Start streaming
-                            new AmbientLightSubscriptionTask().execute(band);
-                        } else if (!bandStreams.get(band).contains(AMBIENT_REQ_EXTRA)) {
-                            // Add accelerometer to the list in the stream map
-                            bandStreams.get(band).add(AMBIENT_REQ_EXTRA);
-
-                            // Start the stream
-                            new AmbientLightSubscriptionTask().execute(band);
-                        }
-                    }
-
-                    if (modes.get(BAROMETER_REQ_EXTRA)){
-                        if (!bandStreams.containsKey(band)) {
-                            // Make a new list to put into the map with the band
-                            List<String> list = new LinkedList<>();
-                            list.add(BAROMETER_REQ_EXTRA);
-
-                            // Add the band to the map
-                            bandStreams.put(band, list);
-
-                            // Start streaming
-                            new BarometerSubscriptionTask().execute(band);
-                        } else if (!bandStreams.get(band).contains(BAROMETER_REQ_EXTRA)) {
-                            // Add accelerometer to the list in the stream map
-                            bandStreams.get(band).add(BAROMETER_REQ_EXTRA);
-
-                            // Start the stream
-                            new BarometerUnsubscribeTask().execute(band);
-                        }
-                    }
-
-                    if (modes.get(GSR_REQ_EXTRA)){
-                        if (!bandStreams.containsKey(band)) {
-                            // Make a new list to put into the map with the band
-                            List<String> list = new LinkedList<>();
-                            list.add(GSR_REQ_EXTRA);
-
-                            // Add the band to the map
-                            bandStreams.put(band, list);
-
-                            // Start streaming
-                            new GsrSubscriptionTask().execute(band);
-                        } else if (!bandStreams.get(band).contains(GSR_REQ_EXTRA)) {
-                            // Add accelerometer to the list in the stream map
-                            bandStreams.get(band).add(GSR_REQ_EXTRA);
-
-                            // Start the stream
-                            new GsrSubscriptionTask().execute(band);
-                        }
-                    }
-
-                    if (modes.get(HEART_RATE_REQ_EXTRA)){
-                        Log.v(TAG, "HEart rate requested");
-                        if (!bandStreams.containsKey(band)) {
-                            // Make a new list to put into the map with the band
-                            List<String> list = new LinkedList<>();
-                            list.add(HEART_RATE_REQ_EXTRA);
-
-                            // Add the band to the map
-                            bandStreams.put(band, list);
-
-                            // Start streaming
-                            new HeartRateSubscriptionTask().execute(band);
-                        } else if (!bandStreams.get(band).contains(HEART_RATE_REQ_EXTRA)) {
-                            // Add accelerometer to the list in the stream map
-                            bandStreams.get(band).add(HEART_RATE_REQ_EXTRA);
-
-                            // Start the stream
-                            new HeartRateSubscriptionTask().execute(band);
-                        }
-                    }
-
                 }
             }
         }
         return Service.START_NOT_STICKY;
+    }
+
+
+
+    private void genericSubscriptionFactory(String request, BandInfo band) {
+        Log.v(TAG, request + " requested");
+        if (!bandStreams.containsKey(band)) {
+            // Make a new list to put into the map with the band
+            List<String> list = new LinkedList<>();
+            list.add(request);
+
+            // Add the band to the map
+            bandStreams.put(band, list);
+
+        } else if (!bandStreams.get(band).contains(request)) {
+            // Add accelerometer to the list in the stream map
+            bandStreams.get(band).add(request);
+
+        }
+
+        // Request the appropriate stream
+        switch (request) {
+            case ACCEL_REQ_EXTRA:
+                new AccelerometerSubscriptionTask().execute(band);
+                break;
+            case ALT_REQ_EXTRA:
+                new AltimeterSubscriptionTask().execute(band);
+                break;
+            case AMBIENT_REQ_EXTRA:
+                new AmbientLightSubscriptionTask().execute(band);
+                break;
+            case BAROMETER_REQ_EXTRA:
+                new BarometerSubscriptionTask().execute(band);
+                break;
+//            case calories
+//            case contact
+//            case distance
+            case GSR_REQ_EXTRA:
+                new GsrSubscriptionTask().execute(band);
+                break;
+//            case gyro
+            case HEART_RATE_REQ_EXTRA:
+                new HeartRateSubscriptionTask().execute(band);
+                break;
+//            case pedo
+//            case skin temp
+//            case uv
+            default:
+                Log.e(TAG, "Unknown subscription requested " + request);
+        }
     }
 
 
