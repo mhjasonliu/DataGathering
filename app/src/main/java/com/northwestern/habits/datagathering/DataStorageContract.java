@@ -294,13 +294,13 @@ public final class DataStorageContract {
         public static final String TABLE_NAME = "skin_temperature_table";
         public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
         public static final String COLUMN_NAME_DATETIME = "date";
-        public static final String COLUMN_NAME_TEMPERATURE_ = "temperature";
+        public static final String COLUMN_NAME_TEMPERATURE = "temperature";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
                         COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
-                        COLUMN_NAME_TEMPERATURE_ + INT_TYPE +
+                        COLUMN_NAME_TEMPERATURE + INT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -326,7 +326,7 @@ public final class DataStorageContract {
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 10;
+        public static final int DATABASE_VERSION = 11;
         public static final String DATABASE_NAME = "Bluetooth.db";
 
         public BluetoothDbHelper(Context context) {

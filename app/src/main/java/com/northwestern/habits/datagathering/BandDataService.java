@@ -27,11 +27,23 @@ import com.microsoft.band.sensors.BandBarometerEvent;
 import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.microsoft.band.sensors.BandCaloriesEvent;
 import com.microsoft.band.sensors.BandCaloriesEventListener;
+import com.microsoft.band.sensors.BandContactEvent;
+import com.microsoft.band.sensors.BandContactEventListener;
+import com.microsoft.band.sensors.BandDistanceEvent;
+import com.microsoft.band.sensors.BandDistanceEventListener;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
+import com.microsoft.band.sensors.BandGyroscopeEvent;
+import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
+import com.microsoft.band.sensors.BandPedometerEvent;
+import com.microsoft.band.sensors.BandPedometerEventListener;
 import com.microsoft.band.sensors.BandSensorEvent;
+import com.microsoft.band.sensors.BandSkinTemperatureEvent;
+import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
+import com.microsoft.band.sensors.BandUVEvent;
+import com.microsoft.band.sensors.BandUVEventListener;
 import com.microsoft.band.sensors.SampleRate;
 
 import java.text.SimpleDateFormat;
@@ -50,6 +62,7 @@ public class BandDataService extends Service {
     public static final String CONTACT_REQ_EXTRA = "contact";
     public static final String DISTANCE_REQ_EXTRA = "distance";
     public static final String GSR_REQ_EXTRA = "gsr";
+    public static final String GYRO_REQ_EXTRA = "gyro";
     public static final String HEART_RATE_REQ_EXTRA = "heartRate";
     public static final String PEDOMETER_REQ_EXTRA = "pedometer";
     public static final String SKIN_TEMP_REQ_EXTRA = "skinTemperature";
@@ -95,13 +108,29 @@ public class BandDataService extends Service {
     HashMap<BandInfo, CustomBandCaloriesEventListener> caloriesListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> caloriesClients = new HashMap<>();
 
+    HashMap<BandInfo, CustomBandContactEventListener> contactListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> contactClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandDistanceEventListener> distanceListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> distanceClients = new HashMap<>();
+
     HashMap<BandInfo, CustomBandGsrEventListener> gsrListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> gsrClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandGyroEventListener> gyroListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> gyroClients = new HashMap<>();
 
     HashMap<BandInfo, CustomBandHeartRateEventListener> heartRateListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> heartRateClients = new HashMap<>();
 
+    HashMap<BandInfo, CustomBandPedometerEventListener> pedometerListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> pedometerClients = new HashMap<>();
 
+    HashMap<BandInfo, CustomBandSkinTempEventListener> skinTempListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> skinTempClients = new HashMap<>();
+
+    HashMap<BandInfo, CustomBandUvEventListener> uvListeners = new HashMap<>();
+    HashMap<BandInfo, BandClient> uvClients = new HashMap<>();
 
     // Types
     private String T_BAND2 = "Microsoft_Band_2";
@@ -293,18 +322,30 @@ public class BandDataService extends Service {
             case CALORIES_REQ_EXTRA:
                 new CaloriesSubscriptionTask().execute(band);
                 break;
-//            case contact
-//            case distance
+            case CONTACT_REQ_EXTRA:
+                new ContactSubscriptionTask().execute(band);
+                break;
+            case DISTANCE_REQ_EXTRA:
+                new DistanceSubscriptionTask().execute(band);
+                break;
             case GSR_REQ_EXTRA:
                 new GsrSubscriptionTask().execute(band);
                 break;
-//            case gyro
+            case GYRO_REQ_EXTRA:
+                new GyroSubscriptionTask().execute(band);
+                break;
             case HEART_RATE_REQ_EXTRA:
                 new HeartRateSubscriptionTask().execute(band);
                 break;
-//            case pedo
-//            case skin temp
-//            case uv
+            case PEDOMETER_REQ_EXTRA:
+                new PedometerSubscriptionTask().execute(band);
+                break;
+            case SKIN_TEMP_REQ_EXTRA:
+                new SkinTemperatureSubscriptionTask().execute(band);
+                break;
+            case UV_REQ_EXTRA:
+                new UvSubscriptionTask().execute(band);
+                break;
             default:
                 Log.e(TAG, "Unknown subscription requested " + request);
         }
@@ -854,7 +895,242 @@ public class BandDataService extends Service {
         }
     }
 
+    private class CustomBandContactEventListener implements BandContactEventListener {
+        private BandInfo info;
+        private String uName;
+        private String location;
 
+        public CustomBandContactEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandContactChanged(final BandContactEvent event) {
+            if (event != null) {
+                String T_CONTACT = "Contact";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_CONTACT, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_CONTACT);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+                String contactState = "";
+                switch(event.getContactState()){
+                    case NOT_WORN:
+                        contactState = "Not Worn";
+                        break;
+                    case UNKNOWN:
+                        contactState = "Unknown";
+                        break;
+                    case WORN:
+                        contactState = "Worn";
+                        break;
+                    default:
+                        contactState = "Contact Statement is broken";
+                }
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "Contact state = " + event.getContactState());
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.ContactTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.ContactTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.ContactTable.COLUMN_NAME_CONTACT_STATE, contactState);
+
+
+                writeDb.insert(DataStorageContract.ContactTable.TABLE_NAME, null, values);
+
+            }
+        }
+    }
+
+    private class CustomBandDistanceEventListener implements BandDistanceEventListener {
+        private BandInfo info;
+        private String uName;
+        private String location;
+
+        public CustomBandDistanceEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandDistanceChanged(final BandDistanceEvent event) {
+            if (event != null) {
+                String T_DISTANCE = "Distance";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_DISTANCE, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_DISTANCE);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+                String motionType = "";
+                switch (event.getMotionType()){
+                    case UNKNOWN:
+                        motionType = "Unknown";
+                        break;
+                    case IDLE:
+                        motionType = "Idle";
+                        break;
+                    case WALKING:
+                        motionType = "Walking";
+                        break;
+                    case JOGGING:
+                        motionType = "Jogging";
+                        break;
+                    case RUNNING:
+                        motionType = "Running";
+                        break;
+                    default:
+                        break;
+                }
+
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "MotionType: " + motionType + "; Pace: "+ event.getPace() +
+                        ", Speed: "+ event.getSpeed() + ", TotalDistance: "+ event.getTotalDistance() );
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.DistanceTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.DistanceTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.DistanceTable.COLUMN_NAME_CURRENT_MOTION, motionType);
+                values.put(DataStorageContract.DistanceTable.COLUMN_NAME_PACE, event.getPace());
+                values.put(DataStorageContract.DistanceTable.COLUMN_NAME_SPEED, event.getSpeed());
+                values.put(DataStorageContract.DistanceTable.COLUMN_NAME_TOTAL_DISTANCE, event.getSpeed());
+
+
+                writeDb.insert(DataStorageContract.DistanceTable.TABLE_NAME, null, values);
+
+            }
+        }
+    }
 
 
 
@@ -958,6 +1234,116 @@ public class BandDataService extends Service {
         }
     }
 
+
+    private class CustomBandGyroEventListener implements BandGyroscopeEventListener {
+
+        private BandInfo info;
+        private String uName;
+        private String location;
+
+        public CustomBandGyroEventListener(BandInfo mInfo, String name) {
+            super();
+            info = mInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
+            if (event != null) {
+
+                String T_Gyro = "Gyroscope";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_Gyro, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_Gyro);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                // Add new entry to the Accelerometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
+                        "Y: " + Double.toString(event.getAccelerationY()) +
+                        "Z: " + Double.toString(event.getAccelerationZ()));
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.GyroTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.GyroTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.GyroTable.COLUMN_NAME_X, event.getAccelerationX());
+                values.put(DataStorageContract.GyroTable.COLUMN_NAME_Y, event.getAccelerationY());
+                values.put(DataStorageContract.GyroTable.COLUMN_NAME_Z, event.getAccelerationZ());
+
+
+                writeDb.insert(DataStorageContract.GyroTable.TABLE_NAME, null, values);
+            }
+
+        }
+    }
+
+
+
+
+
     private class CustomBandHeartRateEventListener implements BandHeartRateEventListener {
 
         private BandInfo info;
@@ -1057,6 +1443,332 @@ public class BandDataService extends Service {
             }
         }
     }
+
+    private class CustomBandPedometerEventListener implements BandPedometerEventListener {
+        private BandInfo info;
+        private String uName;
+        private String location;
+
+        public CustomBandPedometerEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandPedometerChanged(final BandPedometerEvent event) {
+            if (event != null) {
+                String T_PEDOMETER = "Pedometer";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_PEDOMETER, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_PEDOMETER);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "Total Steps: " + event.getTotalSteps() );
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.PedometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.PedometerTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.PedometerTable.COLUMN_NAME_TOTAL_STEPS, event.getTotalSteps());
+
+
+                writeDb.insert(DataStorageContract.PedometerTable.TABLE_NAME, null, values);
+
+            }
+        }
+    }
+
+    private class CustomBandSkinTempEventListener implements BandSkinTemperatureEventListener {
+        private BandInfo info;
+        private String uName;
+        private String location;
+
+        public CustomBandSkinTempEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandSkinTemperatureChanged(final BandSkinTemperatureEvent event) {
+            if (event != null) {
+                String T_SKIN_TEMP = "SkinTemperature";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_SKIN_TEMP, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_SKIN_TEMP);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "Skin Temperature : " + event.getTemperature() );
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.SkinTemperatureTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.SkinTemperatureTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.SkinTemperatureTable.COLUMN_NAME_TEMPERATURE, event.getTemperature());
+
+
+                writeDb.insert(DataStorageContract.SkinTemperatureTable.TABLE_NAME, null, values);
+
+            }
+        }
+    }
+
+
+    private class CustomBandUvEventListener implements BandUVEventListener {
+        private BandInfo info;
+        private String uName;
+        private String location;
+
+        public CustomBandUvEventListener(BandInfo bandInfo, String name) {
+            super();
+            info = bandInfo;
+            uName = name;
+            location = locations.get(info);
+        }
+
+        @Override
+        public void onBandUVChanged(final BandUVEvent event) {
+            if (event != null) {
+                String T_UV = "UV";
+
+                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
+                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
+
+
+                int studyId, devId, sensId;
+                try {
+                    studyId = getStudyId(uName, readDb);
+                } catch (Resources.NotFoundException e) {
+
+                    // Study not found, use lowest available
+                    studyId = getNewStudy(readDb);
+
+
+                    // Write the study into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
+                    values.put(DataStorageContract.StudyTable._ID, studyId);
+                    writeDb.insert(
+                            DataStorageContract.StudyTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    devId = getNewDev(readDb);
+
+                    // Write new Device into database, save the id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.DeviceTable._ID, devId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
+
+                    writeDb.insert(
+                            DataStorageContract.DeviceTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                try {
+                    sensId = getSensorId(T_UV, devId, readDb);
+                } catch (Resources.NotFoundException e) {
+                    sensId = getNewSensor(readDb);
+
+                    // Write new sensor into database, save id
+                    ContentValues values = new ContentValues();
+                    values.put(DataStorageContract.SensorTable._ID, sensId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_UV);
+
+                    writeDb.insert(
+                            DataStorageContract.SensorTable.TABLE_NAME,
+                            null,
+                            values
+                    );
+                }
+
+                String uvIndex = "";
+                switch (event.getUVIndexLevel()){
+                    case NONE:
+                        uvIndex = "None";
+                        break;
+                    case LOW:
+                        uvIndex = "Low";
+                        break;
+                    case MEDIUM:
+                        uvIndex = "Medium";
+                        break;
+                    case HIGH:
+                        uvIndex = "High";
+                        break;
+                    case VERY_HIGH:
+                        uvIndex = "VeryHigh";
+                        break;
+                    default:
+                        break;
+                }
+
+
+                // Add new entry to the Barometer table
+                Log.v(TAG, "Study name is: " + uName);
+                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+                Log.v(TAG, "UV Index: : " + uvIndex );
+                Log.v(TAG, getDateTime(event));
+
+                ContentValues values = new ContentValues();
+                values.put(DataStorageContract.UvTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.UvTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.UvTable.COLUMN_NAME_INDEX_LEVEL, uvIndex);
+
+
+                writeDb.insert(DataStorageContract.UvTable.TABLE_NAME, null, values);
+
+            }
+        }
+    }
+
+
+
+
 
 
     /* ********* Tasks ******** */
@@ -1494,6 +2206,181 @@ public class BandDataService extends Service {
 
 
 
+    private class ContactSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!contactClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandContactEventListener aListener =
+                                    new CustomBandContactEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerContactEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            contactListeners.put(band, aListener);
+                            contactClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class ContactUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (contactClients.containsKey(band)) {
+
+                    BandClient client = contactClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterContactEventListener(
+                                contactListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        contactListeners.remove(band);
+                        // Remove client from list
+                        contactClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    private class DistanceSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!caloriesClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandDistanceEventListener aListener =
+                                    new CustomBandDistanceEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerDistanceEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            distanceListeners.put(band, aListener);
+                            distanceClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class DistanceUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (distanceClients.containsKey(band)) {
+
+                    BandClient client = distanceClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterDistanceEventListener(
+                                distanceListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        distanceListeners.remove(band);
+                        // Remove client from list
+                        distanceClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+
+
+
+
+
 
 
 
@@ -1584,6 +2471,95 @@ public class BandDataService extends Service {
         }
     }
 
+
+    private class GyroSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!caloriesClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandGyroEventListener aListener =
+                                    new CustomBandGyroEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerGyroscopeEventListener(
+                                    aListener, SampleRate.MS128);
+
+                            // Save the listener and client
+                            gyroListeners.put(band, aListener);
+                            gyroClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class GyroUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (gyroClients.containsKey(band)) {
+
+                    BandClient client = gyroClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterGyroscopeEventListener(
+                                gyroListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        gyroListeners.remove(band);
+                        // Remove client from list
+                        gyroClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+
+
+
     private class HeartRateSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
         protected Void doInBackground(BandInfo... params) {
@@ -1668,6 +2644,269 @@ public class BandDataService extends Service {
             return null;
         }
     }
+
+
+
+    private class PedometerSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!contactClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandPedometerEventListener aListener =
+                                    new CustomBandPedometerEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerPedometerEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            pedometerListeners.put(band, aListener);
+                            pedometerClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class PedometerUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (pedometerClients.containsKey(band)) {
+
+                    BandClient client = pedometerClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterPedometerEventListener(
+                                pedometerListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        pedometerListeners.remove(band);
+                        // Remove client from list
+                        pedometerClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    private class SkinTemperatureSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!contactClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandSkinTempEventListener aListener =
+                                    new CustomBandSkinTempEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerSkinTemperatureEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            skinTempListeners.put(band, aListener);
+                            skinTempClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class SkinTemperatureUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (contactClients.containsKey(band)) {
+
+                    BandClient client = contactClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterSkinTemperatureEventListener(
+                                skinTempListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        skinTempListeners.remove(band);
+                        // Remove client from list
+                        skinTempClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+
+    private class UvSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+            if (params.length > 0) {
+                BandInfo band = params[0];
+                try {
+                    if (!contactClients.containsKey(band)) {
+                        // No registered clients streaming calories data
+                        BandClient client = connectBandClient(band, null);
+                        if (client != null &&
+                                client.getConnectionState() == ConnectionState.CONNECTED) {
+                            // Create the listener
+                            CustomBandUvEventListener aListener =
+                                    new CustomBandUvEventListener(band, studyName);
+
+                            // Register the listener
+                            client.getSensorManager().registerUVEventListener(
+                                    aListener);
+
+                            // Save the listener and client
+                            uvListeners.put(band, aListener);
+                            uvClients.put(band, client);
+                        } else {
+                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                    "the band is in range.\n");
+                        }
+                    } else {
+                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                    }
+                } catch (BandException e) {
+                    String exceptionMessage;
+                    switch (e.getErrorType()) {
+                        case UNSUPPORTED_SDK_VERSION_ERROR:
+                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                    "SDK Version. Please update to latest SDK.\n";
+                            break;
+                        case SERVICE_ERROR:
+                            exceptionMessage = "Microsoft Health BandService is not available. " +
+                                    "Please make sure Microsoft Health is installed and that you " +
+                                    "have the correct permissions.\n";
+                            break;
+                        default:
+                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                            break;
+                    }
+                    Log.e(TAG, exceptionMessage);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class UvUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
+        @Override
+        protected Void doInBackground(BandInfo... params) {
+
+            if (params.length > 0) {
+                BandInfo band = params[0];
+
+                if (contactClients.containsKey(band)) {
+
+                    BandClient client = contactClients.get(band);
+
+                    // Unregister the client
+                    try {
+                        client.getSensorManager().unregisterUVEventListener(
+                                uvListeners.get(band)
+                        );
+
+                        // Remove listener from list
+                        uvListeners.remove(band);
+                        // Remove client from list
+                        uvClients.remove(band);
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+
+
+
+
 
     // General
     private BandClient connectBandClient(BandInfo band, BandClient client) throws InterruptedException, BandException {
