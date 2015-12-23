@@ -19,7 +19,8 @@
             android:text="Piezo"
             android:id="@+id/piezoBox"
             android:layout_gravity="center_horizontal"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <FrameLayout
             android:layout_width="wrap_content"
@@ -31,7 +32,8 @@
             android:layout_height="wrap_content"
             android:text="audio"
             android:id="@+id/audioBox"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
     </LinearLayout>
 
     <FrameLayout
@@ -49,7 +51,8 @@
             android:layout_height="wrap_content"
             android:text="Start Stream"
             android:id="@+id/startStreamButton"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:enabled="false"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -57,6 +60,6 @@
             android:text="Stop Stream"
             android:id="@+id/stopStreamButton"
             android:layout_weight="1"
-            />
+            android:enabled="false"/>
     </LinearLayout>
 </LinearLayout>
