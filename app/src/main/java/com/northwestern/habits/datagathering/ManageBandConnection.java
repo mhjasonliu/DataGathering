@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.GridLayout;
 import android.widget.Spinner;
 
 import com.microsoft.band.BandClientManager;
@@ -149,4 +151,27 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         // Clear the heart rate box
         ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(false);
     }
+
+    /**
+     * Does nothing right now
+     * It has the ability to change the width of the grid layout to have another number of columns
+     * but that causes the app to crash when setting to a lower number.
+     * @param newConfig
+     */
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            GridLayout gl = (GridLayout) findViewById(R.id.checkbox_grid);
+            gl.setColumnCount(3);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            GridLayout gl = (GridLayout) findViewById(R.id.checkbox_grid);
+            gl.setColumnCount(3);
+        }
+
+    }
+
+
+
 }

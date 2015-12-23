@@ -154,6 +154,8 @@ public class DeviceManagementActivity extends AppCompatActivity {
     }
 
 
+
+
     /* ************************** SCANNING FOR BT LE DEVICES **************************** */
     private BluetoothLeScanner mLeScanner = BluetoothConnectionLayer.getAdapter().getBluetoothLeScanner();
     private boolean mScanning = false;

@@ -23,16 +23,18 @@
             android:id="@+id/textView4" />
 
         <GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:id="@+id/checkbox_grid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:columnCount="3"
+            android:layout_gravity="center_horizontal">
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Accelerometer"
                 android:id="@+id/accelerometerBox"
                 android:checked="false"
-                android:layout_row="0"
-                android:layout_column="0" />
+                 />
 
             <CheckBox
                 android:layout_width="wrap_content"
@@ -41,8 +43,7 @@
                 android:id="@+id/altimeterBox"
                 android:checked="false"
                 android:enabled="true"
-                android:layout_row="0"
-                android:layout_column="1" />
+                 />
 
             <CheckBox
                 android:layout_width="wrap_content"
@@ -51,16 +52,13 @@
                 android:id="@+id/barometerBox"
                 android:checked="false"
                 android:enabled="true"
-                android:layout_row="1"
-                android:layout_column="0" />
+                 />
 
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Calories"
                 android:id="@+id/caloriesBox"
-                android:layout_row="1"
-                android:layout_column="1"
                 android:checked="false"
                 android:enabled="true"/>
 
@@ -69,8 +67,6 @@
                 android:layout_height="wrap_content"
                 android:text="Contact"
                 android:id="@+id/contactBox"
-                android:layout_row="1"
-                android:layout_column="2"
                 android:checked="false"
                 android:enabled="true"/>
 
@@ -79,8 +75,6 @@
                 android:layout_height="wrap_content"
                 android:text="Distance"
                 android:id="@+id/distanceBox"
-                android:layout_row="3"
-                android:layout_column="0"
                 android:checked="false"
                 android:enabled="true"/>
 
@@ -91,8 +85,7 @@
                 android:id="@+id/gsrBox"
                 android:checked="false"
                 android:enabled="true"
-                android:layout_row="3"
-                android:layout_column="1" />
+                 />
 
             <CheckBox
                 android:layout_width="wrap_content"
@@ -100,8 +93,6 @@
                 android:text="Gyroscope"
                 android:id="@+id/gyroBox"
                 android:checked="false"
-                android:layout_row="3"
-                android:layout_column="2"
                 android:enabled="true" />
 
             <CheckBox
@@ -112,16 +103,13 @@
                 android:checked="false"
                 android:enabled="true"
                 android:onClick="onHeartRateClicked"
-                android:layout_row="4"
-                android:layout_column="0" />
+                 />
 
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Pedometer"
                 android:id="@+id/pedometerBox"
-                android:layout_row="4"
-                android:layout_column="1"
                 android:checked="false"
                 android:enabled="true"/>
 
@@ -130,8 +118,6 @@
                 android:layout_height="wrap_content"
                 android:text="Skin Temp."
                 android:id="@+id/skinTempBox"
-                android:layout_row="4"
-                android:layout_column="2"
                 android:checked="false"
                 android:enabled="true"/>
 
@@ -140,8 +126,7 @@
                 android:layout_height="wrap_content"
                 android:text="UV"
                 android:id="@+id/uvBox"
-                android:layout_row="6"
-                android:layout_column="0"
+
                 android:checked="false"
                 android:enabled="true"/>
 
@@ -152,8 +137,7 @@
                 android:id="@+id/ambientBox"
                 android:checked="false"
                 android:enabled="true"
-                android:layout_row="0"
-                android:layout_column="2" />
+                 />
         </GridLayout>
 
         <TextView
