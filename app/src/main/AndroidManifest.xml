@@ -37,6 +37,13 @@
 
         <activity android:name=".NecklaceManagementActivity" >
         </activity>
+
+        <service
+            android:name=".NecklaceDataService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":NecklaceData">
+        </service>
     </application>
 
 </manifest>
