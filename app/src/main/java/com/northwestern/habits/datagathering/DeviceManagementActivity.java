@@ -7,6 +7,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -165,16 +166,18 @@ public class DeviceManagementActivity extends AppCompatActivity {
     private static final long SCAN_PERIOD = 10000;
 
     private void scanLeDevice(boolean enable) {
-        if (BluetoothConnectionLayer.getAdapter().isOffloadedScanBatchingSupported()) {
-            if (enable) {
-                new ScanTask().execute(enable);
-                Log.v(TAG, "executed scan task");
-            } else {
-                Log.v(TAG, "LE scan was not enabled");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (BluetoothConnectionLayer.getAdapter().isOffloadedScanBatchingSupported()) {
+                if (enable) {
+                    new ScanTask().execute(enable);
+                    Log.v(TAG, "executed scan task");
+                } else {
+                    Log.v(TAG, "LE scan was not enabled");
+                }
             }
+            else
+                Log.v(TAG, "Batch not supported");
         }
-        else
-            Log.v(TAG, "Batch not supported");
     }
 
 
