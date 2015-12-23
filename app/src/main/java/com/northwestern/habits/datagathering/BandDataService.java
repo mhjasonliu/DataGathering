@@ -734,6 +734,7 @@ public class BandDataService extends Service {
                     );
                 }
 
+
                 try {
                     sensId = getSensorId(T_BAROMETER, devId, readDb);
                 } catch (Resources.NotFoundException e) {
