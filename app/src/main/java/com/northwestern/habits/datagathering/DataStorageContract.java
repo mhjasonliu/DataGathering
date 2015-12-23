@@ -170,7 +170,7 @@ public final class DataStorageContract {
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
                         COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
-                        COLUMN_NAME_CALORIES + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_CALORIES + INT_TYPE +
                         " )";
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -215,7 +215,7 @@ public final class DataStorageContract {
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 7;
+        public static final int DATABASE_VERSION = 9;
         public static final String DATABASE_NAME = "Bluetooth.db";
 
         public BluetoothDbHelper(Context context) {
@@ -229,6 +229,7 @@ public final class DataStorageContract {
             db.execSQL(AltimeterTable.SQL_CREATE_ENTRIES);
             db.execSQL(AmbientTable.SQL_CREATE_ENTRIES);
             db.execSQL(BarometerTable.SQL_CREATE_ENTRIES);
+            db.execSQL(CaloriesTable.SQL_CREATE_ENTRIES);
             db.execSQL(GsrTable.SQL_CREATE_ENTRIES);
             db.execSQL(HeartRateTable.SQL_CREATE_ENTRIES);
         }

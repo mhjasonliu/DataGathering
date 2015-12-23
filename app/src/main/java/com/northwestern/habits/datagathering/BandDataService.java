@@ -130,6 +130,7 @@ public class BandDataService extends Service {
                 modes.put(ALT_REQ_EXTRA, extras.getBoolean(ALT_REQ_EXTRA));
                 modes.put(AMBIENT_REQ_EXTRA, extras.getBoolean(AMBIENT_REQ_EXTRA));
                 modes.put(BAROMETER_REQ_EXTRA, extras.getBoolean(BAROMETER_REQ_EXTRA));
+                modes.put(CALORIES_REQ_EXTRA, extras.getBoolean(CALORIES_REQ_EXTRA));
                 modes.put(GSR_REQ_EXTRA, extras.getBoolean(GSR_REQ_EXTRA));
                 modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
 
@@ -247,6 +248,7 @@ public class BandDataService extends Service {
 
                     for ( String key : modes.keySet() ) {
                         if (modes.get(key)) {
+                            Log.v(TAG, "For mode " + key + " value is " + modes.get(key));
                             genericSubscriptionFactory(key, band);
                         }
                     }
@@ -837,7 +839,7 @@ public class BandDataService extends Service {
                 Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, String.format("KiloCalories Burned = %.3d Calories", event.getCalories() ));
+                Log.v(TAG, String.format("KiloCalories Burned = %d Calories", event.getCalories() ));
                 Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
