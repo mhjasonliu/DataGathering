@@ -10,7 +10,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Find device type"
+        android:text="@string/find_device_type"
         android:id="@+id/typeButton"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
@@ -20,10 +20,9 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Device name:"
+        android:text="@string/device_name"
         android:id="@+id/textView"
         android:layout_alignParentTop="true"
-        android:layout_alignLeft="@+id/typeButton"
         android:layout_alignStart="@+id/typeButton" />
 
     <TextView
@@ -31,7 +30,6 @@
         android:layout_height="wrap_content"
         android:id="@+id/nameText"
         android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/textView"
         android:layout_toEndOf="@+id/textView" />
 
     <TextView
@@ -40,7 +38,6 @@
         android:text="Device type:"
         android:id="@+id/textView2"
         android:layout_below="@+id/textView"
-        android:layout_alignLeft="@+id/typeButton"
         android:layout_alignStart="@+id/typeButton" />
 
     <TextView
@@ -48,6 +45,5 @@
         android:layout_height="wrap_content"
         android:id="@+id/typeText"
         android:layout_below="@+id/textView"
-        android:layout_toRightOf="@+id/textView2"
         android:layout_toEndOf="@+id/textView2" />
 </RelativeLayout>

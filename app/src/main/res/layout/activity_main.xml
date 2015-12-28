@@ -9,7 +9,7 @@
 
 
     <TextView
-        android:text="Welcome to HAbits data gathering"
+        android:text="@string/welcome_to_habits_data_gathering"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/welcomeMessage"/>
@@ -17,14 +17,14 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="25dp"
-        android:text="Please connect to a device"
+        android:layout_marginStart="25dp"
+        android:text="@string/please_connect_to_a_device"
         android:id="@+id/welcomePrompt"/>
 
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Start Study"
+        android:text="@string/start_study"
         android:id="@+id/startStudyButton"
         android:onClick="startStudyClicked"
         android:enabled="true"/>
@@ -33,7 +33,7 @@
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Manage Study"
+        android:text="@string/manage_study"
         android:id="@+id/manageStudyButton"
         android:layout_gravity="center_horizontal"
         android:onClick="manageStudyClicked"
@@ -42,7 +42,7 @@
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="End study"
+        android:text="@string/end_study"
         android:id="@+id/endStudyButton"
         android:layout_gravity="center_horizontal"
         android:onClick="endStudyClicked"
@@ -51,7 +51,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="DISPLAY DATABASE"
+        android:text="@string/display_database"
         android:id="@+id/displayDbButton"
         android:onClick="onReadDatabase"
         android:enabled="false"/>
@@ -59,7 +59,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Delete Database"
+        android:text="@string/delete_database"
         android:id="@+id/deleteDbButton"
         android:onClick="onDeleteDatabase"/>
 

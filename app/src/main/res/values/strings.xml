@@ -2,6 +2,33 @@
     <string name="app_name">Data Gathering</string>
     <string name="title_activity_band_connection_management">BandConnectionManagement</string>
     <string name="title_activity_device_scan">DeviceScanActivity</string>
+    <string name="device_name">Device name:</string>
+    <string name="find_device_type">Find device type</string>
+    <string name="stream_types">Stream Types:</string>
+    <string name="accelerometer">Accelerometer</string>
+    <string name="altimeter">Altimeter</string>
+    <string name="barometer">Barometer</string>
+    <string name="calories">Calories</string>
+    <string name="contact">Contact</string>
+    <string name="distance">Distance</string>
+    <string name="gsr">GSR</string>
+    <string name="gyroscope">Gyroscope</string>
+    <string name="heart_rate">Heart Rate</string>
+    <string name="pedometer">Pedometer</string>
+    <string name="skin_temp">Skin Temp.</string>
+    <string name="uv">UV</string>
+    <string name="ambient_light">Ambient Light</string>
+    <string name="location">Location:</string>
+    <string name="start_streaming">Start Streaming</string>
+    <string name="stop_streaming">Stop streaming</string>
+    <string name="welcome_to_habits_data_gathering">Welcome to HAbits data gathering</string>
+    <string name="please_connect_to_a_device">Please connect to a device</string>
+    <string name="start_study">Start Study</string>
+    <string name="manage_study">Manage Study</string>
+    <string name="end_study">End study</string>
+    <string name="display_database">DISPLAY DATABASE</string>
+    <string name="delete_database">Delete Database</string>
+    <string name="refresh">Refresh</string>
 
 
     <string-array name="locations_array">

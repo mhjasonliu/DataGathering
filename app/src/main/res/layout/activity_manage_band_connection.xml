@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Stream Types:"
+            android:text="@string/stream_types"
             android:id="@+id/textView4" />
 
         <GridLayout
@@ -31,7 +31,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Accelerometer"
+                android:text="@string/accelerometer"
                 android:id="@+id/accelerometerBox"
                 android:checked="false"
                  />
@@ -39,7 +39,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Altimeter"
+                android:text="@string/altimeter"
                 android:id="@+id/altimeterBox"
                 android:checked="false"
                 android:enabled="true"
@@ -48,7 +48,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Barometer"
+                android:text="@string/barometer"
                 android:id="@+id/barometerBox"
                 android:checked="false"
                 android:enabled="true"
@@ -57,7 +57,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Calories"
+                android:text="@string/calories"
                 android:id="@+id/caloriesBox"
                 android:checked="false"
                 android:enabled="true"/>
@@ -65,7 +65,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Contact"
+                android:text="@string/contact"
                 android:id="@+id/contactBox"
                 android:checked="false"
                 android:enabled="true"/>
@@ -73,7 +73,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Distance"
+                android:text="@string/distance"
                 android:id="@+id/distanceBox"
                 android:checked="false"
                 android:enabled="true"/>
@@ -81,7 +81,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GSR"
+                android:text="@string/gsr"
                 android:id="@+id/gsrBox"
                 android:checked="false"
                 android:enabled="true"
@@ -90,7 +90,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Gyroscope"
+                android:text="@string/gyroscope"
                 android:id="@+id/gyroBox"
                 android:checked="false"
                 android:enabled="true" />
@@ -98,7 +98,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Heart Rate"
+                android:text="@string/heart_rate"
                 android:id="@+id/heartRateBox"
                 android:checked="false"
                 android:enabled="true"
@@ -108,7 +108,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pedometer"
+                android:text="@string/pedometer"
                 android:id="@+id/pedometerBox"
                 android:checked="false"
                 android:enabled="true"/>
@@ -116,7 +116,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Skin Temp."
+                android:text="@string/skin_temp"
                 android:id="@+id/skinTempBox"
                 android:checked="false"
                 android:enabled="true"/>
@@ -124,7 +124,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="UV"
+                android:text="@string/uv"
                 android:id="@+id/uvBox"
 
                 android:checked="false"
@@ -133,7 +133,7 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ambient Light"
+                android:text="@string/ambient_light"
                 android:id="@+id/ambientBox"
                 android:checked="false"
                 android:enabled="true"
@@ -145,7 +145,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="25dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Location:"
+            android:text="@string/location"
             android:id="@+id/textView3"
             android:layout_gravity="center_horizontal" />
 
@@ -172,7 +172,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Start Streaming"
+                android:text="@string/start_streaming"
                 android:id="@+id/streamButton"
                 android:onClick="onStreamClick"/>
 
@@ -180,7 +180,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Stop streaming"
+                android:text="@string/stop_streaming"
                 android:id="@+id/stopStreamButton"
                 android:onClick="onStopStreamClick"
                 android:enabled="true"/>
