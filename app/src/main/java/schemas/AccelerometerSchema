@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://habits.northwestern.com/schemas/myschema.json",
+  "description": "This schema represents an instance of accelerometer data",
+
+  "type": "object",
+  "definitions": {
+    "sample_time": {
+      "$ref": "SampleTimeSchema.json"
+    }
+  },
+  "properties": {
+    "x": "number",
+    "y": "number",
+    "z": "number",
+    "time": "sample_time"
+  },
+  "required": ["x", "y", "z", "time"]
+}

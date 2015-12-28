@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "This schema represents the moment a sensor records a measurment",
+
+  "type": "object",
+  "properties": {
+
+    "date": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "millisecond": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+
+}

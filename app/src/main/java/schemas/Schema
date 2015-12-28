@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+
+  "title": "Study",
+  "description": "This schema represents the ways data can be sent from sensing devices.",
+
+    "type": "object",
+    "properties": {
+      "studyId": "string",
+    }
+
+
+}
+
+
