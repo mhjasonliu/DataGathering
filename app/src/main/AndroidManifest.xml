@@ -21,12 +21,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DeviceManagementActivity">
+        <activity android:name=".DeviceManagementActivity"
+            android:parentActivityName=".MainActivity">
         </activity>
-        <activity android:name=".ManageConnectionActivity" >
-        </activity>
+
         <activity android:name=".ManageBandConnection"
-            android:configChanges="orientation|keyboardHidden|screenSize">
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:parentActivityName=".DeviceManagementActivity">
         </activity>
 
         <service
