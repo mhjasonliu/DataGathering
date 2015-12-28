@@ -79,8 +79,6 @@ public class BandDataService extends Service {
 
 
     // General stuff (maintained by main)
-    //private BandInfo band = null;
-    //private BandClient client = null;
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
     private HashMap<String, Boolean> modes = new HashMap<>();
 
@@ -3149,34 +3147,12 @@ public class BandDataService extends Service {
     public class StopAllStreams extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-//            Iterator<BandInfo> bandIter = bandStreams.keySet().iterator();
-//            BandInfo mBand;
-//            BandClient client;
-//            while (bandIter.hasNext()) {
-//                mBand = bandIter.next();
-//                client = null;
-//                Log.v(TAG, "Disconnecting a band: " + mBand.getMacAddress());
-//                try {
-//                    try {
-//                        client = connectBandClient(mBand, client);
-//                    } catch (InterruptedException | BandException e) {
-//                        e.printStackTrace();
-//                    }
-//                    try {
-//                        bandClients.get(mBand).disconnect().await();
-//                    } catch (InterruptedException | BandException e) {
-//                        e.printStackTrace();
-//                    }
-//                } catch (Exception e) {
-//                    // The band was not connected, do nothing
-//                    e.printStackTrace();
-//                }
-//                Log.v(TAG, "Removing the band");
-//                Log.v(TAG, "Band removed.");
-//            }
-//
-//            bandClients.clear();
 
+            for (BandInfo band : bandStreams.keySet()) {
+                for (String type : bandStreams.get(band)) {
+                    genericUnsubscribeFactory(type, band);
+                }
+            }
             return null;
         }
     }
