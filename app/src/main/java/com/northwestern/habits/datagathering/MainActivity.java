@@ -43,6 +43,20 @@ public class MainActivity extends AppCompatActivity {
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        newStudyButton = (Button) findViewById(R.id.startStudyButton);
+        editStudyButton = (Button) findViewById(R.id.manageStudyButton);
+        endStudyButton = (Button) findViewById(R.id.endStudyButton);
+
+        if (mDbHelper == null) {
+            mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
+        }
+
+    }
+
 
 
     /******************************* BUTTON HANDLERS *******************************/
