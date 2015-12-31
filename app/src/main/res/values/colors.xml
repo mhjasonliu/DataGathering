@@ -10,6 +10,6 @@
     <color name="RichBlack50">#716C6B</color>
     <color name="RichBlack20">#BBB8B8</color>
     <color name="RichBlack10">#D8D6D6</color>
-    <color name="transparent">#10000000</color>
+    <color name="transparent">#20000000</color>
 
 </resources>
