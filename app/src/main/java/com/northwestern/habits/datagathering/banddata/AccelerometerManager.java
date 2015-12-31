@@ -33,12 +33,9 @@ public class AccelerometerManager extends  DataManager{
     }
 
 
-    public AccelerometerManager(String sName) {
-        super(sName);
+    public AccelerometerManager(String sName, SQLiteDatabase db) {
+        super(sName, "AccelerometerManager", db);
     }
-
-
-    private final String TAG = "AccelerometerManager";
 
 
     private class AccelerometerSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
@@ -50,7 +47,7 @@ public class AccelerometerManager extends  DataManager{
                 try {
                     if (!clients.containsKey(band)) {
                         // No registered clients streaming accelerometer data
-                        BandClient client = BandDataService.connectBandClient(band, null);
+                        BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
                             // Create the listener
@@ -146,24 +143,22 @@ public class AccelerometerManager extends  DataManager{
 
                 String T_ACCEL = "Accelerometer";
 
-                SQLiteDatabase writeDb = BandDataService.mDbHelper.getWritableDatabase();
-                SQLiteDatabase readDb = BandDataService.mDbHelper.getReadableDatabase();
 
 
                 int studyId, devId, sensId;
                 try {
-                    studyId = BandDataService.getStudyId(uName, readDb);
+                    studyId = getStudyId(uName, database);
                 } catch (Resources.NotFoundException e) {
 
                     // study not found, use lowest available
-                    studyId = BandDataService.getNewStudy(readDb);
+                    studyId = getNewStudy(database);
 
 
                     // Write the study into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
                     values.put(DataStorageContract.StudyTable._ID, studyId);
-                    writeDb.insert(
+                    database.insert(
                             DataStorageContract.StudyTable.TABLE_NAME,
                             null,
                             values
@@ -171,19 +166,19 @@ public class AccelerometerManager extends  DataManager{
                 }
 
                 try {
-                    devId = BandDataService.getDevId(location, info.getMacAddress(), studyId, readDb);
+                    devId = getDevId(location, info.getMacAddress(), studyId, database);
                 } catch (Resources.NotFoundException e) {
-                    devId = BandDataService.getNewDev(readDb);
+                    devId = getNewDev(database);
 
                     // Write new Device into database, save the id
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.DeviceTable._ID, devId);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, BandDataService.T_BAND2);
+                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
                     values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
 
-                    writeDb.insert(
+                    database.insert(
                             DataStorageContract.DeviceTable.TABLE_NAME,
                             null,
                             values
@@ -191,9 +186,9 @@ public class AccelerometerManager extends  DataManager{
                 }
 
                 try {
-                    sensId = BandDataService.getSensorId(T_ACCEL, devId, readDb);
+                    sensId = getSensorId(T_ACCEL, devId, database);
                 } catch (Resources.NotFoundException e) {
-                    sensId = BandDataService.getNewSensor(readDb);
+                    sensId = getNewSensor(database);
 
                     // Write new sensor into database, save id
                     ContentValues values = new ContentValues();
@@ -201,14 +196,14 @@ public class AccelerometerManager extends  DataManager{
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_ACCEL);
 
-                    writeDb.insert(
+                    database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
                             null,
                             values
                     );
                 }
 
-                // Add new entry to the Accelerometertable
+                // Add new entry to the Accelerometer table
                 Log.v(TAG, "Study name is: " + uName);
                 Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
@@ -216,17 +211,17 @@ public class AccelerometerManager extends  DataManager{
                 Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
                         "Y: " + Double.toString(event.getAccelerationY()) +
                         "Z: " + Double.toString(event.getAccelerationZ()));
-                Log.v(TAG, BandDataService.getDateTime(event));
+                Log.v(TAG,getDateTime(event));
 
                 ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, BandDataService.getDateTime(event));
+                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y, event.getAccelerationY());
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Z, event.getAccelerationZ());
 
 
-                writeDb.insert(DataStorageContract.AccelerometerTable.TABLE_NAME, null, values);
+                database.insert(DataStorageContract.AccelerometerTable.TABLE_NAME, null, values);
             }
 
         }
