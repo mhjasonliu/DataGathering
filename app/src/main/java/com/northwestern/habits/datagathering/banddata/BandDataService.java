@@ -175,22 +175,8 @@ public class BandDataService extends Service {
 
                 if (extras.getBoolean(STOP_STREAM_EXTRA)){
                     Log.v(TAG, "Stop stream requested.");
+
                     // Unsubscribe from specified tasks
-
-                    if (modes.get(HEART_RATE_REQ_EXTRA) && bandStreams.containsKey(band) &&
-                            bandStreams.get(band).contains(HEART_RATE_REQ_EXTRA)) {
-                        if (bandStreams.get(band).size() == 1) {
-                            // Only stream open for this band, remove from bandStreams
-                            bandStreams.remove(band);
-                        } else {
-                            // Other streams open, remove from list
-                            bandStreams.get(band).remove(HEART_RATE_REQ_EXTRA);
-                        }
-                        // Start an altimeter unsubscribe task
-                        Log.v(TAG, "Unsubscribe from Heart Rate");
-                        new HeartRateUnsubscribeTask().execute(band);
-                    }
-
                     for (String type : modes.keySet()) {
                         if (modes.get(type)) {
                             genericUnsubscribeFactory(type, band);
