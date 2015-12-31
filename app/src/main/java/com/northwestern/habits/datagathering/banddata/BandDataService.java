@@ -18,8 +18,6 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
-import com.microsoft.band.sensors.BandAltimeterEvent;
-import com.microsoft.band.sensors.BandAltimeterEventListener;
 import com.microsoft.band.sensors.BandAmbientLightEvent;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
 import com.microsoft.band.sensors.BandBarometerEvent;
@@ -98,12 +96,9 @@ public class BandDataService extends Service {
 
     // Data managers
     AccelerometerManager accManager;
+    AltimeterManager altManager;
 
     // Maps of listeners (maintained by tasks)
-
-
-    HashMap<BandInfo, CustomBandAltimeterEventListener> altListeners = new HashMap<>();
-    HashMap<BandInfo, BandClient> altClients = new HashMap<>();
 
     HashMap<BandInfo, CustomBandAmbientLightEventListener> ambientListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> ambientClients = new HashMap<>();
@@ -201,6 +196,7 @@ public class BandDataService extends Service {
 
 
     private  void genericUnsubscribeFactory(String request, BandInfo band) {
+        // Check for existance of stream
         if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
             if (bandStreams.get(band).size() == 1) {
                 // Only stream open for this band, remove from bandStreams
@@ -209,55 +205,54 @@ public class BandDataService extends Service {
                 // Other streams open, remove from list
                 bandStreams.get(band).remove(request);
             }
-            // Start an altimeter unsubscribe task
-            Log.v(TAG, "Unsubscribe from " + request);
-            new HeartRateUnsubscribeTask().execute(band);
-        }
+            // Start an unsubscribe task
 
-        // Unsubscribe from the appropriate stream
-        switch (request) {
-            case ACCEL_REQ_EXTRA:
-                if (accManager != null)
-                    accManager.unSubscribe(band);
-                break;
-            case ALT_REQ_EXTRA:
-                new AltimeterUnsubscribeTask().execute(band);
-                break;
-            case AMBIENT_REQ_EXTRA:
-                new AmbientUnsubscribeTask().execute(band);
-                break;
-            case BAROMETER_REQ_EXTRA:
-                new BarometerUnsubscribeTask().execute(band);
-                break;
-            case CALORIES_REQ_EXTRA:
-                new CaloriesUnsubscribeTask().execute(band);
-                break;
-            case CONTACT_REQ_EXTRA:
-                new ContactUnsubscribeTask().execute(band);
-                break;
-            case DISTANCE_REQ_EXTRA:
-                new DistanceUnsubscribeTask().execute(band);
-                break;
-            case GSR_REQ_EXTRA:
-                new GsrUnsubscribeTask().execute(band);
-                break;
-            case GYRO_REQ_EXTRA:
-                new GyroUnsubscribeTask().execute(band);
-                break;
-            case HEART_RATE_REQ_EXTRA:
-                new HeartRateUnsubscribeTask().execute(band);
-                break;
-            case PEDOMETER_REQ_EXTRA:
-                new PedometerUnsubscribeTask().execute(band);
-                break;
-            case SKIN_TEMP_REQ_EXTRA:
-                new SkinTemperatureUnsubscribeTask().execute(band);
-                break;
-            case UV_REQ_EXTRA:
-                new UvUnsubscribeTask().execute(band);
-                break;
-            default:
-                Log.e(TAG, "Unknown subscription requested " + request);
+            // Unsubscribe from the appropriate stream
+            switch (request) {
+                case ACCEL_REQ_EXTRA:
+                    if (accManager != null)
+                        accManager.unSubscribe(band);
+                    break;
+                case ALT_REQ_EXTRA:
+                    if (altManager != null)
+                        altManager.unSubscribe(band);
+                    break;
+                case AMBIENT_REQ_EXTRA:
+                    new AmbientUnsubscribeTask().execute(band);
+                    break;
+                case BAROMETER_REQ_EXTRA:
+                    new BarometerUnsubscribeTask().execute(band);
+                    break;
+                case CALORIES_REQ_EXTRA:
+                    new CaloriesUnsubscribeTask().execute(band);
+                    break;
+                case CONTACT_REQ_EXTRA:
+                    new ContactUnsubscribeTask().execute(band);
+                    break;
+                case DISTANCE_REQ_EXTRA:
+                    new DistanceUnsubscribeTask().execute(band);
+                    break;
+                case GSR_REQ_EXTRA:
+                    new GsrUnsubscribeTask().execute(band);
+                    break;
+                case GYRO_REQ_EXTRA:
+                    new GyroUnsubscribeTask().execute(band);
+                    break;
+                case HEART_RATE_REQ_EXTRA:
+                    new HeartRateUnsubscribeTask().execute(band);
+                    break;
+                case PEDOMETER_REQ_EXTRA:
+                    new PedometerUnsubscribeTask().execute(band);
+                    break;
+                case SKIN_TEMP_REQ_EXTRA:
+                    new SkinTemperatureUnsubscribeTask().execute(band);
+                    break;
+                case UV_REQ_EXTRA:
+                    new UvUnsubscribeTask().execute(band);
+                    break;
+                default:
+                    Log.e(TAG, "Unknown subscription requested " + request);
+            }
         }
 
     } private void genericSubscriptionFactory(String request, BandInfo band) {
@@ -285,7 +280,10 @@ public class BandDataService extends Service {
                 accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
-                new AltimeterSubscriptionTask().execute(band);
+                if (altManager == null)
+                    altManager = new AltimeterManager(studyName);
+
+                altManager.subscribe(band);
                 break;
             case AMBIENT_REQ_EXTRA:
                 new AmbientLightSubscriptionTask().execute(band);
@@ -343,126 +341,6 @@ public class BandDataService extends Service {
      */
     protected static String getDateTime(BandSensorEvent event) {
         return dateFormat.format(event.getTimestamp());
-    }
-
-
-
-
-    private class CustomBandAltimeterEventListener implements BandAltimeterEventListener {
-
-        public CustomBandAltimeterEventListener(BandInfo bandInfo, String name) {
-            super();
-            uName = name;
-            info = bandInfo;
-            location = locations.get(info);
-        }
-
-        private String uName;
-        private BandInfo info;
-        private String location;
-
-        @Override
-        public void onBandAltimeterChanged(final BandAltimeterEvent event) {
-            if (event != null) {
-
-                String T_ALT = "Altimeter";
-
-                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
-                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
-
-
-                int studyId, devId, sensId;
-                try {
-                    studyId = getStudyId(uName, readDb);
-                } catch (Resources.NotFoundException e) {
-
-                    // Study not found, use lowest available
-                    studyId = getNewStudy(readDb);
-
-
-                    // Write the study into database, save the id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
-                    values.put(DataStorageContract.StudyTable._ID, studyId);
-                    writeDb.insert(
-                            DataStorageContract.StudyTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                try {
-                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
-                } catch (Resources.NotFoundException e) {
-                    devId = getNewDev(readDb);
-
-                    // Write new Device into database, save the id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
-
-                    writeDb.insert(
-                            DataStorageContract.DeviceTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                try {
-                    sensId = getSensorId(T_ALT, devId, readDb);
-                } catch (Resources.NotFoundException e) {
-                    sensId = getNewSensor(readDb);
-
-                    // Write new sensor into database, save id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.SensorTable._ID, sensId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_ALT);
-
-                    writeDb.insert(
-                            DataStorageContract.SensorTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                // Add new entry to the Altimeter table
-                Log.v(TAG, "Study name is: " + uName);
-                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
-                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
-                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, String.format("Total Gain = %d cm\n", event.getTotalGain()) +
-                        String.format("Total Loss = %d cm\n", event.getTotalLoss()) +
-                        String.format("Stepping Gain = %d cm\n", event.getSteppingGain()) +
-                        String.format("Stepping Loss = %d cm\n", event.getSteppingLoss()) +
-                        String.format("Steps Ascended = %d\n", event.getStepsAscended()) +
-                        String.format("Steps Descended = %d\n", event.getStepsDescended()) +
-                        String.format("Rate = %f cm/s\n", event.getRate()) +
-                        String.format("Flights of Stairs Ascended = %d\n", event.getFlightsAscended()) +
-                        String.format("Flights of Stairs Descended = %d\n", event.getFlightsDescended()));
-                Log.v(TAG, getDateTime(event));
-
-                ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_SENSOR_ID, sensId);
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_TOTAL_GAIN, event.getTotalGain());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_TOTAL_LOSS, event.getTotalLoss());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPPING_GAIN, event.getSteppingGain());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPPING_LOSS, event.getSteppingLoss());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPS_ASCENDED, event.getStepsAscended());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STEPS_DESCENDED, event.getStepsDescended());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_RATE, event.getRate());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_ASCENDED, event.getFlightsAscended());
-                values.put(DataStorageContract.AltimeterTable.COLUMN_NAME_STAIRS_DESCENDED, event.getFlightsDescended());
-
-
-                writeDb.insert(DataStorageContract.AltimeterTable.TABLE_NAME, null, values);
-            }
-        }
-
     }
 
 
@@ -752,7 +630,7 @@ public class BandDataService extends Service {
                 Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
                 Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, String.format("KiloCalories Burned = %d Calories", event.getCalories() ));
+                Log.v(TAG, String.format("KiloCalories Burned = %d Calories", event.getCalories()));
                 Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
@@ -1647,92 +1525,6 @@ public class BandDataService extends Service {
 
 
 
-
-    private class AltimeterSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-            if (params.length > 0) {
-                BandInfo band = params[0];
-                Log.v(TAG, "Got the band");
-                try {
-                    if (!altClients.containsKey(band)) {
-                        // No registered clients streaming altimeter data
-                        BandClient client = connectBandClient(band, null);
-                        if (client != null &&
-                                client.getConnectionState() == ConnectionState.CONNECTED) {
-                            // Create the listener
-                            CustomBandAltimeterEventListener aListener =
-                                    new CustomBandAltimeterEventListener(band, studyName);
-
-                            // Register the listener
-                            client.getSensorManager().registerAltimeterEventListener(
-                                    aListener);
-
-                            // Save the listener and client
-                            altListeners.put(band, aListener);
-                            altClients.put(band, client);
-                        } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
-                                    "the band is in range.\n");
-                        }
-                    } else {
-                        Log.w(TAG, "Multiple attempts to stream altimeter from this device ignored");
-                    }
-                } catch (BandException e) {
-                    String exceptionMessage;
-                    switch (e.getErrorType()) {
-                        case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
-                                    "SDK Version. Please update to latest SDK.\n";
-                            break;
-                        case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. " +
-                                    "Please make sure Microsoft Health is installed and that you " +
-                                    "have the correct permissions.\n";
-                            break;
-                        default:
-                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                            break;
-                    }
-                    Log.e(TAG, exceptionMessage);
-
-                } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting altimeter data");
-                }
-            }
-            return null;
-        }
-    }
-
-    private class AltimeterUnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-
-            if (params.length > 0) {
-                BandInfo band = params[0];
-
-                if (altClients.containsKey(band)) {
-
-                    BandClient client = altClients.get(band);
-
-                    // Unregister the client
-                    try {
-                        client.getSensorManager().unregisterAltimeterEventListener(
-                                altListeners.get(band)
-                        );
-
-                        // Remove listener from list
-                        altListeners.remove(band);
-                        // Remove client from list
-                        altClients.remove(band);
-                    } catch (BandIOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return null;
-        }
-    }
 
 
     private class AmbientLightSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {

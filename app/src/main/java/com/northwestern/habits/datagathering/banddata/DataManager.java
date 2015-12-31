@@ -7,7 +7,7 @@ import java.util.EventListener;
 import java.util.HashMap;
 
 /**
- * Created by William on 12/31/2015.
+ * Created by William on 12/31/2015
  */
 public abstract class DataManager {
 
