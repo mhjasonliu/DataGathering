@@ -1,7 +1,8 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.banddata;
 
 import android.app.Service;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -17,8 +18,6 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
-import com.microsoft.band.sensors.BandAccelerometerEvent;
-import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.BandAltimeterEvent;
 import com.microsoft.band.sensors.BandAltimeterEventListener;
 import com.microsoft.band.sensors.BandAmbientLightEvent;
@@ -45,6 +44,7 @@ import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
 import com.microsoft.band.sensors.BandUVEvent;
 import com.microsoft.band.sensors.BandUVEventListener;
 import com.microsoft.band.sensors.SampleRate;
+import com.northwestern.habits.datagathering.DataStorageContract;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -54,6 +54,7 @@ import java.util.Locale;
 
 public class BandDataService extends Service {
 
+    /* ****************** STRINGS FOR IDENTIFICATION OF EXTRAS ********************************* */
     public static final String ACCEL_REQ_EXTRA = "accelerometer";
     public static final String ALT_REQ_EXTRA = "altimeter";
     public static final String AMBIENT_REQ_EXTRA = "ambient";
@@ -78,20 +79,27 @@ public class BandDataService extends Service {
     public static final String STOP_STREAM_EXTRA = "stop stream";
 
 
+
+
     // General stuff (maintained by main)
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
     private HashMap<String, Boolean> modes = new HashMap<>();
 
     private HashMap<BandInfo, List<String>> bandStreams = new HashMap<>();
-    private HashMap<BandInfo, String> locations = new HashMap<>();
+    protected static HashMap<BandInfo, String> locations = new HashMap<>();
 
-    private DataStorageContract.BluetoothDbHelper mDbHelper;
+    protected static DataStorageContract.BluetoothDbHelper mDbHelper;
 
-    private String studyName;
+    protected static String studyName;
+
+    protected static Context context;
+
+
+
+    // Data managers
+    AccelerometerManager accManager;
 
     // Maps of listeners (maintained by tasks)
-    HashMap<BandInfo, BandAccelerometerEventListenerCustom> accListeners = new HashMap<>();
-    HashMap<BandInfo, BandClient> accClients = new HashMap<>();
 
 
     HashMap<BandInfo, CustomBandAltimeterEventListener> altListeners = new HashMap<>();
@@ -130,15 +138,13 @@ public class BandDataService extends Service {
     HashMap<BandInfo, CustomBandUvEventListener> uvListeners = new HashMap<>();
     HashMap<BandInfo, BandClient> uvClients = new HashMap<>();
 
-    // Types
-    private String T_BAND2 = "Microsoft_Band_2";
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Started the service.");
+        context = this.getApplicationContext();
 
         Log.v(TAG, "Retrieving database");
-        mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
+        mDbHelper = new DataStorageContract.BluetoothDbHelper(context);
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();
@@ -225,7 +231,8 @@ public class BandDataService extends Service {
         // Unsubscribe from the appropriate stream
         switch (request) {
             case ACCEL_REQ_EXTRA:
-                new AccelerometerUnsubscribe().execute(band);
+                if (accManager != null)
+                    accManager.unSubscribe(band);
                 break;
             case ALT_REQ_EXTRA:
                 new AltimeterUnsubscribeTask().execute(band);
@@ -286,7 +293,10 @@ public class BandDataService extends Service {
         // Request the appropriate stream
         switch (request) {
             case ACCEL_REQ_EXTRA:
-                new AccelerometerSubscriptionTask().execute(band);
+                if (accManager == null)
+                    accManager = new AccelerometerManager(studyName);
+
+                accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
                 new AltimeterSubscriptionTask().execute(band);
@@ -336,123 +346,20 @@ public class BandDataService extends Service {
         return null;
     }
 
-    private final String TAG = "Band Service";
+    private static final String TAG = "Band Service";
 
         /* *********** Event Listeners ************ */
 
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat(
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
     /**
      * Helper that gets the date and time in proper format for database
      */
-    private String getDateTime(BandSensorEvent event) {
+    protected static String getDateTime(BandSensorEvent event) {
         return dateFormat.format(event.getTimestamp());
     }
 
-    private class BandAccelerometerEventListenerCustom implements BandAccelerometerEventListener {
 
-        private BandInfo info;
-        private String uName;
-        private String location;
-
-        public BandAccelerometerEventListenerCustom(BandInfo mInfo, String name) {
-            super();
-            info = mInfo;
-            uName = name;
-            location = locations.get(info);
-        }
-
-        @Override
-        public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
-            if (event != null) {
-
-                String T_ACCEL = "Accelerometer";
-
-                SQLiteDatabase writeDb = mDbHelper.getWritableDatabase();
-                SQLiteDatabase readDb = mDbHelper.getReadableDatabase();
-
-
-                int studyId, devId, sensId;
-                try {
-                    studyId = getStudyId(uName, readDb);
-                } catch (Resources.NotFoundException e) {
-
-                    // study not found, use lowest available
-                    studyId = getNewStudy(readDb);
-
-
-                    // Write the study into database, save the id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
-                    values.put(DataStorageContract.StudyTable._ID, studyId);
-                    writeDb.insert(
-                            DataStorageContract.StudyTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                try {
-                    devId = getDevId(location, info.getMacAddress(), studyId, readDb);
-                } catch (Resources.NotFoundException e) {
-                    devId = getNewDev(readDb);
-
-                    // Write new Device into database, save the id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
-
-                    writeDb.insert(
-                            DataStorageContract.DeviceTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                try {
-                    sensId = getSensorId(T_ACCEL, devId, readDb);
-                } catch (Resources.NotFoundException e) {
-                    sensId = getNewSensor(readDb);
-
-                    // Write new sensor into database, save id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.SensorTable._ID, sensId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_ACCEL);
-
-                    writeDb.insert(
-                            DataStorageContract.SensorTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                // Add new entry to the Accelerometer table
-                Log.v(TAG, "Study name is: " + uName);
-                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
-                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
-                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
-                        "Y: " + Double.toString(event.getAccelerationY()) +
-                        "Z: " + Double.toString(event.getAccelerationZ()));
-                Log.v(TAG, getDateTime(event));
-
-                ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y, event.getAccelerationY());
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Z, event.getAccelerationZ());
-
-
-                writeDb.insert(DataStorageContract.AccelerometerTable.TABLE_NAME, null, values);
-            }
-
-        }
-    }
 
 
     private class CustomBandAltimeterEventListener implements BandAltimeterEventListener {
@@ -1295,7 +1202,7 @@ public class BandDataService extends Service {
                     );
                 }
 
-                // Add new entry to the Accelerometer table
+                // Add new entry to the AccelerometerManager table
                 Log.v(TAG, "Study name is: " + uName);
                 Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
@@ -1752,92 +1659,7 @@ public class BandDataService extends Service {
 
     /* ********* Tasks ******** */
 
-    // Accelerometer
-    private class AccelerometerSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-            if (params.length > 0) {
-                BandInfo band = params[0];
-                Log.v(TAG, "Got the band");
-                try {
-                    if (!accClients.containsKey(band)) {
-                        // No registered clients streaming accelerometer data
-                        BandClient client = connectBandClient(band, null);
-                        if (client != null &&
-                                client.getConnectionState() == ConnectionState.CONNECTED) {
-                            // Create the listener
-                            BandAccelerometerEventListenerCustom aListener =
-                                    new BandAccelerometerEventListenerCustom(band, studyName);
 
-                            // Register the listener
-                            client.getSensorManager().registerAccelerometerEventListener(
-                                    aListener, SampleRate.MS128);
-
-                            // Save the listener and client
-                            accListeners.put(band, aListener);
-                            accClients.put(band, client);
-                        } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
-                                    "the band is in range.\n");
-                        }
-                    } else {
-                        Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
-                    }
-                } catch (BandException e) {
-                    String exceptionMessage;
-                    switch (e.getErrorType()) {
-                        case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
-                                    "SDK Version. Please update to latest SDK.\n";
-                            break;
-                        case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. " +
-                                    "Please make sure Microsoft Health is installed and that you " +
-                                    "have the correct permissions.\n";
-                            break;
-                        default:
-                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                            break;
-                    }
-                    Log.e(TAG, exceptionMessage);
-
-                } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting accelerometer data");
-                }
-            }
-            return null;
-        }
-    }
-
-    private class AccelerometerUnsubscribe extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-
-            if (params.length > 0) {
-                BandInfo band = params[0];
-
-                if (accClients.containsKey(band)) {
-
-                    BandClient client = accClients.get(band);
-
-                    // Unregister the client
-                    try {
-                        client.getSensorManager().unregisterAccelerometerEventListener(
-                                accListeners.get(band)
-                        );
-
-                        // Remove listener from list
-                        accListeners.remove(band);
-                        // Remove client from list
-                        accClients.remove(band);
-                    } catch (BandIOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return null;
-        }
-    }
 
 
     private class AltimeterSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
@@ -2888,9 +2710,9 @@ public class BandDataService extends Service {
 
 
     // General
-    private BandClient connectBandClient(BandInfo band, BandClient client) throws InterruptedException, BandException {
+    protected static BandClient connectBandClient(BandInfo band, BandClient client) throws InterruptedException, BandException {
         if (client == null) {
-            client = BandClientManager.getInstance().create(getBaseContext(), band);
+            client = BandClientManager.getInstance().create(context, band);
         } else if (ConnectionState.CONNECTED == client.getConnectionState()) {
             return client;
         }
@@ -2931,7 +2753,7 @@ public class BandDataService extends Service {
      * @throws android.content.res.Resources.NotFoundException when study name cannot be found
      * @return the integer _ID or
      */
-    private static int getStudyId(String studyId, SQLiteDatabase db) throws Resources.NotFoundException {
+    protected static int getStudyId(String studyId, SQLiteDatabase db) throws Resources.NotFoundException {
 
         // Querry databse for the study name
         String[] projection = new String[] {
@@ -2966,7 +2788,7 @@ public class BandDataService extends Service {
      * @param db database to find the lowest study in
      * @return the lowest unused _ID
      */
-    private static int getNewStudy(SQLiteDatabase db) {
+    protected static int getNewStudy(SQLiteDatabase db) {
         String[] projection = new String[] {
                 DataStorageContract.StudyTable._ID,
         };
@@ -3005,7 +2827,7 @@ public class BandDataService extends Service {
      * @throws android.content.res.Resources.NotFoundException
      * @return id of the device
      */
-    private static int getDevId(String location, String mac, int study, SQLiteDatabase db)
+    protected static int getDevId(String location, String mac, int study, SQLiteDatabase db)
             throws Resources.NotFoundException {
         String[] projection = new String[] {
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC,
@@ -3042,7 +2864,7 @@ public class BandDataService extends Service {
      * @param db to search
      * @return int available ID in the device list
      */
-    private static int getNewDev(SQLiteDatabase db) {
+    protected static int getNewDev(SQLiteDatabase db) {
         String[] projection = new String[] {
                 DataStorageContract.DeviceTable._ID
         };
@@ -3081,7 +2903,7 @@ public class BandDataService extends Service {
      * @throws android.content.res.Resources.NotFoundException
      * @return ID of the sensor or not
      */
-    private static int getSensorId(String type, int device, SQLiteDatabase db)
+    protected static int getSensorId(String type, int device, SQLiteDatabase db)
             throws Resources.NotFoundException {
         String[] projection = new String[] {
                 DataStorageContract.SensorTable.COLUMN_NAME_TYPE,
@@ -3112,7 +2934,7 @@ public class BandDataService extends Service {
         return tmp;
     }
 
-    private static int getNewSensor(SQLiteDatabase db) {
+    protected static int getNewSensor(SQLiteDatabase db) {
         String[] projection = new String[] {
                 DataStorageContract.SensorTable._ID
         };
@@ -3156,4 +2978,10 @@ public class BandDataService extends Service {
             return null;
         }
     }
+
+
+
+
+    /* ********************** STATIC THINGS FOR REFERENCE IN MANAGERS ********************** */
+    protected static String T_BAND2 = "Microsoft_Band_2";
 }

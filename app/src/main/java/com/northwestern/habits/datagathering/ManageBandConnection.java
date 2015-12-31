@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.HeartRateConsentListener;
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 
 public class ManageBandConnection extends AppCompatActivity implements HeartRateConsentListener,
