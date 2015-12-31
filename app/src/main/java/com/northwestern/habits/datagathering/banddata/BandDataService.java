@@ -285,7 +285,7 @@ public class BandDataService extends Service {
             bandStreams.put(band, list);
 
         } else if (!bandStreams.get(band).contains(request)) {
-            // Add accelerometer to the list in the stream map
+            // Add sensor to the list in the stream map
             bandStreams.get(band).add(request);
 
         }
@@ -859,7 +859,7 @@ public class BandDataService extends Service {
                             values
                     );
                 }
-                String contactState = "";
+                String contactState;
                 switch(event.getContactState()){
                     case NOT_WORN:
                         contactState = "Not Worn";
@@ -1202,7 +1202,7 @@ public class BandDataService extends Service {
                     );
                 }
 
-                // Add new entry to the AccelerometerManager table
+                // Add new entry to the gyro table
                 Log.v(TAG, "Study name is: " + uName);
                 Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
@@ -1670,7 +1670,7 @@ public class BandDataService extends Service {
                 Log.v(TAG, "Got the band");
                 try {
                     if (!altClients.containsKey(band)) {
-                        // No registered clients streaming accelerometer data
+                        // No registered clients streaming altimeter data
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
@@ -1756,7 +1756,7 @@ public class BandDataService extends Service {
                 BandInfo band = params[0];
                 try {
                     if (!ambientClients.containsKey(band)) {
-                        // No registered clients streaming accelerometer data
+                        // No registered clients streaming ambient light data
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
@@ -2194,7 +2194,7 @@ public class BandDataService extends Service {
                 BandInfo band = params[0];
                 try {
                     if (!gsrClients.containsKey(band)) {
-                        // No registered clients streaming accelerometer data
+                        // No registered clients streaming gsr data
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
@@ -2368,7 +2368,7 @@ public class BandDataService extends Service {
                 BandInfo band = params[0];
                 try {
                     if (!heartRateClients.containsKey(band)) {
-                        // No registered clients streaming accelerometer data
+                        // No registered clients streaming heart rate data
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
@@ -2725,26 +2725,26 @@ public class BandDataService extends Service {
     }
 
 
-    private class disconnectClient extends AsyncTask<BandClient, Void, Void> {
-        @Override
-        protected Void doInBackground(BandClient... params) {
-//            if (params.length > 0) {
-//                BandClient client;
-//                try {
-//                    client = connectBandClient(params[0]);
-//                    try {
-//                        client.disconnect().await();
-//                    } catch (InterruptedException | BandException e) {
-//                        e.printStackTrace();
-//                    }
-//                } catch (InterruptedException | BandException e) {
-//                    e.printStackTrace();
-//                }
-//
-//            }
-            return null;
-        }
-    }
+//    private class disconnectClient extends AsyncTask<BandClient, Void, Void> {
+//        @Override
+//        protected Void doInBackground(BandClient... params) {
+////            if (params.length > 0) {
+////                BandClient client;
+////                try {
+////                    client = connectBandClient(params[0]);
+////                    try {
+////                        client.disconnect().await();
+////                    } catch (InterruptedException | BandException e) {
+////                        e.printStackTrace();
+////                    }
+////                } catch (InterruptedException | BandException e) {
+////                    e.printStackTrace();
+////                }
+////
+////            }
+//            return null;
+//        }
+//    }
 
     /**
      * Gets the _ID value for the study in the database

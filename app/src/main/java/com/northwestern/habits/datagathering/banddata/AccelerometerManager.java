@@ -19,7 +19,7 @@ import com.northwestern.habits.datagathering.DataStorageContract;
 import java.util.EventListener;
 
 /**
- * Created by William on 12/31/2015.
+ * Created by William on 12/31/2015
  */
 public class AccelerometerManager extends  DataManager{
     @Override
@@ -38,9 +38,9 @@ public class AccelerometerManager extends  DataManager{
     }
 
 
-    private final String TAG = "BAccelerometerManager";
+    private final String TAG = "AccelerometerManager";
 
-    // AccelerometerManager
+
     private class AccelerometerSubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
         @Override
         protected Void doInBackground(BandInfo... params) {
@@ -144,7 +144,7 @@ public class AccelerometerManager extends  DataManager{
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
             if (event != null) {
 
-                String T_ACCEL = "AccelerometerManager";
+                String T_ACCEL = "Accelerometer";
 
                 SQLiteDatabase writeDb = BandDataService.mDbHelper.getWritableDatabase();
                 SQLiteDatabase readDb = BandDataService.mDbHelper.getReadableDatabase();
@@ -208,7 +208,7 @@ public class AccelerometerManager extends  DataManager{
                     );
                 }
 
-                // Add new entry to the AccelerometerManager table
+                // Add new entry to the Accelerometertable
                 Log.v(TAG, "Study name is: " + uName);
                 Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
                 Log.v(TAG, "Device ID is: " + Integer.toString(devId));
