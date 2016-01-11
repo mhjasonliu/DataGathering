@@ -98,8 +98,14 @@ public class BandDataService extends Service {
                 modes.put(AMBIENT_REQ_EXTRA, extras.getBoolean(AMBIENT_REQ_EXTRA));
                 modes.put(BAROMETER_REQ_EXTRA, extras.getBoolean(BAROMETER_REQ_EXTRA));
                 modes.put(CALORIES_REQ_EXTRA, extras.getBoolean(CALORIES_REQ_EXTRA));
+                modes.put(CONTACT_REQ_EXTRA, extras.getBoolean(CONTACT_REQ_EXTRA));
+                modes.put(DISTANCE_REQ_EXTRA, extras.getBoolean(DISTANCE_REQ_EXTRA));
                 modes.put(GSR_REQ_EXTRA, extras.getBoolean(GSR_REQ_EXTRA));
+                modes.put(GYRO_REQ_EXTRA, extras.getBoolean(GYRO_REQ_EXTRA));
                 modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
+                modes.put(PEDOMETER_REQ_EXTRA, extras.getBoolean(PEDOMETER_REQ_EXTRA));
+                modes.put(SKIN_TEMP_REQ_EXTRA, extras.getBoolean(SKIN_TEMP_REQ_EXTRA));
+                modes.put(UV_REQ_EXTRA, extras.getBoolean(UV_REQ_EXTRA));
 
                 locations.put(band, extras.getString(LOCATION_EXTRA));
 
@@ -135,6 +141,7 @@ public class BandDataService extends Service {
 
 
     private  void genericUnsubscribeFactory(String request, BandInfo band) {
+        Log.v(TAG, "Stopping stream " + request);
         // Check for existance of stream
         if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
             if (bandStreams.get(band).size() == 1) {
@@ -161,6 +168,7 @@ public class BandDataService extends Service {
                         ambManager.unSubscribe(band);
                     break;
                 case BAROMETER_REQ_EXTRA:
+                    Log.v(TAG, "Barometer unsubscribe requested");
                     if (barometerManager != null)
                         barometerManager.unSubscribe(band);
                     break;
