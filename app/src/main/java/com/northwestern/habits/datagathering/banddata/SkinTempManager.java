@@ -67,7 +67,7 @@ public class SkinTempManager extends DataManager {
                                     "the band is in range.\n");
                         }
                     } else {
-                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                        Log.w(TAG, "Multiple attempts to stream Skin Temp sensor from this device ignored");
                     }
                 } catch (BandException e) {
                     String exceptionMessage;
@@ -88,7 +88,7 @@ public class SkinTempManager extends DataManager {
                     Log.e(TAG, exceptionMessage);
 
                 } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                    Log.e(TAG, "Unknown error occurred when getting Skin Temp data");
                 }
             }
             return null;

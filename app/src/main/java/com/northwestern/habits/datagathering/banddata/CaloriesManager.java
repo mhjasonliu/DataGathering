@@ -67,7 +67,7 @@ public class CaloriesManager extends DataManager {
                                     "the band is in range.\n");
                         }
                     } else {
-                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                        Log.w(TAG, "Multiple attempts to stream Calories sensor from this device ignored");
                     }
                 } catch (BandException e) {
                     String exceptionMessage;
@@ -88,7 +88,8 @@ public class CaloriesManager extends DataManager {
                     Log.e(TAG, exceptionMessage);
 
                 } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                    Log.e(TAG, "Unknown error occurred when getting Calorie data");
+                    e.printStackTrace();
                 }
             }
             return null;
@@ -129,7 +130,7 @@ public class CaloriesManager extends DataManager {
 
     /* ***************************** LISTENER ***************************************** */
 
-    private class CustomBandCaloriesEventListener implements BandCaloriesEventListener {
+    private class CustomBandCaloriesEventListener implements BandCaloriesEventListener, EventListener {
         private BandInfo info;
         private String uName;
         private String location;

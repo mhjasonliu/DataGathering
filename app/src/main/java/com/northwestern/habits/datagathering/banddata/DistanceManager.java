@@ -65,7 +65,7 @@ public class DistanceManager extends DataManager {
                                     "the band is in range.\n");
                         }
                     } else {
-                        Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                        Log.w(TAG, "Multiple attempts to stream Distance sensor from this device ignored");
                     }
                 } catch (BandException e) {
                     String exceptionMessage;
