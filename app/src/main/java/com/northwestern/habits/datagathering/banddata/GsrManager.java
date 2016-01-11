@@ -58,7 +58,7 @@ public class GsrManager extends DataManager {
                                     aListener);
 
                             // Save the listener and client
-                            listeners.put(band, (EventListener) aListener);
+                            listeners.put(band, aListener);
                             clients.put(band, client);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -126,7 +126,7 @@ public class GsrManager extends DataManager {
 
     /* ***************************** LISTENER ***************************************** */
 
-    private class CustomBandGsrEventListener implements BandGsrEventListener {
+    private class CustomBandGsrEventListener implements BandGsrEventListener, EventListener {
         private BandInfo info;
         private String uName;
         private String location;

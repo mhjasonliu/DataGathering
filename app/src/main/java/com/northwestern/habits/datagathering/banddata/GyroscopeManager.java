@@ -59,7 +59,7 @@ public class GyroscopeManager extends DataManager {
                                     aListener, SampleRate.MS128);
 
                             // Save the listener and client
-                            listeners.put(band, (EventListener) aListener);
+                            listeners.put(band, aListener);
                             clients.put(band, client);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -129,7 +129,7 @@ public class GyroscopeManager extends DataManager {
 
     /* **************************** LISTENER *********************************** */
 
-    private class CustomBandGyroEventListener implements BandGyroscopeEventListener {
+    private class CustomBandGyroEventListener implements BandGyroscopeEventListener, EventListener {
 
         private BandInfo info;
         private String uName;

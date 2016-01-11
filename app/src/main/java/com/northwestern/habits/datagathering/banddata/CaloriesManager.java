@@ -60,7 +60,7 @@ public class CaloriesManager extends DataManager {
                                     aListener);
 
                             // Save the listener and client
-                            listeners.put(band, (EventListener) aListener);
+                            listeners.put(band, aListener);
                             clients.put(band, client);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +

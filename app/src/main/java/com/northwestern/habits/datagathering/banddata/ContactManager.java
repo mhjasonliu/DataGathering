@@ -16,6 +16,8 @@ import com.microsoft.band.sensors.BandContactEvent;
 import com.microsoft.band.sensors.BandContactEventListener;
 import com.northwestern.habits.datagathering.DataStorageContract;
 
+import java.util.EventListener;
+
 /**
  * Created by William on 12/31/2015
  */
@@ -57,7 +59,7 @@ public class ContactManager extends DataManager {
                                     aListener);
 
                             // Save the listener and client
-                            clients.put(band, (BandClient) aListener);
+                            listeners.put(band, aListener);
                             clients.put(band, client);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -86,6 +88,7 @@ public class ContactManager extends DataManager {
 
                 } catch (Exception e) {
                     Log.e(TAG, "Unknown error occurred when getting Contact data");
+                    e.printStackTrace();
                 }
             }
             return null;
@@ -125,7 +128,7 @@ public class ContactManager extends DataManager {
 
     /* ***************************** LISTENER ***************************************** */
 
-    private class CustomBandContactEventListener implements BandContactEventListener {
+    private class CustomBandContactEventListener implements BandContactEventListener, EventListener {
         private BandInfo info;
         private String uName;
         private String location;

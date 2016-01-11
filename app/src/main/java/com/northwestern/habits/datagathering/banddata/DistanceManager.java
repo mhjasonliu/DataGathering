@@ -58,7 +58,7 @@ public class DistanceManager extends DataManager {
                                     aListener);
 
                             // Save the listener and client
-                            listeners.put(band, (EventListener) aListener);
+                            listeners.put(band, aListener);
                             clients.put(band, client);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -86,7 +86,7 @@ public class DistanceManager extends DataManager {
                     Log.e(TAG, exceptionMessage);
 
                 } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting barometer data");
+                    Log.e(TAG, "Unknown error occurred when getting Distance data");
                 }
             }
             return null;
@@ -127,7 +127,7 @@ public class DistanceManager extends DataManager {
     /* ************************************* LISTENER *********************************** */
 
 
-    private class CustomBandDistanceEventListener implements BandDistanceEventListener {
+    private class CustomBandDistanceEventListener implements BandDistanceEventListener, EventListener {
         private BandInfo info;
         private String uName;
         private String location;
