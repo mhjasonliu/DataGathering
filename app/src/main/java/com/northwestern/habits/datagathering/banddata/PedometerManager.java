@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -21,8 +22,8 @@ import java.util.EventListener;
  * Created by William on 12/31/2015
  */
 public class PedometerManager extends DataManager {
-    public PedometerManager(String sName, SQLiteDatabase db) {
-        super(sName, "PedometerManager", db);
+    public PedometerManager(String sName, SQLiteDatabase db, Context context) {
+        super(sName, "AmbientManager", db, context);
     }
 
     @Override

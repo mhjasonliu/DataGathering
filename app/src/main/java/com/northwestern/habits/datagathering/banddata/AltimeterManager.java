@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -24,8 +25,8 @@ public class AltimeterManager extends DataManager {
 
     private final String TAG = "AltimeterManager";
 
-    public AltimeterManager(String sName, SQLiteDatabase db) {
-        super(sName, "AltimeterManager", db);
+    public AltimeterManager(String sName, SQLiteDatabase db, Context context) {
+        super(sName, "AltimeterManager", db, context);
     }
 
     @Override

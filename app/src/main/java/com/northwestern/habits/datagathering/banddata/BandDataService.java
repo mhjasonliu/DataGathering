@@ -225,79 +225,79 @@ public class BandDataService extends Service {
         switch (request) {
             case ACCEL_REQ_EXTRA:
                 if (accManager == null)
-                    accManager = new AccelerometerManager(studyName, db);
+                    accManager = new AccelerometerManager(studyName, db, this);
 
                 accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
                 if (altManager == null)
-                    altManager = new AltimeterManager(studyName, db);
+                    altManager = new AltimeterManager(studyName, db, this);
 
                 altManager.subscribe(band);
                 break;
             case AMBIENT_REQ_EXTRA:
                 if (ambManager == null)
-                    ambManager = new AmbientManager(studyName, db);
+                    ambManager = new AmbientManager(studyName, db, this);
 
                 ambManager.subscribe(band);
                 break;
             case BAROMETER_REQ_EXTRA:
                 if (barometerManager == null)
-                    barometerManager = new BarometerManager(studyName, db);
+                    barometerManager = new BarometerManager(studyName, db, this);
 
                 barometerManager.subscribe(band);
                 break;
             case CALORIES_REQ_EXTRA:
                 if (calManager == null)
-                    calManager = new CaloriesManager(studyName, db);
+                    calManager = new CaloriesManager(studyName, db, this);
 
                 calManager.subscribe(band);
                 break;
             case CONTACT_REQ_EXTRA:
                 if (conManager == null)
-                    conManager = new ContactManager(studyName, db);
+                    conManager = new ContactManager(studyName, db, this);
 
                 conManager.subscribe(band);
                 break;
             case DISTANCE_REQ_EXTRA:
                 if (distManager == null)
-                    distManager = new DistanceManager(studyName, db);
+                    distManager = new DistanceManager(studyName, db, this);
 
                 distManager.subscribe(band);
                 break;
             case GSR_REQ_EXTRA:
                 if (gsrManager == null)
-                    gsrManager = new GsrManager(studyName, db);
+                    gsrManager = new GsrManager(studyName, db, this);
 
                 gsrManager.subscribe(band);
                 break;
             case GYRO_REQ_EXTRA:
                 if (gyroManager == null)
-                    gyroManager = new GyroscopeManager(studyName, db);
+                    gyroManager = new GyroscopeManager(studyName, db, this);
 
                 gyroManager.subscribe(band);
                 break;
             case HEART_RATE_REQ_EXTRA:
                 if (heartManager == null)
-                    heartManager = new HeartRateManager(studyName, db);
+                    heartManager = new HeartRateManager(studyName, db, this);
 
                 heartManager.subscribe(band);
                 break;
             case PEDOMETER_REQ_EXTRA:
                 if (pedoManager == null)
-                    pedoManager = new PedometerManager(studyName, db);
+                    pedoManager = new PedometerManager(studyName, db, this);
 
                 pedoManager.subscribe(band);
                 break;
             case SKIN_TEMP_REQ_EXTRA:
                 if (skinTempManager == null)
-                    skinTempManager = new SkinTempManager(studyName, db);
+                    skinTempManager = new SkinTempManager(studyName, db, this);
 
                 skinTempManager.subscribe(band);
                 break;
             case UV_REQ_EXTRA:
                 if (uvManager == null)
-                    uvManager = new UvManager(studyName, db);
+                    uvManager = new UvManager(studyName, db, this);
 
                 uvManager.subscribe(band);
                 break;

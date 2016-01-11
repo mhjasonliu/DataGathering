@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -33,8 +34,8 @@ public class AccelerometerManager extends  DataManager{
     }
 
 
-    public AccelerometerManager(String sName, SQLiteDatabase db) {
-        super(sName, "AccelerometerManager", db);
+    public AccelerometerManager(String sName, SQLiteDatabase db, Context context) {
+        super(sName, "AccelerometerManager", db, context);
     }
 
 
@@ -47,19 +48,25 @@ public class AccelerometerManager extends  DataManager{
                 try {
                     if (!clients.containsKey(band)) {
                         // No registered clients streaming accelerometer data
+                        Log.v(TAG, "Getting client");
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
+
+                            Log.v(TAG, "Creating listener");
                             // Create the listener
                             BandAccelerometerEventListenerCustom aListener =
                                     new BandAccelerometerEventListenerCustom(band, studyName);
 
+                            Log.v(TAG, "REgistering listener");
                             // Register the listener
                             client.getSensorManager().registerAccelerometerEventListener(
                                     aListener, SampleRate.MS128);
 
                             // Save the listener and client
+                            Log.v(TAG, "puittomg listener");
                             listeners.put(band, aListener);
+                            Log.v(TAG, "Putting client");
                             clients.put(band, client);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -88,6 +95,7 @@ public class AccelerometerManager extends  DataManager{
 
                 } catch (Exception e) {
                     Log.e(TAG, "Unknown error occurred when getting accelerometer data");
+                    e.printStackTrace();
                 }
             }
             return null;

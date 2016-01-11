@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -20,8 +21,8 @@ import com.northwestern.habits.datagathering.DataStorageContract;
  */
 public class ContactManager extends DataManager {
 
-    public ContactManager(String sName, SQLiteDatabase db) {
-        super(sName, "ContactManager", db);
+    public ContactManager(String sName, SQLiteDatabase db, Context context) {
+        super(sName, "AmbientManager", db, context);
     }
 
     @Override

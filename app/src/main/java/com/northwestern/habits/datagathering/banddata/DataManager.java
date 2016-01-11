@@ -1,6 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
-import android.app.Application;
+import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -22,13 +22,14 @@ import java.util.Locale;
 /**
  * Created by William on 12/31/2015
  */
-public abstract class DataManager extends Application{
+public abstract class DataManager {
 
     // Constructor
-    public DataManager(String sName, String tag, SQLiteDatabase db) {
+    public DataManager(String sName, String tag, SQLiteDatabase db, Context context) {
         studyName = sName;
         TAG = tag;
         database = db;
+        this.context = context;
     }
 
 
@@ -40,6 +41,7 @@ public abstract class DataManager extends Application{
     protected final String T_BAND2 = "Microsoft_Band_2";
     protected String TAG = "DataManager"; // Should be reset in the constructor
     SQLiteDatabase database; // Should be reset in the constructor
+    protected Context context;
 
     protected abstract void subscribe(BandInfo info);
     protected abstract void unSubscribe(BandInfo info);
@@ -282,16 +284,36 @@ public abstract class DataManager extends Application{
 
     protected BandClient connectBandClient(BandInfo band, BandClient client) throws InterruptedException, BandException {
         if (client == null) {
-            client = BandClientManager.getInstance().create(this.getApplicationContext(), band);
+            Log.v(TAG, "Creating client");
+            BandClientManager manager = BandClientManager.getInstance();
+            Log.v(TAG, "Manager got");
+            //client = manager.create(this, band);
+
+            client = BandClientManager.getInstance().create(context, band);
         } else if (ConnectionState.CONNECTED == client.getConnectionState()) {
             return client;
         }
 
         Log.v("DataManager", "Loading band connection client...\n");
-        if (ConnectionState.CONNECTED == client.connect().await())
+        if (client == null) {
+            Log.v(TAG, "Its the clinet!!!!!!!!!!!!!!!!!!");
+        } else if (band == null) {
+            Log.v(TAG, "BANDISNULASDLFKAJSDFIOGLBVHNZILXCBGHNALIOWERSNGA");
+        }
+
+        Log.v(TAG, "About to check connection for client " + client);
+        Log.v(TAG, "Connected is " + ConnectionState.CONNECTED);
+
+        Log.v(TAG, "result is " + client.connect().await());
+
+        if (ConnectionState.CONNECTED == client.connect().await()) {
+            Log.v(TAG, "Client is connected");
             return client;
-        else
+        }
+        else {
+            Log.v(TAG, "Client is " + client.getConnectionState());
             return null;
+        }
     }
 
 

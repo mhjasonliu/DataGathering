@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -22,8 +23,8 @@ import java.util.EventListener;
  */
 public class BarometerManager extends DataManager {
 
-    public BarometerManager(String sName, SQLiteDatabase db) {
-        super(sName, "BarometerManager", db);
+    public BarometerManager(String sName, SQLiteDatabase db, Context context) {
+        super(sName, "AmbientManager", db, context);
     }
 
     @Override
