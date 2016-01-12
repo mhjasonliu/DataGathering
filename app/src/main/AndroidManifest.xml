@@ -30,7 +30,7 @@
         </activity>
 
         <service
-            android:name=".BandDataService"
+            android:name=".banddata.BandDataService"
             android:enabled="true"
             android:exported="false"
             android:label="Band Data Service"

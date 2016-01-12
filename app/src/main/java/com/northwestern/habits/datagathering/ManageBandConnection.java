@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.HeartRateConsentListener;
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 
 public class ManageBandConnection extends AppCompatActivity implements HeartRateConsentListener,
@@ -134,9 +135,15 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
     @Override
     public void userAccepted(boolean b) {
-        Log.v(TAG, "User accepted heart rate request");
-        // Tick the heart rate box
-        ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(true);
+        if (b) {
+            Log.v(TAG, "User accepted heart rate request");
+            // Tick the heart rate box
+            ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(true);
+        } else {
+            Log.v(TAG, "User has rejected heart rate request");
+            // Untick the heart rate box
+            ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(false);
+        }
     }
 
     @Override
@@ -149,4 +156,5 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         // Clear the heart rate box
         ((CheckBox) findViewById(R.id.heartRateBox)).setChecked(false);
     }
+
 }
