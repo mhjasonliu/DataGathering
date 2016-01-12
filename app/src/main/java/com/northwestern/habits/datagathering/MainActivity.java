@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.northwestern.habits.datagathering.banddata.BandDataService;
+
 public class MainActivity extends AppCompatActivity {
 
 
@@ -41,6 +43,20 @@ public class MainActivity extends AppCompatActivity {
 
         Log.v(TAG, "Creating database");
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        newStudyButton = (Button) findViewById(R.id.startStudyButton);
+        editStudyButton = (Button) findViewById(R.id.manageStudyButton);
+        endStudyButton = (Button) findViewById(R.id.endStudyButton);
+
+        if (mDbHelper == null) {
+            mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
+        }
+
     }
 
 

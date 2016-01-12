@@ -1,67 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
     android:orientation="vertical">
 
 
-    <TextView
-        android:text="Welcome to HAbits data gathering"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/welcomeMessage"/>
-
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="25dp"
-        android:text="Please connect to a device"
-        android:id="@+id/welcomePrompt"/>
-
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Study"
-        android:id="@+id/startStudyButton"
-        android:onClick="startStudyClicked"
-        android:enabled="true"/>
-
-
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Manage Study"
-        android:id="@+id/manageStudyButton"
-        android:layout_gravity="center_horizontal"
-        android:onClick="manageStudyClicked"
-        android:enabled="false"/>
-
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="End study"
-        android:id="@+id/endStudyButton"
-        android:layout_gravity="center_horizontal"
-        android:onClick="endStudyClicked"
-        android:enabled="false"/>
-
-    <Button
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="DISPLAY DATABASE"
-        android:id="@+id/displayDbButton"
-        android:onClick="onReadDatabase"
-        android:enabled="false"/>
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <Button
+        <LinearLayout
+            android:id="@+id/logo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp"
+            android:orientation="vertical"
+            android:background="@color/NorthwesternPurple30">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/habits_lab_logo"
+                />
+
+
+            <TextView
+                android:text="@string/welcome_to_habits_data_gathering"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/welcomeMessage"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/please_connect_to_a_device"
+                android:id="@+id/welcomePrompt"/>
+
+
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/activity_vertical_margin"
+            android:paddingBottom="@dimen/activity_vertical_margin"
+            android:orientation="vertical">
+
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/start_study"
+                android:id="@+id/startStudyButton"
+                android:onClick="startStudyClicked"
+                android:enabled="true"/>
+
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/manage_study"
+                android:id="@+id/manageStudyButton"
+                android:layout_gravity="center_horizontal"
+                android:onClick="manageStudyClicked"
+                android:enabled="false"/>
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/end_study"
+                android:id="@+id/endStudyButton"
+                android:layout_gravity="center_horizontal"
+                android:onClick="endStudyClicked"
+                android:enabled="false"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/display_database"
+                android:id="@+id/displayDbButton"
+                android:onClick="onReadDatabase"
+                android:enabled="false"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/delete_database"
+                android:id="@+id/deleteDbButton"
+                android:onClick="onDeleteDatabase"/>
+
+
+        </LinearLayout>
+
+        </LinearLayout>
+
+
+    </ScrollView>
+
+
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Delete Database"
-        android:id="@+id/deleteDbButton"
-        android:onClick="onDeleteDatabase"/>
+        android:minHeight="?attr/actionBarSize"
+        android:background="@color/transparent"
+        android:elevation="4dp"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
 
-</LinearLayout>
+
+
+</RelativeLayout>
