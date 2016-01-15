@@ -1,4 +1,24 @@
 <resources>
     <string name="app_name">Data Gathering</string>
     <string name="title_activity_band_connection_management">BandConnectionManagement</string>
+    <string name="title_activity_device_scan">DeviceScanActivity</string>
+    <string name="welcome_to_habits_data_gathering">Welcome</string>
+    <string name="please_connect_to_a_device">Please connect to a device</string>
+    <string name="start_study">Start study</string>
+    <string name="manage_study">Manage Study</string>
+    <string name="end_study">End Study</string>
+    <string name="display_database">Display Database</string>
+    <string name="delete_database">Delete Database</string>
+
+
+    <string-array name="locations_array">
+        <item>inner-left</item>
+        <item>inner-right</item>
+        <item>outer-left</item>
+        <item>outer-right</item>
+    </string-array>
+
+
+
+
 </resources>

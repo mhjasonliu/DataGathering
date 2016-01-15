@@ -5,9 +5,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
+        android:fullBackupContent="false"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -28,18 +29,21 @@
         </activity>
 
         <service
-            android:name=".BandDataService"
+            android:name=".banddata.BandDataService"
             android:enabled="true"
             android:exported="false"
             android:label="Band Data Service"
             android:process=":BandData" >
         </service>
+
+        <activity android:name=".NecklaceManagementActivity" >
+        </activity>
+
         <service
-            android:name=".ServerCommunicationService"
+            android:name=".NecklaceDataService"
             android:enabled="true"
             android:exported="true"
-            android:label="Server Communication Service"
-            android:process=":ServerCommunication">
+            android:process=":NecklaceData">
         </service>
     </application>
 
