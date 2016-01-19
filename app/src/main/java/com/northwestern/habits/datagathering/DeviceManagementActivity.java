@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class DeviceManagementActivity extends AppCompatActivity {
 
@@ -91,7 +92,20 @@ public class DeviceManagementActivity extends AppCompatActivity {
                     }
                     case 1: {
                         // LE device selected
+                        Log.v(TAG, "LE selected, name: " + leNameList.get(childPosition));
+                        if (Objects.equals(leNameList.get(childPosition), "RFduino")) {
+                            // TODO better check for necklace
+                            // Necklace selected, start a new activity
+                            Intent necklaceIntent = new Intent(DeviceManagementActivity.this,
+                                    NecklaceManagementActivity.class);
+                            necklaceIntent.putExtra(NecklaceManagementActivity.NAME_EXTRA,
+                                    leNameList.get(childPosition));
+                            necklaceIntent.putExtra(NecklaceManagementActivity.MAC_EXTRA,
+                                    leAddressList.get(childPosition));
 
+
+                            startActivity(necklaceIntent);
+                        }
                         break;
                     }
                     case 2: {
@@ -174,8 +188,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
                 } else {
                     Log.v(TAG, "LE scan was not enabled");
                 }
-            }
-            else
+            } else
                 Log.v(TAG, "Batch not supported");
         }
     }
@@ -226,9 +239,18 @@ public class DeviceManagementActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Log.v(TAG, "Got single result from scan for LE devices.");
-                    Log.v(TAG, "name" + result.getDevice().getName());
-                    leNameList.add(result.getDevice().getName());
-                    leAddressList.add(result.getDevice().getAddress());
+                    String name = result.getDevice().getName();
+                    String addr = result.getDevice().getAddress();
+                    if (name != null &&
+                            !leAddressList.contains(addr) &&
+                            !leNameList.contains(name)) {
+                        // Add info to list
+                        leNameList.add(name);
+                        leAddressList.add(addr);
+                        listDataHeader.set(1, "Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
+                        listDataChild.put(listDataHeader.get(1), leNameList);
+                        listAdapter.notifyDataSetChanged();
+                    }
                 }
             });
 
