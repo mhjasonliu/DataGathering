@@ -192,6 +192,9 @@ public class HelloWorldActivity extends AppCompatActivity implements HeartRateCo
                     params.put("Year", Integer.toString(cal.get(Calendar.YEAR)));
                     params.put("Month", Integer.toString(cal.get(Calendar.MONTH)));
                     params.put("Day", Integer.toString(cal.get(Calendar.DATE)));
+                    params.put("Hour", Integer.toString(cal.get(Calendar.HOUR_OF_DAY)));
+                    params.put("Minute", Integer.toString(cal.get(Calendar.MINUTE)));
+                    params.put("Second", Integer.toString(cal.get(Calendar.SECOND)));
 
                     //Log.v(TAG, "Put params");
 
