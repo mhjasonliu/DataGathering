@@ -116,6 +116,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void startHelloWorldClicked(View view) {
+        startDevMgmtActivity();
+    }
+
 
 
 
@@ -224,7 +228,6 @@ public class MainActivity extends AppCompatActivity {
 
         mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion() + 1);
     }
-
 
 
 

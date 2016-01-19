@@ -6,10 +6,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:fullBackupContent="false"
         android:allowBackup="true"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -43,8 +44,11 @@
             android:name=".NecklaceDataService"
             android:enabled="true"
             android:exported="true"
-            android:process=":NecklaceData">
+            android:process=":NecklaceData" >
         </service>
+
+        <activity android:name=".HelloWorldActivity" >
+        </activity>
     </application>
 
 </manifest>

@@ -59,7 +59,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
             studyName = extras.getString(STUDY_NAME_EXTRA);
         }
 
-        ((TextView) findViewById(R.id.studyTextView)).setText("Managing Devices for Study:\n" + studyName);
+        ((TextView) findViewById(R.id.studyTextView)).setText("Please select a Band (Make sure one is paired first!)");
 
 
         // get the listview
@@ -83,9 +83,11 @@ public class DeviceManagementActivity extends AppCompatActivity {
                         // Microsoft band selected
                         // Start connection management using the mac address
                         Intent connectionIntent = new Intent(DeviceManagementActivity.this,
-                                ManageBandConnection.class);
-                        connectionIntent.putExtra(ManageBandConnection.INDEX_EXTRA, childPosition);
-                        connectionIntent.putExtra(ManageBandConnection.STUDY_NAME_EXTRA, studyName);
+                                HelloWorldActivity.class);
+                        connectionIntent.putExtra(HelloWorldActivity.BAND_MAC_EXTRA,
+                                parent.getExpandableListAdapter().getChild(groupPosition, childPosition).toString());
+                        //connectionIntent.putExtra(ManageBandConnection.INDEX_EXTRA, childPosition);
+                        //connectionIntent.putExtra(ManageBandConnection.STUDY_NAME_EXTRA, studyName);
                         startActivity(connectionIntent);
                         break;
                     }
@@ -137,19 +139,19 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         leAddressList.clear();
         leNameList.clear();
-        scanLeDevice(bluetoothLe);
+        //scanLeDevice(bluetoothLe);
 
         List<String> pairedList = new ArrayList<>();
         pairedList.addAll(pairedMacAddresses);
 
         listDataHeader.clear();
         listDataHeader.add("Microsoft Band 2 (" + Integer.toString(bandList.size()) + ")");
-        listDataHeader.add("Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
-        listDataHeader.add("Other Paired Bluetooth Devices(" + Integer.toString(pairedList.size()) + ")");
+        //listDataHeader.add("Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
+        //listDataHeader.add("Other Paired Bluetooth Devices(" + Integer.toString(pairedList.size()) + ")");
 
         listDataChild.put(listDataHeader.get(0), bandList);
-        listDataChild.put(listDataHeader.get(1), leNameList);
-        listDataChild.put(listDataHeader.get(2), pairedList);
+        //listDataChild.put(listDataHeader.get(1), leNameList);
+        //listDataChild.put(listDataHeader.get(2), pairedList);
 
         listAdapter.notifyDataSetChanged();
     }
