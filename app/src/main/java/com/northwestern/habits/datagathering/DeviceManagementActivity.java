@@ -37,6 +37,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
     private ArrayList<String> pairedMacAddresses = new ArrayList<>();
     List<String> leAddressList = new ArrayList<>();
     List<String> leNameList = new ArrayList<>();
+    HashMap<String, BluetoothDevice> leDevices = new HashMap<>();
 
 
     ExpandableListAdapter listAdapter;
@@ -102,6 +103,8 @@ public class DeviceManagementActivity extends AppCompatActivity {
                                     leNameList.get(childPosition));
                             necklaceIntent.putExtra(NecklaceManagementActivity.MAC_EXTRA,
                                     leAddressList.get(childPosition));
+                            necklaceIntent.putExtra(NecklaceManagementActivity.DEV_EXTRA,
+                                    leDevices.get(leAddressList.get(childPosition)));
 
 
                             startActivity(necklaceIntent);
@@ -231,6 +234,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
             listDataHeader.set(1, "Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
             listDataChild.put(listDataHeader.get(1), leNameList);
+            listAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -244,6 +248,8 @@ public class DeviceManagementActivity extends AppCompatActivity {
                     if (name != null &&
                             !leAddressList.contains(addr) &&
                             !leNameList.contains(name)) {
+
+                        leDevices.put(addr, result.getDevice());
                         // Add info to list
                         leNameList.add(name);
                         leAddressList.add(addr);
