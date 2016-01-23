@@ -52,7 +52,8 @@
         <service
             android:name=".phonedata.PhoneDataService"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="true"
+            android:process=":PhoneData" >
         </service>
     </application>
 

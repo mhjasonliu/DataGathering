@@ -139,7 +139,8 @@
             android:text="Start Sream"
             android:id="@+id/startStreamButton"
             android:layout_gravity="bottom"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:onClick="startStreamPressed"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -147,6 +148,7 @@
             android:text="End Stream"
             android:id="@+id/endStreamButton"
             android:layout_gravity="bottom"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:onClick="stopStreamPressed"/>
     </LinearLayout>
 </LinearLayout>

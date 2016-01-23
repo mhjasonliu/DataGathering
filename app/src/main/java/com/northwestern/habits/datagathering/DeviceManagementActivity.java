@@ -96,6 +96,10 @@ public class DeviceManagementActivity extends AppCompatActivity {
                     }
                     case 2: {
                         // This phone selected
+                        Intent phoneIntent = new Intent(DeviceManagementActivity.this,
+                                PhoneDataActivity.class);
+                        phoneIntent.putExtra(PhoneDataActivity.STUDY_NAME_EXTRA, studyName);
+                        startActivity(phoneIntent);
 
                         break;
                     }
