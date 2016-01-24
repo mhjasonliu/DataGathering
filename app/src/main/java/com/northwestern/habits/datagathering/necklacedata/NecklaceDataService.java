@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.necklacedata;
 
 import android.app.Service;
 import android.content.Intent;
