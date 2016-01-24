@@ -151,8 +151,6 @@ public class AccelerometerManager extends  DataManager{
 
                 String T_ACCEL = "Accelerometer";
 
-
-
                 int studyId, devId, sensId;
                 try {
                     studyId = getStudyId(uName, database);

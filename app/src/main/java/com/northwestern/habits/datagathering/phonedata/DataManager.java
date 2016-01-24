@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 
 import com.northwestern.habits.datagathering.DataStorageContract;
 
@@ -24,6 +27,12 @@ public abstract class DataManager implements SensorEventListener {
         TAG = tag;
         database = db;
         this.context = context;
+        mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
+
+        // Set mac address
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wInfo = wifiManager.getConnectionInfo();
+        mac = wInfo.getMacAddress();
     }
 
     // Fields
@@ -32,14 +41,13 @@ public abstract class DataManager implements SensorEventListener {
     protected String TAG = "DataManager"; // Should be reset in the constructor
     SQLiteDatabase database; // Should be reset in the constructor
     protected Context context;
+    protected Sensor mSensor;
+    protected SensorManager mSensorManager;
+    protected String location;
+    protected String mac;
 
     protected abstract void subscribe();
     protected abstract void unSubscribe();
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
