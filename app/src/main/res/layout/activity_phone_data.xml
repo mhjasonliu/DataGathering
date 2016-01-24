@@ -80,17 +80,8 @@
             android:layout_height="wrap_content"
             android:text="Proximity"
             android:id="@+id/proxBox"
-            android:layout_row="3"
-            android:layout_column="0"
-            android:checked="false" />
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Orientation"
-            android:id="@+id/orientationBox"
             android:layout_row="2"
-            android:layout_column="1"
+            android:layout_column="2"
             android:checked="false" />
 
         <CheckBox
@@ -99,7 +90,7 @@
             android:text="Barometer"
             android:id="@+id/barometerBox"
             android:layout_row="2"
-            android:layout_column="2"
+            android:layout_column="1"
             android:checked="false" />
 
         <CheckBox
@@ -108,7 +99,7 @@
             android:text="Humidity"
             android:id="@+id/humidBox"
             android:layout_row="3"
-            android:layout_column="1"
+            android:layout_column="0"
             android:checked="false" />
 
         <CheckBox
@@ -117,7 +108,7 @@
             android:text="Rotation"
             android:id="@+id/rotationBox"
             android:layout_row="3"
-            android:layout_column="2"
+            android:layout_column="1"
             android:checked="false" />
     </GridLayout>
 

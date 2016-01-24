@@ -14,18 +14,17 @@ import java.util.HashMap;
 
 public class PhoneDataService extends Service {
 
-    public final String ACCELEROMETER_EXTRA = "accel";
-    public final String TEMP_EXTRA = "temp";
-    public final String GRAVITY_EXTRA = "grav";
-    public final String GYRO_EXTRA = "GYRO";
-    public final String LIGHT_EXTRA = "LIGHT";
-    public final String LINEAR_ACCEL_EXTRA = "LINACC";
-    public final String MAG_FIELD_EXTRA = "MAG";
-    public final String ORIENTATION_EXTRA = "ORIENT";
-    public final String PRESSURE_EXTRA = "PRESSURE";
-    public final String PROXIMITY_EXTRA = "PROX";
-    public final String HUMIDIDTY_EXTRA = "HUMID";
-    public final String ROTATION_EXTRA = "ROTATION";
+    public static final String ACCELEROMETER_EXTRA = "accel";
+    public static final String TEMP_EXTRA = "temp";
+    public static final String GRAVITY_EXTRA = "grav";
+    public static final String GYRO_EXTRA = "GYRO";
+    public static final String LIGHT_EXTRA = "LIGHT";
+    public static final String LINEAR_ACCEL_EXTRA = "LINACC";
+    public static final String MAG_FIELD_EXTRA = "MAG";
+    public static final String PRESSURE_EXTRA = "PRESSURE";
+    public static final String PROXIMITY_EXTRA = "PROX";
+    public static final String HUMIDIDTY_EXTRA = "HUMID";
+    public static final String ROTATION_EXTRA = "ROTATION";
 
     public static final String STUDY_ID_EXTRA = "study";
     public static final String CONTINUE_STUDY_EXTRA = "continue study";
@@ -45,7 +44,6 @@ public class PhoneDataService extends Service {
     private LightManager lightManager;
     private LinearAccelManager linAccelManager;
     private MagFieldManager magManager;
-    private OrientationManager orientationManager;
     private PressureManager pressureManager;
     private ProximityManager proximityManager;
     private HumidityManager humidityManager;
@@ -73,7 +71,17 @@ public class PhoneDataService extends Service {
 
             } else {
                 // Continue the study
-
+                modes.put(ACCELEROMETER_EXTRA, extras.getBoolean(ACCELEROMETER_EXTRA));
+                modes.put(TEMP_EXTRA, extras.getBoolean(TEMP_EXTRA));
+                modes.put(GRAVITY_EXTRA, extras.getBoolean(GRAVITY_EXTRA));
+                modes.put(GYRO_EXTRA, extras.getBoolean(GYRO_EXTRA));
+                modes.put(LIGHT_EXTRA, extras.getBoolean(LIGHT_EXTRA));
+                modes.put(LINEAR_ACCEL_EXTRA, extras.getBoolean(LINEAR_ACCEL_EXTRA));
+                modes.put(MAG_FIELD_EXTRA, extras.getBoolean(MAG_FIELD_EXTRA));
+                modes.put(PRESSURE_EXTRA, extras.getBoolean(PRESSURE_EXTRA));
+                modes.put(PROXIMITY_EXTRA, extras.getBoolean(PROXIMITY_EXTRA));
+                modes.put(HUMIDIDTY_EXTRA, extras.getBoolean(HUMIDIDTY_EXTRA));
+                modes.put(ROTATION_EXTRA, extras.getBoolean(ROTATION_EXTRA));
 
                 // Set the study and device
                 studyName = extras.getString(STUDY_ID_EXTRA);
@@ -158,12 +166,6 @@ public class PhoneDataService extends Service {
 
                 magManager.subscribe();
                 break;
-            case ORIENTATION_EXTRA:
-                if (orientationManager == null)
-                    orientationManager = new OrientationManager(studyName, db, this);
-
-                orientationManager.subscribe();
-                break;
             case PRESSURE_EXTRA:
                 if (pressureManager == null)
                     pressureManager = new PressureManager(studyName, db, this);
@@ -226,10 +228,6 @@ public class PhoneDataService extends Service {
             case MAG_FIELD_EXTRA:
                 if (magManager != null)
                     magManager.unSubscribe();
-                break;
-            case ORIENTATION_EXTRA:
-                if (orientationManager != null)
-                    orientationManager.unSubscribe();
                 break;
             case PRESSURE_EXTRA:
                 if (pressureManager != null)

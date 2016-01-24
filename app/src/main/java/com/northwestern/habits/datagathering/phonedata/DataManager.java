@@ -4,18 +4,19 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 
 import com.northwestern.habits.datagathering.DataStorageContract;
 
 import java.text.SimpleDateFormat;
-import java.util.EventListener;
 import java.util.Locale;
 
 /**
  * Created by William on 1/23/2016
  */
-public abstract class DataManager implements EventListener {
+public abstract class DataManager implements SensorEventListener {
 
     // Constructor
     public DataManager(String sName, String tag, SQLiteDatabase db, Context context) {
@@ -27,13 +28,24 @@ public abstract class DataManager implements EventListener {
 
     // Fields
     String studyName;
-    protected final String THIS_PHONE = "Android_Phone";
+    protected final String T_PHONE = "Android_Phone";
     protected String TAG = "DataManager"; // Should be reset in the constructor
     SQLiteDatabase database; // Should be reset in the constructor
     protected Context context;
 
     protected abstract void subscribe();
     protected abstract void unSubscribe();
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
 
     /**
      * Helper that gets the date and time in proper format for database

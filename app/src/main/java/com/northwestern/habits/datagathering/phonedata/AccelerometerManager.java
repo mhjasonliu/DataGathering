@@ -2,6 +2,8 @@ package com.northwestern.habits.datagathering.phonedata;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
 
 
 /**
@@ -23,4 +25,6 @@ public class AccelerometerManager extends DataManager {
     protected void unSubscribe() {
 
     }
+
+
 }
