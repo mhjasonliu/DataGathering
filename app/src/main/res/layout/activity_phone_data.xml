@@ -131,7 +131,8 @@
             android:id="@+id/startStreamButton"
             android:layout_gravity="bottom"
             android:layout_weight="1"
-            android:onClick="startStreamPressed"/>
+            android:onClick="startStreamPressed"
+            android:enabled="false"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -140,6 +141,7 @@
             android:id="@+id/endStreamButton"
             android:layout_gravity="bottom"
             android:layout_weight="1"
-            android:onClick="stopStreamPressed"/>
+            android:onClick="stopStreamPressed"
+            android:enabled="false"/>
     </LinearLayout>
 </LinearLayout>

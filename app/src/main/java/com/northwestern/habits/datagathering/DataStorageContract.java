@@ -288,6 +288,25 @@ public final class DataStorageContract {
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
+
+    public static abstract class EatingMomentTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "eating_moment";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_TYPE = "type";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_TYPE + TEXT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+    }
+
+
+
+
     public static abstract class PedometerTable implements BaseColumns {
 
         public static final String TABLE_NAME = "pedometer_table";
@@ -362,6 +381,7 @@ public final class DataStorageContract {
             db.execSQL(GsrTable.SQL_CREATE_ENTRIES);
             db.execSQL(GyroTable.SQL_CREATE_ENTRIES);
             db.execSQL(HeartRateTable.SQL_CREATE_ENTRIES);
+            db.execSQL(EatingMomentTable.SQL_CREATE_ENTRIES);
             db.execSQL(PedometerTable.SQL_CREATE_ENTRIES);
             db.execSQL(SkinTemperatureTable.SQL_CREATE_ENTRIES);
             db.execSQL(UvTable.SQL_CREATE_ENTRIES);
@@ -382,6 +402,7 @@ public final class DataStorageContract {
             db.execSQL(GsrTable.SQL_DELETE_ENTRIES);
             db.execSQL(GyroTable.SQL_DELETE_ENTRIES);
             db.execSQL(HeartRateTable.SQL_DELETE_ENTRIES);
+            db.execSQL(EatingMomentTable.SQL_DELETE_ENTRIES);
             db.execSQL(PedometerTable.SQL_DELETE_ENTRIES);
             db.execSQL(SkinTemperatureTable.SQL_DELETE_ENTRIES);
             db.execSQL(UvTable.SQL_DELETE_ENTRIES);
