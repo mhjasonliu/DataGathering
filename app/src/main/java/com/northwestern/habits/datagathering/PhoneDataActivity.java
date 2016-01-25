@@ -103,5 +103,14 @@ public class PhoneDataActivity extends AppCompatActivity {
     }
 
 
+    public void onChewClicked(View view) {
+        long currentTime = System.currentTimeMillis();
+
+    }
+
+    public void onHtmClicked(View view) {
+        long currentTime = System.currentTimeMillis();
+
+    }
 
 }

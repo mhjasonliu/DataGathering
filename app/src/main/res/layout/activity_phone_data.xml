@@ -112,6 +112,27 @@
             android:checked="false" />
     </GridLayout>
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Record Hand to Mouth"
+            android:id="@+id/htmButton"
+            android:onClick="onHtmClicked"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Record Chew"
+            android:id="@+id/chewButton"
+            android:layout_weight="1"
+            android:onClick="onChewClicked"/>
+    </LinearLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
