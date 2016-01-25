@@ -1,5 +1,7 @@
 package com.northwestern.habits.datagathering.necklacedata;
 
+import android.util.Log;
+
 /**
  * Created by William on 1/24/2016
  */
@@ -15,13 +17,17 @@ public class NecklaceEvent {
 
 
     NecklaceEvent (byte[] bytes) {
-        byte0 = bytes[0];
-        byte1 = bytes[1];
-        byte2 = bytes[2];
-        byte3 = bytes[3];
-        byte4 = bytes[4];
-        byte5 = bytes[5];
-        byte6 = bytes[6];
+        if (bytes.length == 7) {
+            byte0 = bytes[0];
+            byte1 = bytes[1];
+            byte2 = bytes[2];
+            byte3 = bytes[3];
+            byte4 = bytes[4];
+            byte5 = bytes[5];
+            byte6 = bytes[6];
+        } else {
+            Log.e("NecklaceEvent", "Wrong number of bytes in constructor: " + Integer.toString(bytes.length));
+        }
     }
 
 
