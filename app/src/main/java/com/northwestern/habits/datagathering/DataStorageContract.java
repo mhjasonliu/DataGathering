@@ -294,9 +294,11 @@ public final class DataStorageContract {
         public static final String TABLE_NAME = "eating_moment";
         public static final String COLUMN_NAME_DATETIME = "date";
         public static final String COLUMN_NAME_TYPE = "type";
+        public static final String COLUMN_NAME_STUDY_ID = "study_id";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_STUDY_ID + INT_TYPE + COMMA_SEP +
                         COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
                         COLUMN_NAME_TYPE + TEXT_TYPE +
                         " )";

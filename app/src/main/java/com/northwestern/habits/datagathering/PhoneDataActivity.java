@@ -1,23 +1,32 @@
 package com.northwestern.habits.datagathering;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 
 import com.northwestern.habits.datagathering.phonedata.PhoneDataService;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 public class PhoneDataActivity extends AppCompatActivity {
 
     public static final String STUDY_NAME_EXTRA = "studyname";
 
     private String studyName;
+    private final String TAG = "PhoneDataActivity";
 
     private HashMap<String,Boolean> modes = new HashMap<>();
 
@@ -105,12 +114,111 @@ public class PhoneDataActivity extends AppCompatActivity {
 
     public void onChewClicked(View view) {
         long currentTime = System.currentTimeMillis();
-
+        writeMoment("Chew", currentTime);
     }
 
     public void onHtmClicked(View view) {
         long currentTime = System.currentTimeMillis();
-
+        writeMoment("Hand-to-mouth", currentTime);
     }
 
+    private void writeMoment(String type, long time) {
+        int studyId;
+        SQLiteDatabase database =
+                (new DataStorageContract.BluetoothDbHelper(getApplicationContext())).getWritableDatabase();
+        try {
+            studyId = getStudyId(studyName, database);
+        } catch (Resources.NotFoundException e) {
+
+            // study not found, use lowest available
+            studyId = getNewStudy(database);
+
+
+            // Write the study into database, save the id
+            ContentValues values = new ContentValues();
+            values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, studyId);
+            values.put(DataStorageContract.StudyTable._ID, studyId);
+            database.insert(
+                    DataStorageContract.StudyTable.TABLE_NAME,
+                    null,
+                    values
+            );
+        }
+
+        Date date = new Date(time);
+
+        Log.v(TAG, "Study name is: " + studyName);
+        Log.v(TAG, "Type: " + type);
+        Log.v(TAG, dateFormat.format(date));
+
+        ContentValues values = new ContentValues();
+        values.put(DataStorageContract.EatingMomentTable.COLUMN_NAME_DATETIME, dateFormat.format(date));
+        values.put(DataStorageContract.EatingMomentTable.COLUMN_NAME_TYPE, type);
+        values.put(DataStorageContract.EatingMomentTable.COLUMN_NAME_STUDY_ID, studyId);
+
+        database.insert(DataStorageContract.EatingMomentTable.TABLE_NAME, null, values);
+    }
+
+    protected int getStudyId(String studyId, SQLiteDatabase db) throws Resources.NotFoundException {
+
+        // Querry databse for the study name
+        String[] projection = new String[] {
+                DataStorageContract.StudyTable._ID,
+                DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID
+        };
+
+        // Query for the specified studyId
+        Cursor cursor = db.query(
+                DataStorageContract.StudyTable.TABLE_NAME,
+                projection,
+                DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID + "=?",
+                new String[] { studyId },
+                null,
+                null,
+                null
+        );
+        cursor.moveToFirst();
+
+        if (cursor.getCount() == 0)
+            throw new Resources.NotFoundException();
+
+
+        int tmp = cursor.getInt(cursor.getColumnIndexOrThrow(DataStorageContract.StudyTable._ID));
+        cursor.close();
+        return tmp;
+    }
+
+    protected int getNewStudy(SQLiteDatabase db) {
+        String[] projection = new String[] {
+                DataStorageContract.StudyTable._ID,
+        };
+
+        // Get the table of studies
+        Cursor cursor = db.query(
+                DataStorageContract.StudyTable.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                DataStorageContract.StudyTable._ID + " DESC",
+                "1"
+        );
+        cursor.moveToFirst();
+
+        // First entry
+        if (cursor.getCount() == 0)
+            return 0;
+
+        // Cursor currently points at study entry with largest ID
+        int studyIdCol = cursor.getColumnIndexOrThrow(
+                DataStorageContract.StudyTable._ID);
+
+        int tmp = cursor.getInt(studyIdCol) + 1;
+        cursor.close();
+        return tmp;
+    }
+
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
 }
