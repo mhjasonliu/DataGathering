@@ -216,12 +216,12 @@ public class AmbientManager extends DataManager {
                 Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AmbientTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                values.put(DataStorageContract.AmbientTable.COLUMN_NAME_SENSOR_ID, sensId);
-                values.put(DataStorageContract.AmbientTable.COLUMN_NAME_BRIGHTNESS, event.getBrightness());
+                values.put(DataStorageContract.AmbientLightTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.AmbientLightTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.AmbientLightTable.COLUMN_NAME_BRIGHTNESS, event.getBrightness());
 
 
-                database.insert(DataStorageContract.AmbientTable.TABLE_NAME, null, values);
+                database.insert(DataStorageContract.AmbientLightTable.TABLE_NAME, null, values);
             }
         }
     }

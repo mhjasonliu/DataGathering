@@ -216,12 +216,12 @@ public class SkinTempManager extends DataManager {
                 Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
-                values.put(DataStorageContract.SkinTemperatureTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                values.put(DataStorageContract.SkinTemperatureTable.COLUMN_NAME_SENSOR_ID, sensId);
-                values.put(DataStorageContract.SkinTemperatureTable.COLUMN_NAME_TEMPERATURE, event.getTemperature());
+                values.put(DataStorageContract.TemperatureTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.TemperatureTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.TemperatureTable.COLUMN_NAME_TEMPERATURE, event.getTemperature());
 
 
-                database.insert(DataStorageContract.SkinTemperatureTable.TABLE_NAME, null, values);
+                database.insert(DataStorageContract.TemperatureTable.TABLE_NAME, null, values);
 
             }
         }

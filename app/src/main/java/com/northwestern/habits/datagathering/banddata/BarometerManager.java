@@ -215,13 +215,19 @@ public class BarometerManager extends DataManager {
                 Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
-                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_SENSOR_ID, sensId);
-                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_PRESSURE, event.getAirPressure());
-                values.put(DataStorageContract.BarometerTable.COLUMN_NAME_TEMP, event.getTemperature());
+                values.put(DataStorageContract.PressureTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.PressureTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.PressureTable.COLUMN_NAME_PRESSURE, event.getAirPressure());
+
+                database.insert(DataStorageContract.PressureTable.TABLE_NAME, null, values);
 
 
-                database.insert(DataStorageContract.BarometerTable.TABLE_NAME, null, values);
+                values = new ContentValues();
+                values.put(DataStorageContract.TemperatureTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                values.put(DataStorageContract.TemperatureTable.COLUMN_NAME_SENSOR_ID, sensId);
+                values.put(DataStorageContract.TemperatureTable.COLUMN_NAME_TEMPERATURE, event.getTemperature());
+
+                database.insert(DataStorageContract.TemperatureTable.TABLE_NAME, null, values);
 
             }
         }
