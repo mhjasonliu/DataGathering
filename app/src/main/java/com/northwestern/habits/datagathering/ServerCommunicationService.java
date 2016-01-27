@@ -18,7 +18,7 @@ public class ServerCommunicationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
 
-        new SendDbTask().execute();
+        new SendTableTask().execute();
         return Service.START_STICKY;
     }
 
@@ -31,7 +31,7 @@ public class ServerCommunicationService extends Service {
     }
 
 
-    private class SendDbTask extends AsyncTask<Void, Void, Void> {
+    private class SendTableTask extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... params) {

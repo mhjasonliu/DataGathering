@@ -90,10 +90,10 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/display_database"
-                android:id="@+id/displayDbButton"
-                android:onClick="onReadDatabase"
-                android:enabled="false"/>
+                android:text="Send database"
+                android:id="@+id/sendDbButton"
+                android:onClick="onSendDatabase"
+                android:enabled="true"/>
 
             <Button
                 android:layout_width="match_parent"
