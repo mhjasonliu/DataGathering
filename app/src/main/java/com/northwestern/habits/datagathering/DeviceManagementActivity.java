@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 public class DeviceManagementActivity extends AppCompatActivity {
 
@@ -94,7 +93,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
                     case 1: {
                         // LE device selected
                         Log.v(TAG, "LE selected, name: " + leNameList.get(childPosition));
-                        if (Objects.equals(leNameList.get(childPosition), "RFduino")) {
+                        if (true) {//Objects.equals(leNameList.get(childPosition), "RFduino")) {
                             // TODO better check for necklace
                             // Necklace selected, start a new activity
                             Intent necklaceIntent = new Intent(DeviceManagementActivity.this,

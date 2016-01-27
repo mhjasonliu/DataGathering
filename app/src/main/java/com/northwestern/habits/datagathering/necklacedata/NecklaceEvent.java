@@ -17,7 +17,7 @@ public class NecklaceEvent {
 
 
     NecklaceEvent (byte[] bytes) {
-        if (bytes.length == 7) {
+        if (bytes.length == 20) {
             byte0 = bytes[0];
             byte1 = bytes[1];
             byte2 = bytes[2];
