@@ -5,7 +5,10 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -18,6 +21,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.northwestern.habits.datagathering.banddata.BandDataService;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
 
         Log.v(TAG, "Creating database");
         mDbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
+
+        if (db == null) {
+            Log.v(TAG, "the database is null");
+        }
     }
 
     @Override
@@ -222,7 +231,48 @@ public class MainActivity extends AppCompatActivity {
     public void onDeleteDatabase( View view ) {
         db = mDbHelper.getWritableDatabase();
 
+
         mDbHelper.onUpgrade(db, db.getVersion(), db.getVersion() + 1);
+    }
+
+    public void onReadDatabase(View view) {
+        db = mDbHelper.getWritableDatabase();
+        Log.v(TAG, "Got database " + db);
+
+        String studyId = "0";
+
+        // Querry databse for the study name
+        String[] projection = new String[] {
+                DataStorageContract.StudyTable._ID,
+                DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID
+        };
+
+        // Query for the specified studyId
+        Cursor cursor = db.query(
+                DataStorageContract.StudyTable.TABLE_NAME,
+                projection,
+                DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID + "=?",
+                new String[] { studyId },
+                null,
+                null,
+                null
+        );
+        cursor.moveToFirst();
+
+        if (cursor.getCount() == 0)
+            throw new Resources.NotFoundException();
+
+        Log.v(TAG, "database path:" + db.getPath());
+
+        File dattabsefile = new File(db.getPath());
+
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.putExtra(Intent.EXTRA_EMAIL, new String[] {"williamstogin2018@u.northwestern.edu"});
+        i.putExtra(Intent.EXTRA_SUBJECT, "Database");
+        i.putExtra(Intent.EXTRA_TEXT, "Attached is (hopefully) the database");
+        i.setType("application/octet-stream");
+        i.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(db.getPath())));
+        startActivity(Intent.createChooser(i, "Send e-mail"));
     }
 
 
