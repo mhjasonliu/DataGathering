@@ -12,14 +12,13 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ServerCommunicationService extends Service {
     public ServerCommunicationService() {
@@ -79,55 +78,62 @@ public class ServerCommunicationService extends Service {
 
                         while (!c.isAfterLast()) {
                             Log.v(TAG, "Iterating in while loop");
-                            HashMap<String, String> send_params = new HashMap<>();
-                            send_params.put("id", c.getString(id_col));
-                            send_params.put("name", c.getString(name_col));
+                            Log.v(TAG, "SEnding post.....");
+                            try {
 
-                            StringBuilder postData = new StringBuilder();
-                            for (Map.Entry<String, String> param : send_params.entrySet()) {
-                                if (postData.length() != 0) {
-                                    postData.append('&');
+                                HashMap<String, String> sparams = new HashMap<>();
+                                sparams.put("id", Integer.toString(c.getInt(id_col)));
+                                //sparams.put("name", c.getString(name_col));
+
+                                Log.v(TAG, "Put sparams");
+
+                                Set set = sparams.entrySet();
+                                StringBuilder postData = new StringBuilder();
+                                for (Map.Entry<String, String> param : sparams.entrySet()) {
+                                    if (postData.length() != 0) {
+                                        postData.append('&');
+                                    }
+                                    postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+                                    postData.append('=');
+                                    postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
                                 }
-                                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
-                                postData.append('=');
-                                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+
+                                byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+
+                                Log.v(TAG, "Encoded post data");
+
+                                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                                conn.setRequestMethod("POST");
+                                conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
+                                conn.setDoOutput(true);
+                                Log.v(TAG, "Bytes are: " + new String(postDataBytes));
+                                conn.getOutputStream().write(postDataBytes);
+
+                                Log.v(TAG, "Posted data");
+
+                                Log.v(TAG, "Response code " + conn.getResponseMessage());
+
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                                StringBuilder builder = new StringBuilder();
+                                Log.v(TAG, "Reading response");
+                                for (String line = null; (line = reader.readLine()) != null;) {
+                                    builder.append(line).append("\n");
+                                }
+
+                                reader.close();
+                                conn.disconnect();
+                                Log.v(TAG, "Disconnected");
+                                Log.v(TAG, "Response: " + builder.toString());
+
+                            } catch (MalformedURLException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-
-                            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
-
-                            Log.v(TAG, "Encoded post data");
-
-                            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                            conn.setRequestMethod("POST");
-                            conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
-                            conn.setDoOutput(true);
-                            conn.getOutputStream().write(postDataBytes);
-
-                            Log.v(TAG, "Posted data");
-
-                            InputStreamReader inReader = new InputStreamReader(conn.getInputStream(), "UTF-8");
-                            Log.v(TAG, "Made instreamreader");
-                            BufferedReader reader = new BufferedReader(inReader);
-                            Log.v(TAG, "Got buffered reader");
-                            StringBuilder builder = new StringBuilder();
-                            //Log.v(TAG, "Reading response");
-                            for (String line = null; (line = reader.readLine()) != null; ) {
-                                builder.append(line).append("\n");
-                            }
-
-                            reader.close();
-                            conn.disconnect();
-                            //Log.v(TAG, "Disconnected");
-                            Log.v(TAG, "Response: " + builder.toString());
-
                             c.moveToNext();
                         }
                         c.close();
                     } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    } catch (ProtocolException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
