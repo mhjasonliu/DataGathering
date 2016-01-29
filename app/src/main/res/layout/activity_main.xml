@@ -93,7 +93,13 @@
                 android:text="Send database"
                 android:id="@+id/sendDbButton"
                 android:onClick="onSendDatabase"
-                android:enabled="true"/>
+                android:enabled="false"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test"
+                android:onClick="onSendDatabase"/>
 
             <Button
                 android:layout_width="match_parent"
