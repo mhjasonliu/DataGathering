@@ -43,6 +43,7 @@ public class ServerCommunicationService extends Service {
             Cursor c = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
             Log.v(TAG, "Cursor has" + c.getCount());
             new SendTableTask().execute(STUDY);
+
         }
         //new SendTableTask().execute();
         return Service.START_STICKY;
@@ -83,7 +84,7 @@ public class ServerCommunicationService extends Service {
 
                                 HashMap<String, String> sparams = new HashMap<>();
                                 sparams.put("id", Integer.toString(c.getInt(id_col)));
-                                //sparams.put("name", c.getString(name_col));
+                                sparams.put("name", c.getString(name_col));
 
                                 Log.v(TAG, "Put sparams");
 
