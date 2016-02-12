@@ -1,14 +1,14 @@
 package com.northwestern.habits.datagathering.phonedata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.hardware.SensorEvent;
 
 /**
  * Created by William on 1/23/2016
  */
 public class MagFieldManager extends DataManager {
-    public MagFieldManager(String sName, SQLiteDatabase db, Context context) {
+    public MagFieldManager(String sName, SQLiteOpenHelper db, Context context) {
         super(sName, "MagFieldManager", db, context);
     }
 

@@ -3,7 +3,7 @@ package com.northwestern.habits.datagathering.phonedata;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
@@ -15,7 +15,7 @@ import com.northwestern.habits.datagathering.DataStorageContract;
  * Created by William on 1/23/2016
  */
 public class GyroManager extends DataManager {
-    public GyroManager(String sName, SQLiteDatabase db, Context context) {
+    public GyroManager(String sName, SQLiteOpenHelper db, Context context) {
         super(sName, "GyroManager", db, context);
 
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);

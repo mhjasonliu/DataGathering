@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,10 +23,10 @@ import java.util.Locale;
 public abstract class DataManager implements SensorEventListener {
 
     // Constructor
-    public DataManager(String sName, String tag, SQLiteDatabase db, Context context) {
+    public DataManager(String sName, String tag, SQLiteOpenHelper openHelper, Context context) {
         studyName = sName;
         TAG = tag;
-        database = db;
+        database = openHelper.getWritableDatabase();
         this.context = context;
         mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
 

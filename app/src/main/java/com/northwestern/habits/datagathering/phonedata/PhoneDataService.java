@@ -2,7 +2,7 @@ package com.northwestern.habits.datagathering.phonedata;
 
 import android.app.Service;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -33,7 +33,7 @@ public class PhoneDataService extends Service {
     private final String TAG = "PhoneDataService";
     private String studyName;
 
-    private SQLiteDatabase db;
+    private SQLiteOpenHelper dbHelper;
     private HashMap<String, Boolean> modes = new HashMap<>();
 
 
@@ -57,8 +57,8 @@ public class PhoneDataService extends Service {
         Log.v(TAG, "Started the service.");
 
         Log.v(TAG, "Retrieving database");
-        if (db == null)
-            db = (new DataStorageContract.BluetoothDbHelper(getApplicationContext())).getWritableDatabase();
+        if (dbHelper == null)
+            dbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();
@@ -126,67 +126,67 @@ public class PhoneDataService extends Service {
         switch (request) {
             case ACCELEROMETER_EXTRA:
                 if (accManager == null)
-                    accManager = new AccelerometerManager(studyName, db, this);
+                    accManager = new AccelerometerManager(studyName, dbHelper, this);
 
                 accManager.subscribe();
                 break;
             case TEMP_EXTRA:
                 if (tempManager == null)
-                    tempManager = new TempManager(studyName, db, this);
+                    tempManager = new TempManager(studyName, dbHelper, this);
 
                 tempManager.subscribe();
                 break;
             case GRAVITY_EXTRA:
                 if (gravManager == null)
-                    gravManager = new GravityManager(studyName, db, this);
+                    gravManager = new GravityManager(studyName, dbHelper, this);
 
                 gravManager.subscribe();
                 break;
             case GYRO_EXTRA:
                 if (gyroManager == null)
-                    gyroManager = new GyroManager(studyName, db, this);
+                    gyroManager = new GyroManager(studyName, dbHelper, this);
 
                 gyroManager.subscribe();
                 break;
             case LIGHT_EXTRA:
                 if (lightManager == null)
-                    lightManager = new LightManager(studyName, db, this);
+                    lightManager = new LightManager(studyName, dbHelper, this);
 
                 lightManager.subscribe();
                 break;
             case LINEAR_ACCEL_EXTRA:
                 if (linAccelManager == null)
-                    linAccelManager = new LinearAccelManager(studyName, db, this);
+                    linAccelManager = new LinearAccelManager(studyName, dbHelper, this);
 
                 linAccelManager.subscribe();
                 break;
             case MAG_FIELD_EXTRA:
                 if (magManager == null)
-                    magManager = new MagFieldManager(studyName, db, this);
+                    magManager = new MagFieldManager(studyName, dbHelper, this);
 
                 magManager.subscribe();
                 break;
             case PRESSURE_EXTRA:
                 if (pressureManager == null)
-                    pressureManager = new PressureManager(studyName, db, this);
+                    pressureManager = new PressureManager(studyName, dbHelper, this);
 
                 pressureManager.subscribe();
                 break;
             case PROXIMITY_EXTRA:
                 if (proximityManager == null)
-                    proximityManager = new ProximityManager(studyName, db, this);
+                    proximityManager = new ProximityManager(studyName, dbHelper, this);
 
                 proximityManager.subscribe();
                 break;
             case HUMIDIDTY_EXTRA:
                 if (humidityManager == null)
-                    humidityManager = new HumidityManager(studyName, db, this);
+                    humidityManager = new HumidityManager(studyName, dbHelper, this);
 
                 humidityManager.subscribe();
                 break;
             case ROTATION_EXTRA:
                 if (rotationManager == null)
-                    rotationManager = new RotationManager(studyName, db, this);
+                    rotationManager = new RotationManager(studyName, dbHelper, this);
 
                 rotationManager.subscribe();
                 break;
