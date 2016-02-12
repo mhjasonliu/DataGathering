@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -28,7 +29,7 @@ public class PhoneDataActivity extends AppCompatActivity {
     private String studyName;
     private final String TAG = "PhoneDataActivity";
 
-    private HashMap<String,Boolean> modes = new HashMap<>();
+    private HashMap<String, Boolean> modes = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +70,6 @@ public class PhoneDataActivity extends AppCompatActivity {
                 manager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null);
 
 
-
-
     }
 
 
@@ -103,12 +102,41 @@ public class PhoneDataActivity extends AppCompatActivity {
         phoneIntent.putExtra(PhoneDataService.ROTATION_EXTRA,
                 ((CheckBox) findViewById(R.id.rotationBox)).isChecked());
 
-                startService(phoneIntent);
+        startService(phoneIntent);
     }
 
 
     public void stopStreamPressed(View view) {
 
+        Intent phoneIntent = new Intent(this, PhoneDataService.class);
+        phoneIntent.putExtra(PhoneDataService.STUDY_ID_EXTRA, studyName);
+        phoneIntent.putExtra(PhoneDataService.CONTINUE_STUDY_EXTRA, true);
+        phoneIntent.putExtra(PhoneDataService.STOP_STREAM_EXTRA, true);
+
+        phoneIntent.putExtra(PhoneDataService.ACCELEROMETER_EXTRA,
+                ((CheckBox) findViewById(R.id.accelBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.TEMP_EXTRA,
+                ((CheckBox) findViewById(R.id.tempBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.GRAVITY_EXTRA,
+                ((CheckBox) findViewById(R.id.gravBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.GYRO_EXTRA,
+                ((CheckBox) findViewById(R.id.gyroBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.LIGHT_EXTRA,
+                ((CheckBox) findViewById(R.id.lightBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.LINEAR_ACCEL_EXTRA,
+                ((CheckBox) findViewById(R.id.linAccBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.MAG_FIELD_EXTRA,
+                ((CheckBox) findViewById(R.id.magFieldBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.PRESSURE_EXTRA,
+                ((CheckBox) findViewById(R.id.barometerBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.PROXIMITY_EXTRA,
+                ((CheckBox) findViewById(R.id.proxBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.HUMIDIDTY_EXTRA,
+                ((CheckBox) findViewById(R.id.humidBox)).isChecked());
+        phoneIntent.putExtra(PhoneDataService.ROTATION_EXTRA,
+                ((CheckBox) findViewById(R.id.rotationBox)).isChecked());
+
+        startService(phoneIntent);
     }
 
 
@@ -138,11 +166,15 @@ public class PhoneDataActivity extends AppCompatActivity {
             ContentValues values = new ContentValues();
             values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, studyId);
             values.put(DataStorageContract.StudyTable._ID, studyId);
-            database.insert(
-                    DataStorageContract.StudyTable.TABLE_NAME,
-                    null,
-                    values
-            );
+            try {
+                database.insertOrThrow(
+                        DataStorageContract.StudyTable.TABLE_NAME,
+                        null,
+                        values
+                );
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
         }
 
         Date date = new Date(time);
@@ -162,7 +194,7 @@ public class PhoneDataActivity extends AppCompatActivity {
     protected int getStudyId(String studyId, SQLiteDatabase db) throws Resources.NotFoundException {
 
         // Querry databse for the study name
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.StudyTable._ID,
                 DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID
         };
@@ -172,7 +204,7 @@ public class PhoneDataActivity extends AppCompatActivity {
                 DataStorageContract.StudyTable.TABLE_NAME,
                 projection,
                 DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID + "=?",
-                new String[] { studyId },
+                new String[]{studyId},
                 null,
                 null,
                 null
@@ -189,7 +221,7 @@ public class PhoneDataActivity extends AppCompatActivity {
     }
 
     protected int getNewStudy(SQLiteDatabase db) {
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.StudyTable._ID,
         };
 

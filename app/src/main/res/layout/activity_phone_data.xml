@@ -19,7 +19,8 @@
             android:id="@+id/accelBox"
             android:checked="false"
             android:layout_row="0"
-            android:layout_column="0" />
+            android:layout_column="0"
+            android:enabled="true"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -28,7 +29,8 @@
             android:id="@+id/gyroBox"
             android:layout_row="1"
             android:layout_column="0"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -37,7 +39,8 @@
             android:id="@+id/tempBox"
             android:checked="false"
             android:layout_row="0"
-            android:layout_column="1" />
+            android:layout_column="1"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -46,7 +49,8 @@
             android:id="@+id/gravBox"
             android:layout_row="0"
             android:layout_column="2"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -55,7 +59,8 @@
             android:id="@+id/magFieldBox"
             android:layout_row="2"
             android:layout_column="0"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -64,7 +69,8 @@
             android:id="@+id/lightBox"
             android:layout_row="1"
             android:layout_column="1"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -73,7 +79,8 @@
             android:id="@+id/linAccBox"
             android:layout_row="1"
             android:layout_column="2"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -82,7 +89,8 @@
             android:id="@+id/proxBox"
             android:layout_row="2"
             android:layout_column="2"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -91,7 +99,8 @@
             android:id="@+id/barometerBox"
             android:layout_row="2"
             android:layout_column="1"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -100,7 +109,8 @@
             android:id="@+id/humidBox"
             android:layout_row="3"
             android:layout_column="0"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -109,7 +119,8 @@
             android:id="@+id/rotationBox"
             android:layout_row="3"
             android:layout_column="1"
-            android:checked="false" />
+            android:checked="false"
+            android:enabled="false"/>
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -163,7 +174,7 @@
             android:layout_gravity="bottom"
             android:layout_weight="1"
             android:onClick="startStreamPressed"
-            android:enabled="false"/>
+            android:enabled="true"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -173,6 +184,6 @@
             android:layout_gravity="bottom"
             android:layout_weight="1"
             android:onClick="stopStreamPressed"
-            android:enabled="false"/>
+            android:enabled="true"/>
     </LinearLayout>
 </LinearLayout>

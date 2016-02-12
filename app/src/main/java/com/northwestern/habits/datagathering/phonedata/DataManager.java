@@ -27,6 +27,9 @@ public abstract class DataManager implements SensorEventListener {
         studyName = sName;
         TAG = tag;
         database = openHelper.getWritableDatabase();
+        if (database == null) {
+            openHelper.onCreate(database);
+        }
         this.context = context;
         mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
 
@@ -160,9 +163,8 @@ public abstract class DataManager implements SensorEventListener {
                 DataStorageContract.DeviceTable.TABLE_NAME,
                 projection,
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC + "=?" + " AND " +
-                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?" +" AND " +
-                        DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION + "=?",
-                new String[] { mac, Integer.toString(study), location},
+                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?",
+                new String[] { mac, Integer.toString(study)},
                 null,
                 null,
                 null
