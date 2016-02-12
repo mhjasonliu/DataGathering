@@ -2,14 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.northwestern.habits.datagathering" >
 
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="com.microsoft.band.service.access.BIND_BAND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
-        android:fullBackupContent="false"
         android:allowBackup="true"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -43,7 +44,17 @@
             android:name=".NecklaceDataService"
             android:enabled="true"
             android:exported="true"
-            android:process=":NecklaceData">
+            android:process=":NecklaceData" >
+        </service>
+
+        <activity android:name=".PhoneDataActivity" >
+        </activity>
+
+        <service
+            android:name=".phonedata.PhoneDataService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":PhoneData" >
         </service>
     </application>
 

@@ -121,6 +121,11 @@ public class BandDataService extends Service {
                     for (String type : modes.keySet()) {
                         if (modes.get(type)) {
                             genericUnsubscribeFactory(type, band);
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
 
@@ -130,8 +135,13 @@ public class BandDataService extends Service {
 
                     for ( String key : modes.keySet() ) {
                         if (modes.get(key)) {
-                            Log.v(TAG, "For mode " + key + " value is " + modes.get(key));
+                            //Log.v(TAG, "For mode " + key + " value is " + modes.get(key));
                             genericSubscriptionFactory(key, band);
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -152,7 +162,6 @@ public class BandDataService extends Service {
                 // Other streams open, remove from list
                 bandStreams.get(band).remove(request);
             }
-            // Start an unsubscribe task
 
             // Unsubscribe from the appropriate stream
             switch (request) {
@@ -169,7 +178,6 @@ public class BandDataService extends Service {
                         ambManager.unSubscribe(band);
                     break;
                 case BAROMETER_REQ_EXTRA:
-                    Log.v(TAG, "Barometer unsubscribe requested");
                     if (barometerManager != null)
                         barometerManager.unSubscribe(band);
                     break;
@@ -214,7 +222,10 @@ public class BandDataService extends Service {
             }
         }
 
-    } private void genericSubscriptionFactory(String request, BandInfo band) {
+    }
+
+
+    private void genericSubscriptionFactory(String request, BandInfo band) {
         Log.v(TAG, request + " requested");
         if (!bandStreams.containsKey(band)) {
             // Make a new list to put into the map with the band

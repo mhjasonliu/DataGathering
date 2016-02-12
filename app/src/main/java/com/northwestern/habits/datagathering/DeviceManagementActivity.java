@@ -95,6 +95,15 @@ public class DeviceManagementActivity extends AppCompatActivity {
                         break;
                     }
                     case 2: {
+                        // This phone selected
+                        Intent phoneIntent = new Intent(DeviceManagementActivity.this,
+                                PhoneDataActivity.class);
+                        phoneIntent.putExtra(PhoneDataActivity.STUDY_NAME_EXTRA, studyName);
+                        startActivity(phoneIntent);
+
+                        break;
+                    }
+                    case 3: {
                         // Other bluetooth device selected
 
                         break;
@@ -144,12 +153,14 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         listDataHeader.clear();
         listDataHeader.add("Microsoft Band 2 (" + Integer.toString(bandList.size()) + ")");
-        listDataHeader.add("Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
-        listDataHeader.add("Other Paired Bluetooth Devices(" + Integer.toString(pairedList.size()) + ")");
+        listDataHeader.add("Low Energy Bluetooth Devices (" + Integer.toString(leAddressList.size()) + ")");
+        listDataHeader.add("Android devices (1)");
+        listDataHeader.add("Other Paired Bluetooth Devices (" + Integer.toString(pairedList.size()) + ")");
 
         listDataChild.put(listDataHeader.get(0), bandList);
         listDataChild.put(listDataHeader.get(1), leNameList);
-        listDataChild.put(listDataHeader.get(2), pairedList);
+        listDataChild.put(listDataHeader.get(2), new ArrayList<String>(1){{add("This phone");}});
+        listDataChild.put(listDataHeader.get(3), pairedList);
 
         listAdapter.notifyDataSetChanged();
     }
