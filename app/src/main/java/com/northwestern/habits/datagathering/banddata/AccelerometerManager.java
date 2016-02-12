@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -34,8 +35,8 @@ public class AccelerometerManager extends  DataManager{
     }
 
 
-    public AccelerometerManager(String sName, SQLiteDatabase db, Context context) {
-        super(sName, "AccelerometerManager", db, context);
+    public AccelerometerManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
+        super(sName, "AccelerometerManager", dbHelper, context);
     }
 
 

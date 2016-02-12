@@ -3,7 +3,7 @@ package com.northwestern.habits.datagathering.banddata;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -23,8 +23,8 @@ import java.util.EventListener;
  */
 public class AmbientManager extends DataManager {
 
-    public AmbientManager(String sName, SQLiteDatabase database, Context context) {
-        super(sName, "AmbientManager", database, context);
+    public AmbientManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
+        super(sName, "AmbientManager", dbHelper, context);
     }
 
     @Override

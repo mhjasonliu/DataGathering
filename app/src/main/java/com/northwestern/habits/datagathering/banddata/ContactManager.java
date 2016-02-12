@@ -3,7 +3,7 @@ package com.northwestern.habits.datagathering.banddata;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -23,7 +23,7 @@ import java.util.EventListener;
  */
 public class ContactManager extends DataManager {
 
-    public ContactManager(String sName, SQLiteDatabase db, Context context) {
+    public ContactManager(String sName, SQLiteOpenHelper db, Context context) {
         super(sName, "AmbientManager", db, context);
     }
 

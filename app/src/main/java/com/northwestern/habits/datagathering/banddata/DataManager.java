@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
@@ -24,10 +25,10 @@ import java.util.Locale;
 public abstract class DataManager implements EventListener {
 
     // Constructor
-    public DataManager(String sName, String tag, SQLiteDatabase db, Context context) {
+    public DataManager(String sName, String tag, SQLiteOpenHelper helper, Context context) {
         studyName = sName;
         TAG = tag;
-        database = db;
+        database = helper.getWritableDatabase();
         this.context = context;
     }
 
