@@ -356,7 +356,7 @@ public final class DataStorageContract {
         public static final String TABLE_NAME = "ultra_violet_table";
         public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
         public static final String COLUMN_NAME_DATETIME = "date";
-        public static final String COLUMN_NAME_INDEX_LEVEL = "uv";
+        public static final String COLUMN_NAME_INDEX_LEVEL = "level";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
@@ -368,6 +368,22 @@ public final class DataStorageContract {
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
 
+    public static abstract class VibrationTable implements BaseColumns {
+        public static final String TABLE_NAME ="piezo_vibration_table";
+        public static final String COLUMN_NAME_SENSOR_ID = "sensor_id";
+        public static final String COLUMN_NAME_DATETIME = "date";
+        public static final String COLUMN_NAME_MAGNITUDE = "Magnitude";
+        private static final String SQL_CREATE_ENTRIES =
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        _ID + " INTEGER PRIMARY KEY" + COMMA_SEP +
+                        COLUMN_NAME_SENSOR_ID + INT_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATETIME + DATETIME_TYPE + COMMA_SEP +
+                        COLUMN_NAME_MAGNITUDE + FLOAT_TYPE +
+                        " )";
+        private static final String SQL_DELETE_ENTRIES =
+                "DROP TABLE IF EXISTS " + TABLE_NAME;
+
+    }
 
 
     public static class BluetoothDbHelper extends SQLiteOpenHelper {
@@ -396,6 +412,7 @@ public final class DataStorageContract {
             db.execSQL(PedometerTable.SQL_CREATE_ENTRIES);
             db.execSQL(TemperatureTable.SQL_CREATE_ENTRIES);
             db.execSQL(UvTable.SQL_CREATE_ENTRIES);
+            db.execSQL(VibrationTable.SQL_CREATE_ENTRIES);
         }
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             // This database is only a cache for online data, so its upgrade policy is
@@ -417,9 +434,10 @@ public final class DataStorageContract {
             db.execSQL(PedometerTable.SQL_DELETE_ENTRIES);
             db.execSQL(TemperatureTable.SQL_DELETE_ENTRIES);
             db.execSQL(UvTable.SQL_DELETE_ENTRIES);
+            db.execSQL(VibrationTable.SQL_DELETE_ENTRIES);
             Log.v("Db", "Deleted tables");
             onCreate(db);
-            Log.v("DB", "created new database");
+            Log.v("Db", "created new database");
         }
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             onUpgrade(db, oldVersion, newVersion);

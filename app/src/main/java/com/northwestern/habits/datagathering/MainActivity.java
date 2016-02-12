@@ -276,6 +276,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void onSendDatabase (View view) {
+        Log.v(TAG, "Send database clicked");
+        // Stop streaming
+        endStudyClicked(view);
+
+        // Start sending to backend
+        Intent intent = new Intent(this, ServerCommunicationService.class);
+        startService(intent);
+    }
+
+
 
 
 }

@@ -90,6 +90,16 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="Send database"
+                android:id="@+id/sendDbButton"
+                android:onClick="onSendDatabase"
+                android:enabled="false"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test"
+                android:onClick="onSendDatabase"/>
                 android:text="send database to Shibo"
                 android:id="@+id/displayDbButton"
                 android:onClick="onReadDatabase"
