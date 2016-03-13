@@ -394,6 +394,17 @@ public final class DataStorageContract {
         public BluetoothDbHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
+
+        private static BluetoothDbHelper sInstance;
+
+        public static synchronized BluetoothDbHelper getInstance(Context context) {
+            if (sInstance == null) {
+                sInstance = new BluetoothDbHelper(context.getApplicationContext());
+            }
+            return sInstance;
+        }
+
+
         public void onCreate(SQLiteDatabase db) {
             db.execSQL(StudyTable.SQL_CREATE_ENTRIES);
             db.execSQL(DeviceTable.SQL_CREATE_ENTRIES);

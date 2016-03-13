@@ -16,7 +16,10 @@ import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 
+import com.microsoft.band.BandClientManager;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -121,7 +124,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
                     }
                     case 3: {
                         // Other bluetooth device selected
-
                         break;
                     }
                 }
@@ -143,6 +145,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
         // Adding child data
         List<String> bandList = new ArrayList<>();
         BluetoothConnectionLayer.refreshPairedBands();
+        Log.v(TAG, "Bands: " + Arrays.toString(BandClientManager.getInstance().getPairedBands()));
         bandList.addAll(BluetoothConnectionLayer.bandMap.keySet());
 
 

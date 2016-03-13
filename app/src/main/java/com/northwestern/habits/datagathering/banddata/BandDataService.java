@@ -2,7 +2,6 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.app.Service;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -79,7 +78,7 @@ public class BandDataService extends Service {
 
         Log.v(TAG, "Retrieving database");
         if (dbHelper == null)
-            dbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
+            dbHelper = DataStorageContract.BluetoothDbHelper.getInstance(this);
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();

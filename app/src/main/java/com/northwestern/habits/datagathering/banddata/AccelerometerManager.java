@@ -3,7 +3,6 @@ package com.northwestern.habits.datagathering.banddata;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -59,13 +58,13 @@ public class AccelerometerManager extends  DataManager{
                             BandAccelerometerEventListenerCustom aListener =
                                     new BandAccelerometerEventListenerCustom(band, studyName);
 
-                            Log.v(TAG, "REgistering listener");
+                            Log.v(TAG, "Registering listener");
                             // Register the listener
                             client.getSensorManager().registerAccelerometerEventListener(
                                     aListener, SampleRate.MS128);
 
                             // Save the listener and client
-                            Log.v(TAG, "puittomg listener");
+                            Log.v(TAG, "putting listener");
                             listeners.put(band, aListener);
                             Log.v(TAG, "Putting client");
                             clients.put(band, client);
@@ -148,7 +147,9 @@ public class AccelerometerManager extends  DataManager{
 
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
+            Log.v(TAG, "ACCEL EVENT");
             if (event != null) {
+                Log.v(TAG, "not null");
 
                 String T_ACCEL = "Accelerometer";
 
