@@ -2,9 +2,6 @@ package com.northwestern.habits.datagathering;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -186,7 +183,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
 
     /* ************************** SCANNING FOR BT LE DEVICES **************************** */
-    private BluetoothLeScanner mLeScanner = BluetoothConnectionLayer.getAdapter().getBluetoothLeScanner();
+//    private BluetoothLeScanner mLeScanner = BluetoothConnectionLayer.getAdapter().getBluetoothLeScanner();
     private boolean mScanning = false;
     private Handler mHandler = new Handler();
 
@@ -219,17 +216,17 @@ public class DeviceManagementActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         mScanning = false;
-                        mLeScanner.stopScan(mLeScanCallback);
+//                        mLeScanner.stopScan(mLeScanCallback);
                     }
                 }, SCAN_PERIOD);
 
                 mScanning = true;
-                mLeScanner.startScan(mLeScanCallback);
+//                mLeScanner.startScan(mLeScanCallback);
             }
             return null;
         }
     }
-
+/*
     // Device scan callback.
     private ScanCallback mLeScanCallback = new ScanCallback() {
         @Override
@@ -280,5 +277,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
             Log.v(TAG, "Scan for LE bluetooth devices failed with error code " + errorCode);
         }
     };
+    */
 
 }
