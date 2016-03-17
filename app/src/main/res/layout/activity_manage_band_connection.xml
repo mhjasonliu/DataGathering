@@ -166,11 +166,23 @@
             android:layout_gravity="center_horizontal" />
 
 
-        <Spinner
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/locationSpinner"
-            android:spinnerMode="dialog" />
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/locationSpinner"
+                android:spinnerMode="dialog"
+                android:layout_gravity="left"/>
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/frequencySpinner"
+                android:spinnerMode="dialog"
+                android:layout_gravity="end"/>
+
+        </FrameLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
