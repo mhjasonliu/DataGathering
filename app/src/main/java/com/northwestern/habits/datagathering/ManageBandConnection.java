@@ -27,6 +27,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
     private int index;
     private String studyName;
     private String location = "inner-left";
+    private String frequency = "8Hz";
 
 
     @Override
@@ -43,14 +44,23 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         }
 
 
-        // Prepare the spinner
+        // Prepare the location spinner
         Spinner locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+        ArrayAdapter<CharSequence> locationAdapter = ArrayAdapter.createFromResource(this,
                 R.array.locations_array, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        locationSpinner.setAdapter(adapter);
+        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the locationAdapter to the spinner
+        locationSpinner.setAdapter(locationAdapter);
+
+        // Prepare the frequency spinner
+        Spinner frequencySpinner = (Spinner) findViewById(R.id.frequencySpinner);
+        ArrayAdapter<CharSequence> frequencyAdapter = ArrayAdapter.createFromResource(this,
+                R.array.frequency_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the frequencyAdapter to the spinner
+        frequencySpinner.setAdapter(frequencyAdapter);
 
     }
 
@@ -64,7 +74,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         startService(managementIntent);
     }
 
-    public void onStopStreamClick (View viewl) {
+    public void onStopStreamClick(View viewl) {
         // Create the intent
         Intent managementIntent = makeIntent();
 
@@ -106,9 +116,10 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
                 (Boolean) ((CheckBox) findViewById(R.id.uvBox)).isChecked());
 
 
-
         intent.putExtra(BandDataService.LOCATION_EXTRA,
                 location);
+        intent.putExtra(BandDataService.FREQUENCY_EXTRA,
+                frequency);
         intent.putExtra(BandDataService.STUDY_ID_EXTRA, studyName);
 
 
@@ -118,7 +129,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         return intent;
     }
 
-    public void onHeartRateClicked (View view) {
+    public void onHeartRateClicked(View view) {
         // Check for heart rate consent
 
         com.microsoft.band.sensors.BandSensorManager manager =
@@ -148,7 +159,14 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        location = (String) parent.getItemAtPosition(position);
+        switch (view.getId()) {
+            case R.id.locationSpinner:
+                location = (String) parent.getItemAtPosition(position);
+                break;
+            case R.id.frequencySpinner:
+                frequency = (String) parent.getItemAtPosition(position);
+                break;
+        }
     }
 
     @Override

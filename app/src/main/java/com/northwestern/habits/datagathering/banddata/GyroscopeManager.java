@@ -23,6 +23,23 @@ import java.util.EventListener;
  * Created by William on 12/31/2015
  */
 public class GyroscopeManager extends DataManager {
+    private SampleRate frequency;
+    protected void setFrequency(String f) {
+        switch (f) {
+            case "8Hz":
+                frequency = SampleRate.MS128;
+                break;
+            case "31Hz":
+                frequency = SampleRate.MS32;
+                break;
+            case "62Hz":
+                frequency = SampleRate.MS16;
+                break;
+            default:
+                frequency = SampleRate.MS128;
+        }
+    }
+
     public GyroscopeManager(String sName, SQLiteOpenHelper db, Context context) {
         super(sName, "AmbientManager", db, context);
     }
@@ -56,7 +73,7 @@ public class GyroscopeManager extends DataManager {
 
                             // Register the listener
                             client.getSensorManager().registerGyroscopeEventListener(
-                                    aListener, SampleRate.MS128);
+                                    aListener, frequency);
 
                             // Save the listener and client
                             listeners.put(band, aListener);

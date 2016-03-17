@@ -18,6 +18,12 @@
         <item>outer-right</item>
     </string-array>
 
+    <string-array name="frequency_array">
+        <item>8Hz</item>
+        <item>31Hz</item>
+        <item>62Hz</item>
+    </string-array>
+
 
 
 

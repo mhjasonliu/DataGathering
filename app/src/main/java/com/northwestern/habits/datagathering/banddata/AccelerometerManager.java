@@ -23,6 +23,24 @@ import java.util.EventListener;
  * Created by William on 12/31/2015
  */
 public class AccelerometerManager extends  DataManager{
+    private SampleRate frequency;
+    protected void setFrequency(String f) {
+        switch (f) {
+            case "8Hz":
+                frequency = SampleRate.MS128;
+                break;
+            case "31Hz":
+                frequency = SampleRate.MS32;
+                break;
+            case "62Hz":
+                frequency = SampleRate.MS16;
+                break;
+            default:
+                frequency = SampleRate.MS128;
+        }
+    }
+
+
     @Override
     protected void subscribe(BandInfo info) {
         new AccelerometerSubscriptionTask().execute(info);
@@ -61,7 +79,7 @@ public class AccelerometerManager extends  DataManager{
                             Log.v(TAG, "Registering listener");
                             // Register the listener
                             client.getSensorManager().registerAccelerometerEventListener(
-                                    aListener, SampleRate.MS128);
+                                    aListener, frequency);
 
                             // Save the listener and client
                             Log.v(TAG, "putting listener");

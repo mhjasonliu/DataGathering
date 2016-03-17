@@ -156,14 +156,30 @@
                 android:layout_column="2" />
         </GridLayout>
 
-        <TextView
+        <FrameLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="25dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Location:"
-            android:id="@+id/textView3"
-            android:layout_gravity="center_horizontal" />
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="25dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Location:"
+                android:id="@+id/locationText"
+                android:layout_gravity="center_horizontal"
+                android:gravity="left"/>
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="25dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Frequency:"
+                android:id="@+id/frequencyText"
+                android:layout_gravity="center_horizontal"
+                android:gravity="end"/>
+
+        </FrameLayout>
 
 
         <FrameLayout

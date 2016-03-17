@@ -36,6 +36,7 @@ public class BandDataService extends Service {
     public static final String INDEX_EXTRA = "index";
     public static final String STUDY_ID_EXTRA = "study";
     public static final String LOCATION_EXTRA = "location";
+    public static final String FREQUENCY_EXTRA = "frequency";
 
     public static final String CONTINUE_STUDY_EXTRA = "continue study";
     public static final String STOP_STREAM_EXTRA = "stop stream";
@@ -51,6 +52,7 @@ public class BandDataService extends Service {
 
     private HashMap<BandInfo, List<String>> bandStreams = new HashMap<>();
     protected static HashMap<BandInfo, String> locations = new HashMap<>();
+    protected static HashMap<BandInfo, String> frequencies = new HashMap<>();
 
     protected String studyName;
 
@@ -108,6 +110,7 @@ public class BandDataService extends Service {
                 modes.put(UV_REQ_EXTRA, extras.getBoolean(UV_REQ_EXTRA));
 
                 locations.put(band, extras.getString(LOCATION_EXTRA));
+                frequencies.put(band, extras.getString(FREQUENCY_EXTRA));
 
                 // Set the study and device
                 studyName = extras.getString(STUDY_ID_EXTRA);
@@ -246,6 +249,7 @@ public class BandDataService extends Service {
                 if (accManager == null)
                     accManager = new AccelerometerManager(studyName, dbHelper, this);
 
+                accManager.setFrequency(frequencies.get(band));
                 accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
@@ -294,6 +298,7 @@ public class BandDataService extends Service {
                 if (gyroManager == null)
                     gyroManager = new GyroscopeManager(studyName, dbHelper, this);
 
+                gyroManager.setFrequency(frequencies.get(band));
                 gyroManager.subscribe(band);
                 break;
             case HEART_RATE_REQ_EXTRA:
