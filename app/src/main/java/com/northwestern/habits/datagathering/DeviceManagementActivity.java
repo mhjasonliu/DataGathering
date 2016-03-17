@@ -1,7 +1,10 @@
 package com.northwestern.habits.datagathering;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -21,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class DeviceManagementActivity extends AppCompatActivity {
 
     private final String TAG = "Device activity";
@@ -175,7 +179,9 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
         listDataChild.put(listDataHeader.get(0), bandList);
         listDataChild.put(listDataHeader.get(1), leNameList);
-        listDataChild.put(listDataHeader.get(2), new ArrayList<String>(1){{add("This phone");}});
+        listDataChild.put(listDataHeader.get(2), new ArrayList<String>(1) {{
+            add("This phone");
+        }});
         listDataChild.put(listDataHeader.get(3), pairedList);
 
         listAdapter.notifyDataSetChanged();
@@ -226,7 +232,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
             return null;
         }
     }
-/*
+
     // Device scan callback.
     private ScanCallback mLeScanCallback = new ScanCallback() {
         @Override
@@ -277,6 +283,4 @@ public class DeviceManagementActivity extends AppCompatActivity {
             Log.v(TAG, "Scan for LE bluetooth devices failed with error code " + errorCode);
         }
     };
-    */
-
 }
