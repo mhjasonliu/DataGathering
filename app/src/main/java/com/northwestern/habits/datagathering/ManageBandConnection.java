@@ -52,6 +52,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the locationAdapter to the spinner
         locationSpinner.setAdapter(locationAdapter);
+        locationSpinner.setOnItemSelectedListener(this);
 
         // Prepare the frequency spinner
         Spinner frequencySpinner = (Spinner) findViewById(R.id.frequencySpinner);
@@ -61,6 +62,7 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
         frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the frequencyAdapter to the spinner
         frequencySpinner.setAdapter(frequencyAdapter);
+        frequencySpinner.setOnItemSelectedListener(this);
 
     }
 
@@ -159,11 +161,13 @@ public class ManageBandConnection extends AppCompatActivity implements HeartRate
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        switch (view.getId()) {
+        Log.v(TAG, "Item selected");
+        switch (parent.getId()) {
             case R.id.locationSpinner:
                 location = (String) parent.getItemAtPosition(position);
                 break;
             case R.id.frequencySpinner:
+                Log.v(TAG, "Frequency change to " + parent.getItemAtPosition(position));
                 frequency = (String) parent.getItemAtPosition(position);
                 break;
         }
