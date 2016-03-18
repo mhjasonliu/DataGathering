@@ -269,6 +269,8 @@ public class AmbientManager extends DataManager {
                     fw.append(Integer.toString(sensId));
                     fw.append(',');
                     fw.append(getDateTime(event));
+                    fw.append(',');
+                    fw.append(Integer.toString(event.getBrightness()));
                     fw.append('\n');
                     fw.close();
                 } catch (Exception e) {
