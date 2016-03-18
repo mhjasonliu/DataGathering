@@ -2,8 +2,10 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -16,6 +18,11 @@ import com.microsoft.band.sensors.BandPedometerEvent;
 import com.microsoft.band.sensors.BandPedometerEventListener;
 import com.northwestern.habits.datagathering.DataStorageContract;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.EventListener;
 
 /**
@@ -218,6 +225,52 @@ public class PedometerManager extends DataManager {
 
 
                 database.insert(DataStorageContract.PedometerTable.TABLE_NAME, null, values);
+
+                // Insert into csv file
+                File folder = new File(BandDataService.PATH);
+                Calendar cal = Calendar.getInstance();
+                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+                String formattedDate = df.format(cal.getTime());
+                final String filename = folder.toString() + "/" + "Altimeter" + formattedDate.toString() + ".csv";
+
+                File file = new File(filename);
+
+                // If file does not exists, then create it
+                boolean fpExists = true;
+                if (!file.exists()) {
+                    try {
+                        boolean fb = file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    fpExists = false;
+                }
+
+                // Post data to the csv
+                FileWriter fw;
+                try {
+                    fw = new FileWriter(filename, true);
+                    if (!fpExists) {
+                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                        intent.setData(Uri.fromFile(file));
+                        context.sendBroadcast(intent);
+                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time\n");
+                    }
+                    fw.append(uName);
+                    fw.append(',');
+                    fw.append(Integer.toString(studyId));
+                    fw.append(',');
+                    fw.append(Integer.toString(devId));
+                    fw.append(',');
+                    fw.append(Integer.toString(sensId));
+                    fw.append(',');
+                    fw.append(getDateTime(event));
+                    fw.append('\n');
+                    fw.close();
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to write to csv");
+                    e.printStackTrace();
+                }
 
             }
         }
