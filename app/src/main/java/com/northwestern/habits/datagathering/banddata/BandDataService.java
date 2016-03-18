@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -12,6 +13,7 @@ import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DataStorageContract;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +47,7 @@ public class BandDataService extends Service {
 
     private static final String TAG = "Band Service";
 
+    public static String PATH;// = Environment.getExternalStorageDirectory().getAbsolutePath() + "/BandData";
 
     // General stuff (maintained by main)
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
@@ -148,6 +151,17 @@ public class BandDataService extends Service {
                     }
                 }
             }
+        }
+
+        // Create file for the csv's
+        PATH = Environment.getExternalStorageDirectory() + "/Band";
+
+        File folder = new File(BandDataService.PATH);
+
+        boolean var;
+        if (!folder.exists()) {
+            var = folder.mkdir();
+            Log.v(TAG, BandDataService.PATH + " exists: " + Boolean.toString(var));
         }
         return Service.START_NOT_STICKY;
     }

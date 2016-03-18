@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -52,6 +53,24 @@ public class MainActivity extends AppCompatActivity {
         if (db == null) {
             Log.v(TAG, "the database is null");
         }
+
+        storagePermitted(this);
+    }
+
+    private static boolean storagePermitted(Activity activity) {
+
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED)
+
+            return true;
+
+        ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+
+        return false;
+
     }
 
     @Override
