@@ -277,7 +277,9 @@ public class AltimeterManager extends DataManager {
                         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                         intent.setData(Uri.fromFile(file));
                         context.sendBroadcast(intent);
-                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time\n");
+                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time,TotalGain,TotalLoss," +
+                                "SteppingGain,SteppingLoss,StepsAscended,StepsDescended," +
+                                "Rate,FlightsAscended,FlightsDescended\n");
                     }
                     fw.append(uName);
                     fw.append(',');
@@ -288,6 +290,24 @@ public class AltimeterManager extends DataManager {
                     fw.append(Integer.toString(sensId));
                     fw.append(',');
                     fw.append(getDateTime(event));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getTotalGain()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getTotalLoss()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getSteppingGain()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getSteppingLoss()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getStepsAscended()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getStepsDescended()));
+                    fw.append(',');
+                    fw.append(Float.toString(event.getRate()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getFlightsAscended()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getFlightsDescended()));
                     fw.append('\n');
                     fw.close();
                 } catch (Exception e) {
