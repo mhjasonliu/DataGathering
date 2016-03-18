@@ -258,7 +258,7 @@ public class AmbientManager extends DataManager {
                         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                         intent.setData(Uri.fromFile(file));
                         context.sendBroadcast(intent);
-                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time\n");
+                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time,AmbientLight\n");
                     }
                     fw.append(uName);
                     fw.append(',');
