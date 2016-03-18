@@ -278,7 +278,7 @@ public class BarometerManager extends DataManager {
                     fw.append(',');
                     fw.append(Double.toString(event.getAirPressure()));
                     fw.append(',');
-                    fw.append(Double.toString(event.getTemperature()))
+                    fw.append(Double.toString(event.getTemperature()));
                     fw.append('\n');
                     fw.close();
                 } catch (Exception e) {
