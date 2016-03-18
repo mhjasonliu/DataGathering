@@ -256,7 +256,7 @@ public class GyroscopeManager extends DataManager {
                 Calendar cal = Calendar.getInstance();
                 SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
                 String formattedDate = df.format(cal.getTime());
-                final String filename = folder.toString() + "/" + "Altimeter" + formattedDate.toString() + ".csv";
+                final String filename = folder.toString() + "/" + "Gyroscope " + formattedDate.toString() + ".csv";
 
                 File file = new File(filename);
 
