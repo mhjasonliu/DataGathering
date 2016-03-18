@@ -252,7 +252,7 @@ public class GsrManager extends DataManager {
                         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                         intent.setData(Uri.fromFile(file));
                         context.sendBroadcast(intent);
-                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time\n");
+                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time,Resistance\n");
                     }
                     fw.append(uName);
                     fw.append(',');
@@ -263,6 +263,8 @@ public class GsrManager extends DataManager {
                     fw.append(Integer.toString(sensId));
                     fw.append(',');
                     fw.append(getDateTime(event));
+                    fw.append(',');
+                    fw.append(Float.toString(event.getResistance()));
                     fw.append('\n');
                     fw.close();
                 } catch (Exception e) {
