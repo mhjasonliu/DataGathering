@@ -280,7 +280,7 @@ public class DistanceManager extends DataManager {
                         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                         intent.setData(Uri.fromFile(file));
                         context.sendBroadcast(intent);
-                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time\n");
+                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time,MotionType,Pace,Speed,TotalDistance\n");
                     }
                     fw.append(uName);
                     fw.append(',');
@@ -291,6 +291,14 @@ public class DistanceManager extends DataManager {
                     fw.append(Integer.toString(sensId));
                     fw.append(',');
                     fw.append(getDateTime(event));
+                    fw.append(',');
+                    fw.append(motionType);
+                    fw.append(',');
+                    fw.append(Float.toString(event.getPace()));
+                    fw.append(',');
+                    fw.append(Float.toString(event.getSpeed()));
+                    fw.append(',');
+                    fw.append(Long.toString(event.getTotalDistance()));
                     fw.append('\n');
                     fw.close();
                 } catch (Exception e) {
