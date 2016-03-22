@@ -134,7 +134,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
     }
 
     public void onRefreshClicked(View view) {
-        prepareListData();
+//        prepareListData();
     }
 
     /*
