@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
@@ -31,6 +32,7 @@ import java.util.EventListener;
  */
 public class GyroscopeManager extends DataManager {
     private SampleRate frequency;
+    private final String T_Gyro = "Gyroscope";
     protected void setFrequency(String f) {
         switch (f) {
             case "8Hz":
@@ -53,7 +55,7 @@ public class GyroscopeManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new SubscriptionTask().doInBackground(info);
+        new SubscriptionTask().execute(info);
     }
 
     @Override
@@ -77,7 +79,6 @@ public class GyroscopeManager extends DataManager {
                             // Create the listener
                             CustomBandGyroEventListener aListener =
                                     new CustomBandGyroEventListener(band, studyName);
-
                             // Register the listener
                             client.getSensorManager().registerGyroscopeEventListener(
                                     aListener, frequency);
@@ -85,6 +86,12 @@ public class GyroscopeManager extends DataManager {
                             // Save the listener and client
                             listeners.put(band, aListener);
                             clients.put(band, client);
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(context, "Successfully connected to gyroscope", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                     "the band is in range.\n");
@@ -114,6 +121,14 @@ public class GyroscopeManager extends DataManager {
 
                 } catch (Exception e) {
                     Log.e(TAG, "Unknown error occurred when getting Gyro data");
+                    e.printStackTrace();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, "Unknown error connecting to "
+                                    + T_Gyro, Toast.LENGTH_LONG).show();
+                        }
+                    });
                 }
             }
             return null;
@@ -171,8 +186,6 @@ public class GyroscopeManager extends DataManager {
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
-
-                String T_Gyro = "Gyroscope";
 
                 int studyId, devId, sensId;
                 try {
@@ -233,6 +246,7 @@ public class GyroscopeManager extends DataManager {
                 }
 
                 // Add new entry to the gyro table
+                Log.v(TAG, "Gyro received");
 //                Log.v(TAG, "Study name is: " + uName);
 //                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
 //                Log.v(TAG, "Device ID is: " + Integer.toString(devId));

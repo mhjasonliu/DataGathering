@@ -39,8 +39,8 @@ public abstract class DataManager implements EventListener {
 
 
     // Fields
-    HashMap<BandInfo, EventListener> listeners = new HashMap<>();
-    HashMap<BandInfo, BandClient> clients = new HashMap<>();
+    protected HashMap<BandInfo, EventListener> listeners = new HashMap<>();
+    protected HashMap<BandInfo, BandClient> clients = new HashMap<>();
 
     String studyName;
     protected final String T_BAND2 = "Microsoft_Band_2";

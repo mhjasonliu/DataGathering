@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
@@ -127,6 +128,13 @@ public class AccelerometerManager extends DataManager {
 
                 } catch (Exception e) {
                     Log.e(TAG, "Unknown error occurred when getting accelerometer data");
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, "Unknown error connecting to "
+                                    + T_ACCEL, Toast.LENGTH_LONG).show();
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
