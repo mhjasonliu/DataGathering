@@ -231,14 +231,14 @@ public class GyroscopeManager extends DataManager {
                 }
 
                 // Add new entry to the gyro table
-                Log.v(TAG, "Study name is: " + uName);
-                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
-                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
-                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
-                        "Y: " + Double.toString(event.getAccelerationY()) +
-                        "Z: " + Double.toString(event.getAccelerationZ()));
-                Log.v(TAG, getDateTime(event));
+//                Log.v(TAG, "Study name is: " + uName);
+//                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+//                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+//                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+//                Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
+//                        "Y: " + Double.toString(event.getAccelerationY()) +
+//                        "Z: " + Double.toString(event.getAccelerationZ()));
+//                Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_DATETIME, getDateTime(event));

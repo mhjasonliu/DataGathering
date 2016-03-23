@@ -3,8 +3,6 @@ package com.northwestern.habits.datagathering;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -234,53 +232,53 @@ public class DeviceManagementActivity extends AppCompatActivity {
     }
 
     // Device scan callback.
-    private ScanCallback mLeScanCallback = new ScanCallback() {
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            Log.v(TAG, "Got batch results from scan for LE devices.");
-            Iterator<ScanResult> resIter = results.iterator();
-            ScanResult result;
-            leAddressList.clear();
-            leNameList.clear();
-            while (resIter.hasNext()) {
-                result = resIter.next();
-                leNameList.add(result.getDevice().getName());
-                leAddressList.add(result.getDevice().getAddress());
-            }
-
-            listDataHeader.set(1, "Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
-            listDataChild.put(listDataHeader.get(1), leNameList);
-            listAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onScanResult(int callbackType, final ScanResult result) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.v(TAG, "Got single result from scan for LE devices.");
-                    String name = result.getDevice().getName();
-                    String addr = result.getDevice().getAddress();
-                    if (name != null &&
-                            !leAddressList.contains(addr) &&
-                            !leNameList.contains(name)) {
-
-                        leDevices.put(addr, result.getDevice());
-                        // Add info to list
-                        leNameList.add(name);
-                        leAddressList.add(addr);
-                        listDataHeader.set(1, "Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
-                        listDataChild.put(listDataHeader.get(1), leNameList);
-                        listAdapter.notifyDataSetChanged();
-                    }
-                }
-            });
-
-        }
-
-        @Override
-        public void onScanFailed(int errorCode) {
-            Log.v(TAG, "Scan for LE bluetooth devices failed with error code " + errorCode);
-        }
-    };
+//    private ScanCallback mLeScanCallback = new ScanCallback() {
+//        @Override
+//        public void onBatchScanResults(List<ScanResult> results) {
+//            Log.v(TAG, "Got batch results from scan for LE devices.");
+//            Iterator<ScanResult> resIter = results.iterator();
+//            ScanResult result;
+//            leAddressList.clear();
+//            leNameList.clear();
+//            while (resIter.hasNext()) {
+//                result = resIter.next();
+//                leNameList.add(result.getDevice().getName());
+//                leAddressList.add(result.getDevice().getAddress());
+//            }
+//
+//            listDataHeader.set(1, "Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
+//            listDataChild.put(listDataHeader.get(1), leNameList);
+//            listAdapter.notifyDataSetChanged();
+//        }
+//
+//        @Override
+//        public void onScanResult(int callbackType, final ScanResult result) {
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Log.v(TAG, "Got single result from scan for LE devices.");
+//                    String name = result.getDevice().getName();
+//                    String addr = result.getDevice().getAddress();
+//                    if (name != null &&
+//                            !leAddressList.contains(addr) &&
+//                            !leNameList.contains(name)) {
+//
+//                        leDevices.put(addr, result.getDevice());
+//                        // Add info to list
+//                        leNameList.add(name);
+//                        leAddressList.add(addr);
+//                        listDataHeader.set(1, "Low Energy Bluetooth Devices(" + Integer.toString(leAddressList.size()) + ")");
+//                        listDataChild.put(listDataHeader.get(1), leNameList);
+//                        listAdapter.notifyDataSetChanged();
+//                    }
+//                }
+//            });
+//
+//        }
+//
+//        @Override
+//        public void onScanFailed(int errorCode) {
+//            Log.v(TAG, "Scan for LE bluetooth devices failed with error code " + errorCode);
+//        }
+//    };
 }
