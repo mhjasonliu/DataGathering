@@ -53,7 +53,7 @@ public class GyroscopeManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new SubscriptionTask().execute(info);
+        new SubscriptionTask().doInBackground(info);
     }
 
     @Override

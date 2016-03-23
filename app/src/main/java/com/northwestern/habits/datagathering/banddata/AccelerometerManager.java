@@ -51,12 +51,12 @@ public class AccelerometerManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new AccelerometerSubscriptionTask().execute(info);
+        new AccelerometerSubscriptionTask().doInBackground(info);
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
-        new AccelerometerUnsubscribe().execute(info);
+        new AccelerometerUnsubscribe().doInBackground(info);
     }
 
 
