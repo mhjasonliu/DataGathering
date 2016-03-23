@@ -31,6 +31,7 @@ import java.util.EventListener;
 public class AltimeterManager extends DataManager {
 
     private final String TAG = "AltimeterManager";
+    String T_ALT = "Altimeter";
 
     public AltimeterManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
         super(sName, "AltimeterManager", dbHelper, context);
@@ -52,7 +53,6 @@ public class AltimeterManager extends DataManager {
         protected Void doInBackground(BandInfo... params) {
             if (params.length > 0) {
                 BandInfo band = params[0];
-                Log.v(TAG, "Got the band");
                 try {
                     if (!clients.containsKey(band)) {
                         // No registered clients streaming altimeter data
@@ -73,6 +73,8 @@ public class AltimeterManager extends DataManager {
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                     "the band is in range.\n");
+
+                            toastFailure();
                         }
                     } else {
                         Log.w(TAG, "Multiple attempts to stream altimeter from this device ignored");
@@ -155,9 +157,6 @@ public class AltimeterManager extends DataManager {
         @Override
         public void onBandAltimeterChanged(final BandAltimeterEvent event) {
             if (event != null) {
-
-                String T_ALT = "Altimeter";
-
 
                 int studyId, devId, sensId;
                 try {

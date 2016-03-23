@@ -31,6 +31,7 @@ import java.util.EventListener;
  */
 public class AccelerometerManager extends DataManager {
     private SampleRate frequency;
+    private final String T_ACCEL = "Accelerometer";
 
     protected void setFrequency(String f) {
         switch (f) {
@@ -94,9 +95,14 @@ public class AccelerometerManager extends DataManager {
                             listeners.put(band, aListener);
                             Log.v(TAG, "Putting client");
                             clients.put(band, client);
+
+                            // Toast saying connection successful
+                            toastStreaming(T_ACCEL);
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                     "the band is in range.\n");
+
+                            toastFailure();
                         }
                     } else {
                         Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
@@ -177,7 +183,6 @@ public class AccelerometerManager extends DataManager {
             if (event != null) {
                 Log.v(TAG, "not null");
 
-                String T_ACCEL = "Accelerometer";
 
                 int studyId, devId, sensId;
                 try {

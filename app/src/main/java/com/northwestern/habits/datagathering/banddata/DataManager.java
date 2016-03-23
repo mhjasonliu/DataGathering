@@ -5,6 +5,8 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Handler;
+import android.widget.Toast;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
@@ -30,6 +32,9 @@ public abstract class DataManager implements EventListener {
         TAG = tag;
         database = helper.getWritableDatabase();
         this.context = context;
+        toastingFailure = false;
+        if (mHandler == null)
+            mHandler = new Handler();
     }
 
 
@@ -42,8 +47,12 @@ public abstract class DataManager implements EventListener {
     protected String TAG = "DataManager"; // Should be reset in the constructor
     SQLiteDatabase database; // Should be reset in the constructor
     protected Context context;
+    protected Handler mHandler;
+
+    protected static boolean toastingFailure;
 
     protected abstract void subscribe(BandInfo info);
+
     protected abstract void unSubscribe(BandInfo info);
 
 
@@ -60,20 +69,22 @@ public abstract class DataManager implements EventListener {
     protected String getDateTime(BandSensorEvent event) {
         return dateFormat.format(event.getTimestamp());
     }
+
     private final SimpleDateFormat dateFormat = new SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
 
     /**
      * Gets the _ID value for the study in the database
+     *
      * @param studyId study name to search for
-     * @param db database to search for the study name
-     * @throws android.content.res.Resources.NotFoundException when study name cannot be found
+     * @param db      database to search for the study name
      * @return the integer _ID or
+     * @throws android.content.res.Resources.NotFoundException when study name cannot be found
      */
     protected int getStudyId(String studyId, SQLiteDatabase db) throws Resources.NotFoundException {
 
         // Querry databse for the study name
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.StudyTable._ID,
                 DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID
         };
@@ -83,7 +94,7 @@ public abstract class DataManager implements EventListener {
                 DataStorageContract.StudyTable.TABLE_NAME,
                 projection,
                 DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID + "=?",
-                new String[] { studyId },
+                new String[]{studyId},
                 null,
                 null,
                 null
@@ -102,11 +113,12 @@ public abstract class DataManager implements EventListener {
 
     /**
      * Uses the next unused ID
+     *
      * @param db database to find the lowest study in
      * @return the lowest unused _ID
      */
     protected int getNewStudy(SQLiteDatabase db) {
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.StudyTable._ID,
         };
 
@@ -138,15 +150,16 @@ public abstract class DataManager implements EventListener {
 
     /**
      * Gets the device id for the device specified
-     * @param mac address (physical) of the device
+     *
+     * @param mac   address (physical) of the device
      * @param study id of the study
-     * @param db database to query
-     * @throws android.content.res.Resources.NotFoundException
+     * @param db    database to query
      * @return id of the device
+     * @throws android.content.res.Resources.NotFoundException
      */
     protected int getDevId(String location, String mac, int study, SQLiteDatabase db)
             throws Resources.NotFoundException {
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC,
                 DataStorageContract.DeviceTable._ID,
                 DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID,
@@ -158,9 +171,9 @@ public abstract class DataManager implements EventListener {
                 DataStorageContract.DeviceTable.TABLE_NAME,
                 projection,
                 DataStorageContract.DeviceTable.COLUMN_NAME_MAC + "=?" + " AND " +
-                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?" +" AND " +
+                        DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID + "=?" + " AND " +
                         DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION + "=?",
-                new String[] { mac, Integer.toString(study), location},
+                new String[]{mac, Integer.toString(study), location},
                 null,
                 null,
                 null
@@ -178,11 +191,12 @@ public abstract class DataManager implements EventListener {
 
     /**
      * Gets the next largest ID for the device
+     *
      * @param db to search
      * @return int available ID in the device list
      */
     protected int getNewDev(SQLiteDatabase db) {
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.DeviceTable._ID
         };
 
@@ -214,15 +228,16 @@ public abstract class DataManager implements EventListener {
 
     /**
      * Gets the ID for the sensor associated with the device and sensor type
-     * @param type of sensor
+     *
+     * @param type   of sensor
      * @param device ID in the SQLite db associated with the sensor
-     * @param db to query
-     * @throws android.content.res.Resources.NotFoundException
+     * @param db     to query
      * @return ID of the sensor or not
+     * @throws android.content.res.Resources.NotFoundException
      */
     protected int getSensorId(String type, int device, SQLiteDatabase db)
             throws Resources.NotFoundException {
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.SensorTable.COLUMN_NAME_TYPE,
                 DataStorageContract.SensorTable._ID,
                 DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID
@@ -235,7 +250,7 @@ public abstract class DataManager implements EventListener {
                 DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID + "=?" +
                         " AND " +
                         DataStorageContract.SensorTable.COLUMN_NAME_TYPE + "=?",
-                new String[] { Integer.toString(device), type},
+                new String[]{Integer.toString(device), type},
                 null,
                 null,
                 null
@@ -252,7 +267,7 @@ public abstract class DataManager implements EventListener {
     }
 
     protected int getNewSensor(SQLiteDatabase db) {
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.SensorTable._ID
         };
 
@@ -291,11 +306,36 @@ public abstract class DataManager implements EventListener {
 
         if (ConnectionState.CONNECTED == client.connect().await()) {
             return client;
-        }
-        else {
+        } else {
             return null;
         }
     }
 
+    protected void toastStreaming(final String type) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_LONG).show();
+            }
+        });
+        cancelToast = null;
+    }
+
+    protected void toastFailure() {
+        mHandler.post(r);
+    }
+
+    private static Toast cancelToast = null;
+
+    Runnable r = new Runnable() {
+        @Override
+        public void run() {
+            if (cancelToast == null) {
+                cancelToast = Toast.makeText(context, "Band isn't connected. Please make sure bluetooth is on and " +
+                    "the band is in range.", Toast.LENGTH_LONG);
+                cancelToast.show();
+            }
+        }
+    };
 
 }

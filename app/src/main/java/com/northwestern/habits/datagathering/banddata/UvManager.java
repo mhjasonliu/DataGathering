@@ -72,6 +72,7 @@ public class UvManager extends DataManager {
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                     "the band is in range.\n");
+                            toastFailure();
                         }
                     } else {
                         Log.w(TAG, "Multiple attempts to stream UV sensor from this device ignored");
