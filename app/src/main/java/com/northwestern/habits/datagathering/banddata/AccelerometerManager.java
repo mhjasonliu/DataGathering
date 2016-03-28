@@ -35,6 +35,7 @@ public class AccelerometerManager extends DataManager {
     private SampleRate frequency;
     private final String T_ACCEL = "Accelerometer";
     private TimeoutTask mTimeoutTask = null;
+    private int restartCount = 1;
 
     protected void setFrequency(String f) {
         switch (f) {
@@ -213,7 +214,6 @@ public class AccelerometerManager extends DataManager {
                 // Iterate through stored event handlers
                 long timeout;
                 long interval;
-                int timeoutCount = 0;
                 for (EventListener listener :
                         listeners.values()) {
                     // Check timeout field
@@ -231,7 +231,7 @@ public class AccelerometerManager extends DataManager {
                         });
                         // Subscribe again
                         new AccelerometerSubscriptionTask().doInBackground(((BandAccelerometerEventListenerCustom) listener).info);
-                        final int innerCount = timeoutCount++;
+                        final int innerCount = restartCount++;
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {

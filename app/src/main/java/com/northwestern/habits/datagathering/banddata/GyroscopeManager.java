@@ -35,6 +35,8 @@ public class GyroscopeManager extends DataManager {
     private final String T_Gyro = "Gyroscope";
     private TimeoutTask mTimeoutTask = null;
     private final long TIMEOUT_INTERVAL = 1000;
+    private int restartCount = 1;
+
     protected void setFrequency(String f) {
         switch (f) {
             case "8Hz":
@@ -198,7 +200,6 @@ public class GyroscopeManager extends DataManager {
                 // Iterate through stored event handlers
                 long timeout;
                 long interval;
-                int timeoutCount = 0;
                 for (EventListener listener :
                         listeners.values()) {
                     // Check timeout field
@@ -216,7 +217,7 @@ public class GyroscopeManager extends DataManager {
                         });
                         // Subscribe again
                         new SubscriptionTask().doInBackground(((CustomBandGyroEventListener) listener).info);
-                        final int innerCount = timeoutCount++;
+                        final int innerCount = restartCount++;
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
