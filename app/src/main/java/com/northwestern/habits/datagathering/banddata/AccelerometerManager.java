@@ -31,8 +31,10 @@ import java.util.EventListener;
  * Created by William on 12/31/2015
  */
 public class AccelerometerManager extends DataManager {
+    private static final long TIMEOUT_INTERVAL = 1000;
     private SampleRate frequency;
     private final String T_ACCEL = "Accelerometer";
+    private TimeoutTask mTimeoutTask = null;
 
     protected void setFrequency(String f) {
         switch (f) {
@@ -53,12 +55,14 @@ public class AccelerometerManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new AccelerometerSubscriptionTask().execute(info);
+        Log.v(TAG, "Subscribing to " + T_ACCEL);
+        new AccelerometerSubscriptionTask().executeOnExecutor(AccelerometerSubscriptionTask.THREAD_POOL_EXECUTOR, info);
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
-        new AccelerometerUnsubscribe().execute(info);
+        Log.v(TAG, "Unsubscribing from " + T_ACCEL);
+        new AccelerometerUnsubscribe().executeOnExecutor(AccelerometerUnsubscribe.THREAD_POOL_EXECUTOR, info);
     }
 
 
@@ -72,33 +76,44 @@ public class AccelerometerManager extends DataManager {
         protected Void doInBackground(BandInfo... params) {
             if (params.length > 0) {
                 BandInfo band = params[0];
-                Log.v(TAG, "Got the band");
+//                Log.v(TAG, "Got the band");
                 try {
                     if (!clients.containsKey(band)) {
                         // No registered clients streaming accelerometer data
-                        Log.v(TAG, "Getting client");
+//                        Log.v(TAG, "Getting client");
                         BandClient client = connectBandClient(band, null);
                         if (client != null &&
                                 client.getConnectionState() == ConnectionState.CONNECTED) {
 
-                            Log.v(TAG, "Creating listener");
+//                            Log.v(TAG, "Creating listener");
                             // Create the listener
                             BandAccelerometerEventListenerCustom aListener =
                                     new BandAccelerometerEventListenerCustom(band, studyName);
 
-                            Log.v(TAG, "Registering listener");
+//                            Log.v(TAG, "Registering listener");
                             // Register the listener
                             client.getSensorManager().registerAccelerometerEventListener(
                                     aListener, frequency);
 
                             // Save the listener and client
-                            Log.v(TAG, "putting listener");
+//                            Log.v(TAG, "putting listener");
                             listeners.put(band, aListener);
-                            Log.v(TAG, "Putting client");
+//                            Log.v(TAG, "Putting client");
                             clients.put(band, client);
 
                             // Toast saying connection successful
                             toastStreaming(T_ACCEL);
+//                            Log.e(TAG, "Timeout task is ");// + mTimeoutTask);
+                            if (mTimeoutTask == null) {
+                                mTimeoutTask = new TimeoutTask();
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.e(TAG, "Running mTimeoutTask");
+                                        mTimeoutTask.execute();
+                                    }
+                                });
+                            }
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                     "the band is in range.\n");
@@ -107,6 +122,7 @@ public class AccelerometerManager extends DataManager {
                         }
                     } else {
                         Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
+                        Log.v(TAG, listeners.toString());
                     }
                 } catch (BandException e) {
                     String exceptionMessage;
@@ -140,32 +156,91 @@ public class AccelerometerManager extends DataManager {
             }
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            // Start timeout task if one isn't already running
+            if (mTimeoutTask == null) {
+                mTimeoutTask = new TimeoutTask();
+                mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
+            }
+        }
+
     }
 
     private class AccelerometerUnsubscribe extends AsyncTask<BandInfo, Void, Void> {
         @Override
         protected Void doInBackground(BandInfo... params) {
 
+            Log.v(TAG, "1");
             if (params.length > 0) {
                 BandInfo band = params[0];
 
+                Log.v(TAG, "2");
                 if (clients.containsKey(band)) {
 
+                    Log.v(TAG, "3");
                     BandClient client = clients.get(band);
 
                     // Unregister the client
                     try {
+                        Log.e(TAG, "Unsubscribing...");
                         client.getSensorManager().unregisterAccelerometerEventListener(
                                 (BandAccelerometerEventListener) listeners.get(band)
                         );
 
+                        Log.v(TAG, "Removing from lists");
                         // Remove listener from list
                         listeners.remove(band);
                         // Remove client from list
                         clients.remove(band);
+//                        toastFailure();
                     } catch (BandIOException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    Log.e(TAG, "Tried to unsubscribe from band, but clients doesn't contain the info");
+                }
+            }
+            return null;
+        }
+    }
+
+    private class TimeoutTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            while (true) {
+                // Iterate through stored event handlers
+                long timeout;
+                long interval = 0;
+                for (EventListener listener :
+                        listeners.values()) {
+                    // Check timeout field
+                    timeout = ((BandAccelerometerEventListenerCustom) listener).lastReceived;
+                    interval = System.currentTimeMillis() - timeout;
+                    if (timeout != 0
+                            && interval > TIMEOUT_INTERVAL) {
+                        // Timeout occurred, unsubscribe the current listener
+                        new AccelerometerUnsubscribe().doInBackground(((BandAccelerometerEventListenerCustom) listener).info);
+                        // Subscribe again
+                        new AccelerometerSubscriptionTask().doInBackground(((BandAccelerometerEventListenerCustom) listener).info);
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Restarted Accelerometer", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+                try {
+                    Thread.sleep(TIMEOUT_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (listeners.size() == 0) {
+                    // All listeners have been unsubscribed
+                    mTimeoutTask = null;
+                    break;
                 }
             }
             return null;
@@ -177,6 +252,19 @@ public class AccelerometerManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
+        protected long lastReceived = 0;
+
+        @Override
+        public String toString() {
+            StringBuilder builter = new StringBuilder();
+            builter.append("Band info: ");
+            builter.append(info.getName());
+            builter.append("\nUser name: ");
+            builter.append(uName);
+            builter.append("\nLocation: ");
+            builter.append(location);
+            return builter.toString();
+        }
 
         public BandAccelerometerEventListenerCustom(BandInfo mInfo, String name) {
             super();
@@ -187,10 +275,7 @@ public class AccelerometerManager extends DataManager {
 
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
-            Log.v(TAG, "ACCEL EVENT");
             if (event != null) {
-                Log.v(TAG, "not null");
-
 
                 int studyId, devId, sensId;
                 try {
@@ -251,6 +336,7 @@ public class AccelerometerManager extends DataManager {
                 }
 
                 // Add new entry to the Accelerometer table
+                Log.v(TAG, "Event Received");
 //                Log.v(TAG, "Study name is: " + uName);
 //                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
 //                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
@@ -262,6 +348,7 @@ public class AccelerometerManager extends DataManager {
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                lastReceived = System.currentTimeMillis();
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y, event.getAccelerationY());
