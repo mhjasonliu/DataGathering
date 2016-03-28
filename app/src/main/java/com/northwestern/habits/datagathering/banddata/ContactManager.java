@@ -247,7 +247,8 @@ public class ContactManager extends DataManager {
                 Calendar cal = Calendar.getInstance();
                 SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
                 String formattedDate = df.format(cal.getTime());
-                final String filename = folder.toString() + "/" + "Contact " + formattedDate.toString() + ".csv";
+                final String filename = folder.toString() + "/" + "Contact " + formattedDate
+                        + uName + ".csv";
 
                 File file = new File(filename);
 
