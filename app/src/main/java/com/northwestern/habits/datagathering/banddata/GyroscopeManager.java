@@ -50,7 +50,7 @@ public class GyroscopeManager extends DataManager {
     }
 
     public GyroscopeManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "AmbientManager", db, context);
+        super(sName, "GyroscopeManager", db, context);
     }
 
     @Override
@@ -272,7 +272,7 @@ public class GyroscopeManager extends DataManager {
                 Calendar cal = Calendar.getInstance();
                 SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
                 String formattedDate = df.format(cal.getTime());
-                final String filename = folder.toString() + "/" + "Gyroscope " + formattedDate.toString() + ".csv";
+                final String filename = folder.toString() + "/" + "Gyroscope " + formattedDate + ".csv";
 
                 File file = new File(filename);
 
