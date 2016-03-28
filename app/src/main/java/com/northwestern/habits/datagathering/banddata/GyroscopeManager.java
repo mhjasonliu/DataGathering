@@ -34,7 +34,7 @@ public class GyroscopeManager extends DataManager {
     private SampleRate frequency;
     private final String T_Gyro = "Gyroscope";
     private TimeoutTask mTimeoutTask = null;
-    private final long TIMEOUT_INTERVAL = 10000;
+    private final long TIMEOUT_INTERVAL = 1000;
     protected void setFrequency(String f) {
         switch (f) {
             case "8Hz":
@@ -100,7 +100,7 @@ public class GyroscopeManager extends DataManager {
                                     @Override
                                     public void run() {
                                         Log.e(TAG, "Running mTimeoutTask");
-                                        mTimeoutTask.execute();
+                                        mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
                                     }
                                 });
                             }
@@ -336,7 +336,7 @@ public class GyroscopeManager extends DataManager {
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                lastReceived = event.getTimestamp();
+                lastReceived = System.currentTimeMillis();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_Y, event.getAccelerationY());

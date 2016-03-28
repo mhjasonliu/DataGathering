@@ -156,15 +156,15 @@ public class AccelerometerManager extends DataManager {
             }
             return null;
         }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            // Start timeout task if one isn't already running
-            if (mTimeoutTask == null) {
-                mTimeoutTask = new TimeoutTask();
-                mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
-            }
-        }
+//
+//        @Override
+//        protected void onPostExecute(Void result) {
+//            // Start timeout task if one isn't already running
+//            if (mTimeoutTask == null) {
+//                mTimeoutTask = new TimeoutTask();
+//                mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
+//            }
+//        }
 
     }
 
@@ -212,7 +212,8 @@ public class AccelerometerManager extends DataManager {
             while (true) {
                 // Iterate through stored event handlers
                 long timeout;
-                long interval = 0;
+                long interval;
+                int timeoutCount = 0;
                 for (EventListener listener :
                         listeners.values()) {
                     // Check timeout field
@@ -222,12 +223,21 @@ public class AccelerometerManager extends DataManager {
                             && interval > TIMEOUT_INTERVAL) {
                         // Timeout occurred, unsubscribe the current listener
                         new AccelerometerUnsubscribe().doInBackground(((BandAccelerometerEventListenerCustom) listener).info);
-                        // Subscribe again
-                        new AccelerometerSubscriptionTask().doInBackground(((BandAccelerometerEventListenerCustom) listener).info);
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context, "Restarted Accelerometer", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, "Accelerometer timeout detected...", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        // Subscribe again
+                        new AccelerometerSubscriptionTask().doInBackground(((BandAccelerometerEventListenerCustom) listener).info);
+                        final int innerCount = timeoutCount++;
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Successfully restarted Accelerometer for the " +
+                                        Integer.toString(innerCount) +
+                                        "th time", Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
