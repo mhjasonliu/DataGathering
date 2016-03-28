@@ -33,6 +33,8 @@ import java.util.EventListener;
 public class GyroscopeManager extends DataManager {
     private SampleRate frequency;
     private final String T_Gyro = "Gyroscope";
+    private TimeoutTask mTimeoutTask = null;
+    private final long TIMEOUT_INTERVAL = 10000;
     protected void setFrequency(String f) {
         switch (f) {
             case "8Hz":
@@ -55,19 +57,19 @@ public class GyroscopeManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new SubscriptionTask().execute(info);
+        new SubscriptionTask().executeOnExecutor(SubscriptionTask.THREAD_POOL_EXECUTOR, info);
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
-        new UnsubscribeTask().execute(info);
+        new UnsubscribeTask().executeOnExecutor(UnsubscribeTask.THREAD_POOL_EXECUTOR, info);
     }
 
     /* *********************************** TASKS *************************************** */
 
-    private class SubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
+    private class SubscriptionTask extends AsyncTask<BandInfo, Void, Boolean> {
         @Override
-        protected Void doInBackground(BandInfo... params) {
+        protected Boolean doInBackground(BandInfo... params) {
             if (params.length > 0) {
                 BandInfo band = params[0];
                 try {
@@ -92,11 +94,22 @@ public class GyroscopeManager extends DataManager {
                                     Toast.makeText(context, "Successfully connected to gyroscope", Toast.LENGTH_SHORT).show();
                                 }
                             });
+                            if (mTimeoutTask == null) {
+                                mTimeoutTask = new TimeoutTask();
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.e(TAG, "Running mTimeoutTask");
+                                        mTimeoutTask.execute();
+                                    }
+                                });
+                            }
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                     "the band is in range.\n");
 
                             toastFailure();
+                            return true;
                         }
                     } else {
                         Log.w(TAG, "Multiple attempts to stream Gyro sensor from this device ignored");
@@ -131,8 +144,20 @@ public class GyroscopeManager extends DataManager {
                     });
                 }
             }
-            return null;
+            return false;
         }
+//
+//        @Override
+//        protected void onPostExecute(Boolean result) {
+//            // Start timeout task if one isn't already running
+//            if (result) {
+//                if (mTimeoutTask == null) {
+//                    mTimeoutTask = new TimeoutTask();
+////                    mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
+//                }
+//            }
+//        }
+
     }
 
     private class UnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
@@ -166,6 +191,58 @@ public class GyroscopeManager extends DataManager {
     }
 
 
+    private class TimeoutTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            while (true) {
+                // Iterate through stored event handlers
+                long timeout;
+                long interval;
+                int timeoutCount = 0;
+                for (EventListener listener :
+                        listeners.values()) {
+                    // Check timeout field
+                    timeout = ((CustomBandGyroEventListener) listener).lastReceived;
+                    interval = System.currentTimeMillis() - timeout;
+                    if (timeout != 0
+                            && interval > TIMEOUT_INTERVAL) {
+                        // Timeout occurred, unsubscribe the current listener
+                        new UnsubscribeTask().doInBackground(((CustomBandGyroEventListener) listener).info);
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Gyroscope timeout detected...", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        // Subscribe again
+                        new SubscriptionTask().doInBackground(((CustomBandGyroEventListener) listener).info);
+                        final int innerCount = timeoutCount++;
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Successfully restarted Gyroscope for the " +
+                                        Integer.toString(innerCount) +
+                                        "th time", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+                try {
+                    Thread.sleep(TIMEOUT_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (listeners.size() == 0) {
+                    // All listeners have been unsubscribed
+                    mTimeoutTask = null;
+                    break;
+                }
+            }
+            return null;
+        }
+    }
+
+
 
 
     /* **************************** LISTENER *********************************** */
@@ -175,6 +252,7 @@ public class GyroscopeManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
+        private long lastReceived;
 
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
             super();
@@ -258,6 +336,7 @@ public class GyroscopeManager extends DataManager {
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_DATETIME, getDateTime(event));
+                lastReceived = event.getTimestamp();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_Y, event.getAccelerationY());
