@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
+    tools:context=".LabelActivity"
     android:orientation="vertical">
 
 
@@ -36,16 +36,6 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:id="@+id/welcomeMessage"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:text="@string/please_connect_to_a_device"
-                    android:id="@+id/welcomePrompt"/>
-
-
-
             </LinearLayout>
 
 
@@ -62,20 +52,20 @@
                 <Button
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="Eating"
+                    android:text="Start Eating"
                     android:id="@+id/eatingButton"
-                    android:onClick="eatingClicked"
-                    android:enabled="false"/>
+                    android:onClick="onEatingClicked"
+                    android:enabled="true"/>
 
 
                 <Button
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="Not Eating"
+                    android:text="Stop Eating"
                     android:id="@+id/notEatingButton"
                     android:layout_gravity="center_horizontal"
-                    android:onClick="notEatingClicked"
-                    android:enabled="true"/>
+                    android:onClick="onNotEatingClicked"
+                    android:enabled="false"/>
 
             </LinearLayout>
 
@@ -87,7 +77,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
-                android:text="For Administrator Only"/>
+                android:text="For Administrator Only"
+                android:onClick="onContinue"/>
 
         </LinearLayout>
     </ScrollView>
