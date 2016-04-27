@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -33,7 +32,7 @@ import java.util.EventListener;
 public class GyroscopeManager extends DataManager {
     private SampleRate frequency;
     private final String T_Gyro = "Gyroscope";
-    private TimeoutTask mTimeoutTask = null;
+    private TimeoutThread mTimeoutThread = new TimeoutThread();
     private final long TIMEOUT_INTERVAL = 1000;
     private int restartCount = 1;
 
@@ -59,143 +58,138 @@ public class GyroscopeManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new SubscriptionTask().executeOnExecutor(SubscriptionTask.THREAD_POOL_EXECUTOR, info);
+        new SubscriptionThread(info).start();
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
-        new UnsubscribeTask().executeOnExecutor(UnsubscribeTask.THREAD_POOL_EXECUTOR, info);
+        new UnsubscribeThread(info).start();
     }
 
-    /* *********************************** TASKS *************************************** */
+    /* *********************************** THREADS *************************************** */
 
-    private class SubscriptionTask extends AsyncTask<BandInfo, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(BandInfo... params) {
-            if (params.length > 0) {
-                BandInfo band = params[0];
-                try {
-                    if (!clients.containsKey(band)) {
-                        // No registered clients streaming calories data
-                        BandClient client = connectBandClient(band, null);
-                        if (client != null &&
-                                client.getConnectionState() == ConnectionState.CONNECTED) {
-                            // Create the listener
-                            CustomBandGyroEventListener aListener =
-                                    new CustomBandGyroEventListener(band, studyName);
-                            // Register the listener
-                            client.getSensorManager().registerGyroscopeEventListener(
-                                    aListener, frequency);
+    private class SubscriptionThread extends Thread {
+        private Runnable r;
 
-                            // Save the listener and client
-                            listeners.put(band, aListener);
-                            clients.put(band, client);
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(context, "Successfully connected to gyroscope", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            if (mTimeoutTask == null) {
-                                mTimeoutTask = new TimeoutTask();
+        public SubscriptionThread(final BandInfo info) {
+            super();
+
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (!clients.containsKey(info)) {
+                            // No registered clients streaming calories data
+                            BandClient client = connectBandClient(info, null);
+                            if (client != null &&
+                                    client.getConnectionState() == ConnectionState.CONNECTED) {
+                                // Create the listener
+                                CustomBandGyroEventListener aListener =
+                                        new CustomBandGyroEventListener(info, studyName);
+                                // Register the listener
+                                client.getSensorManager().registerGyroscopeEventListener(
+                                        aListener, frequency);
+
+                                // Save the listener and client
+                                listeners.put(info, aListener);
+                                clients.put(info, client);
                                 mHandler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Log.e(TAG, "Running mTimeoutTask");
-                                        mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
+                                        Toast.makeText(context, "Successfully connected to gyroscope", Toast.LENGTH_SHORT).show();
                                     }
                                 });
+                                if (!mTimeoutThread.isAlive()) {
+                                    mTimeoutThread.start();
+                                }
+                            } else {
+                                Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                        "the band is in range.\n");
+
+                                toastFailure();
                             }
                         } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
-                                    "the band is in range.\n");
-
-                            toastFailure();
-                            return true;
+                            Log.w(TAG, "Multiple attempts to stream Gyro sensor from this device ignored");
                         }
-                    } else {
-                        Log.w(TAG, "Multiple attempts to stream Gyro sensor from this device ignored");
-                    }
-                } catch (BandException e) {
-                    String exceptionMessage;
-                    switch (e.getErrorType()) {
-                        case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
-                                    "SDK Version. Please update to latest SDK.\n";
-                            break;
-                        case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. " +
-                                    "Please make sure Microsoft Health is installed and that you " +
-                                    "have the correct permissions.\n";
-                            break;
-                        default:
-                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                            break;
-                    }
-                    Log.e(TAG, exceptionMessage);
-
-                } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting Gyro data");
-                    e.printStackTrace();
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "Unknown error connecting to "
-                                    + T_Gyro, Toast.LENGTH_LONG).show();
+                    } catch (BandException e) {
+                        String exceptionMessage;
+                        switch (e.getErrorType()) {
+                            case UNSUPPORTED_SDK_VERSION_ERROR:
+                                exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                        "SDK Version. Please update to latest SDK.\n";
+                                break;
+                            case SERVICE_ERROR:
+                                exceptionMessage = "Microsoft Health BandService is not available. " +
+                                        "Please make sure Microsoft Health is installed and that you " +
+                                        "have the correct permissions.\n";
+                                break;
+                            default:
+                                exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                                break;
                         }
-                    });
-                }
-            }
-            return false;
-        }
-//
-//        @Override
-//        protected void onPostExecute(Boolean result) {
-//            // Start timeout task if one isn't already running
-//            if (result) {
-//                if (mTimeoutTask == null) {
-//                    mTimeoutTask = new TimeoutTask();
-////                    mTimeoutTask.executeOnExecutor(THREAD_POOL_EXECUTOR);
-//                }
-//            }
-//        }
+                        Log.e(TAG, exceptionMessage);
 
-    }
-
-    private class UnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-
-            if (params.length > 0) {
-                BandInfo band = params[0];
-
-                if (clients.containsKey(band)) {
-
-                    BandClient client = clients.get(band);
-
-                    // Unregister the client
-                    try {
-                        client.getSensorManager().unregisterGyroscopeEventListener(
-                                (BandGyroscopeEventListener) listeners.get(band)
-                        );
-
-                        // Remove listener from list
-                        listeners.remove(band);
-                        // Remove client from list
-                        clients.remove(band);
-                    } catch (BandIOException e) {
+                    } catch (Exception e) {
+                        Log.e(TAG, "Unknown error occurred when getting Gyro data");
                         e.printStackTrace();
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Unknown error connecting to "
+                                        + T_Gyro, Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
                 }
-            }
-            return null;
+            };
+        }
+
+        @Override
+        public void run() {
+            r.run();
         }
     }
 
+    private class UnsubscribeThread extends Thread {
+        private Runnable r;
 
-    private class TimeoutTask extends AsyncTask<Void, Void, Void> {
+        public UnsubscribeThread(final BandInfo info) {
+            super();
+
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    if (clients.containsKey(info)) {
+
+                        BandClient client = clients.get(info);
+
+                        // Unregister the client
+                        try {
+                            client.getSensorManager().unregisterGyroscopeEventListener(
+                                    (BandGyroscopeEventListener) listeners.get(info)
+                            );
+
+                            // Remove listener from list
+                            listeners.remove(info);
+                            // Remove client from list
+                            clients.remove(info);
+                        } catch (BandIOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+        }
+
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
+            r.run();
+        }
+    }
+
+    private class TimeoutThread extends Thread {
+        @Override
+        public void run() {
             while (true) {
                 // Iterate through stored event handlers
                 long timeout;
@@ -208,7 +202,7 @@ public class GyroscopeManager extends DataManager {
                     if (timeout != 0
                             && interval > TIMEOUT_INTERVAL) {
                         // Timeout occurred, unsubscribe the current listener
-                        new UnsubscribeTask().doInBackground(((CustomBandGyroEventListener) listener).info);
+                        new UnsubscribeThread(((CustomBandGyroEventListener) listener).info).start();
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -216,7 +210,7 @@ public class GyroscopeManager extends DataManager {
                             }
                         });
                         // Subscribe again
-                        new SubscriptionTask().doInBackground(((CustomBandGyroEventListener) listener).info);
+                        new SubscriptionThread((((CustomBandGyroEventListener) listener).info)).start();
                         final int innerCount = restartCount++;
                         mHandler.post(new Runnable() {
                             @Override
@@ -234,16 +228,12 @@ public class GyroscopeManager extends DataManager {
                     e.printStackTrace();
                 }
                 if (listeners.size() == 0) {
-                    // All listeners have been unsubscribed
-                    mTimeoutTask = null;
+                    // All listeners unsubscribed from
                     break;
                 }
             }
-            return null;
         }
     }
-
-
 
 
     /* **************************** LISTENER *********************************** */

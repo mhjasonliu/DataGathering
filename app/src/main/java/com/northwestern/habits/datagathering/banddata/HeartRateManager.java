@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.microsoft.band.BandClient;
@@ -35,104 +34,118 @@ public class HeartRateManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new SubscriptionTask().execute(info);
+        new SubscriptionThread(info).start();
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
-        new UnsubscribeTask().execute(info);
+        new UnsubscribeThread(info).start();
     }
 
-    /* ***************************** TASKS ****************************************** */
+    /* ***************************** THREADS ****************************************** */
 
-    private class SubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-            if (params.length > 0) {
-                BandInfo band = params[0];
-                try {
-                    if (!clients.containsKey(band)) {
-                        // No registered clients streaming heart rate data
-                        BandClient client = connectBandClient(band, null);
-                        if (client != null &&
-                                client.getConnectionState() == ConnectionState.CONNECTED) {
-                            // Create the listener
-                            CustomBandHeartRateEventListener aListener =
-                                    new CustomBandHeartRateEventListener(band, studyName);
+    private class SubscriptionThread extends Thread {
+        private Runnable r;
 
-                            // Register the listener
-                            client.getSensorManager().registerHeartRateEventListener(
-                                    aListener);
+        public SubscriptionThread(final BandInfo info) {
+            super();
 
-                            // Save the listener and client
-                            listeners.put(band,  aListener);
-                            clients.put(band, client);
-                        } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
-                                    "the band is in range.\n");
-
-                            toastFailure();
-                        }
-                    } else {
-                        Log.w(TAG, "Multiple attempts to stream heart rate sensor from this device ignored");
-                    }
-                } catch (BandException e) {
-                    String exceptionMessage;
-                    switch (e.getErrorType()) {
-                        case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
-                                    "SDK Version. Please update to latest SDK.\n";
-                            break;
-                        case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. " +
-                                    "Please make sure Microsoft Health is installed and that you " +
-                                    "have the correct permissions.\n";
-                            break;
-                        default:
-                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                            break;
-                    }
-                    Log.e(TAG, exceptionMessage);
-
-                } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting heart rate data");
-                }
-            }
-            return null;
-        }
-    }
-
-    private class UnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-
-            if (params.length > 0) {
-                BandInfo band = params[0];
-
-                if (clients.containsKey(band)) {
-
-                    BandClient client = clients.get(band);
-
-                    // Unregister the client
+            r = new Runnable() {
+                @Override
+                public void run() {
                     try {
-                        client.getSensorManager().unregisterHeartRateEventListener(
-                                (BandHeartRateEventListener) listeners.get(band)
-                        );
+                        if (!clients.containsKey(info)) {
+                            // No registered clients streaming heart rate data
+                            BandClient client = connectBandClient(info, null);
+                            if (client != null &&
+                                    client.getConnectionState() == ConnectionState.CONNECTED) {
+                                // Create the listener
+                                CustomBandHeartRateEventListener aListener =
+                                        new CustomBandHeartRateEventListener(info, studyName);
 
-                        // Remove listener from list
-                        listeners.remove(band);
-                        // Remove client from list
-                        clients.remove(band);
-                    } catch (BandIOException e) {
-                        e.printStackTrace();
+                                // Register the listener
+                                client.getSensorManager().registerHeartRateEventListener(
+                                        aListener);
+
+                                // Save the listener and client
+                                listeners.put(info,  aListener);
+                                clients.put(info, client);
+                            } else {
+                                Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                        "the band is in range.\n");
+
+                                toastFailure();
+                            }
+                        } else {
+                            Log.w(TAG, "Multiple attempts to stream heart rate sensor from this device ignored");
+                        }
+                    } catch (BandException e) {
+                        String exceptionMessage;
+                        switch (e.getErrorType()) {
+                            case UNSUPPORTED_SDK_VERSION_ERROR:
+                                exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                        "SDK Version. Please update to latest SDK.\n";
+                                break;
+                            case SERVICE_ERROR:
+                                exceptionMessage = "Microsoft Health BandService is not available. " +
+                                        "Please make sure Microsoft Health is installed and that you " +
+                                        "have the correct permissions.\n";
+                                break;
+                            default:
+                                exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                                break;
+                        }
+                        Log.e(TAG, exceptionMessage);
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Unknown error occurred when getting heart rate data");
                     }
                 }
-            }
-            return null;
+            };
+        }
+
+        @Override
+        public void run() {
+            r.run();
         }
     }
 
+    private class UnsubscribeThread extends Thread {
+        private Runnable r;
 
+        public UnsubscribeThread(final BandInfo info) {
+            super();
+
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    if (clients.containsKey(info)) {
+
+                        BandClient client = clients.get(info);
+
+                        // Unregister the client
+                        try {
+                            client.getSensorManager().unregisterHeartRateEventListener(
+                                    (BandHeartRateEventListener) listeners.get(info)
+                            );
+
+                            // Remove listener from list
+                            listeners.remove(info);
+                            // Remove client from list
+                            clients.remove(info);
+                        } catch (BandIOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+        }
+
+        @Override
+        public void run() {
+            r.run();
+        }
+    }
 
 
     /* ************************************* LISTENER ********************************** */

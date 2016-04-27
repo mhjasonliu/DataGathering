@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.microsoft.band.BandClient;
@@ -16,6 +15,7 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
+import com.microsoft.band.sensors.GsrSampleRate;
 import com.northwestern.habits.datagathering.DataStorageContract;
 
 import java.io.File;
@@ -35,100 +35,115 @@ public class GsrManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        new SubscriptionTask().execute(info);
+        new SubscriptionThread(info).start();
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
-        new UnsubscribeTask().execute(info);
+        new UnsubscribeThread(info).start();
     }
 
-    /* **************************** TASKS ********************************************** */
+    /* **************************** THREADS ********************************************** */
 
-    private class SubscriptionTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
-            if (params.length > 0) {
-                BandInfo band = params[0];
-                try {
-                    if (!clients.containsKey(band)) {
-                        // No registered clients streaming gsr data
-                        BandClient client = connectBandClient(band, null);
-                        if (client != null &&
-                                client.getConnectionState() == ConnectionState.CONNECTED) {
-                            // Create the listener
-                            CustomBandGsrEventListener aListener =
-                                    new CustomBandGsrEventListener(band, studyName);
+    private class SubscriptionThread extends Thread {
+        Runnable r;
 
-                            // Register the listener
-                            client.getSensorManager().registerGsrEventListener(
-                                    aListener);
+        public SubscriptionThread(final BandInfo bandInfo) {
+            super();
 
-                            // Save the listener and client
-                            listeners.put(band, aListener);
-                            clients.put(band, client);
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (!clients.containsKey(bandInfo)) {
+                            // No registered clients streaming gsr data
+                            BandClient client = connectBandClient(bandInfo, null);
+                            if (client != null &&
+                                    client.getConnectionState() == ConnectionState.CONNECTED) {
+                                // Create the listener
+                                CustomBandGsrEventListener aListener =
+                                        new CustomBandGsrEventListener(bandInfo, studyName);
+
+                                // Register the listener
+                                client.getSensorManager().registerGsrEventListener(
+                                        aListener, GsrSampleRate.MS200);
+
+                                // Save the listener and client
+                                listeners.put(bandInfo, aListener);
+                                clients.put(bandInfo, client);
+                            } else {
+                                Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                        "the band is in range.\n");
+
+                                toastFailure();
+                            }
                         } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
-                                    "the band is in range.\n");
-
-                            toastFailure();
+                            Log.w(TAG, "Multiple attempts to stream gsr sensor from this device ignored");
                         }
-                    } else {
-                        Log.w(TAG, "Multiple attempts to stream gsr sensor from this device ignored");
-                    }
-                } catch (BandException e) {
-                    String exceptionMessage;
-                    switch (e.getErrorType()) {
-                        case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
-                                    "SDK Version. Please update to latest SDK.\n";
-                            break;
-                        case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. " +
-                                    "Please make sure Microsoft Health is installed and that you " +
-                                    "have the correct permissions.\n";
-                            break;
-                        default:
-                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                            break;
-                    }
-                    Log.e(TAG, exceptionMessage);
+                    } catch (BandException e) {
+                        String exceptionMessage;
+                        switch (e.getErrorType()) {
+                            case UNSUPPORTED_SDK_VERSION_ERROR:
+                                exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                        "SDK Version. Please update to latest SDK.\n";
+                                break;
+                            case SERVICE_ERROR:
+                                exceptionMessage = "Microsoft Health BandService is not available. " +
+                                        "Please make sure Microsoft Health is installed and that you " +
+                                        "have the correct permissions.\n";
+                                break;
+                            default:
+                                exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                                break;
+                        }
+                        Log.e(TAG, exceptionMessage);
 
-                } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting gsr data");
+                    } catch (Exception e) {
+                        Log.e(TAG, "Unknown error occurred when getting gsr data");
+                    }
                 }
-            }
-            return null;
+            };
+        }
+
+        @Override
+        public void run() {
+            r.run();
         }
     }
 
-    private class UnsubscribeTask extends AsyncTask<BandInfo, Void, Void> {
-        @Override
-        protected Void doInBackground(BandInfo... params) {
+    private class UnsubscribeThread extends Thread {
+        private Runnable r;
 
-            if (params.length > 0) {
-                BandInfo band = params[0];
+        public UnsubscribeThread(final BandInfo band) {
+            super();
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    if (clients.containsKey(band)) {
 
-                if (clients.containsKey(band)) {
+                        BandClient client = clients.get(band);
 
-                    BandClient client = clients.get(band);
+                        // Unregister the client
+                        try {
+                            client.getSensorManager().unregisterGsrEventListener(
+                                    (BandGsrEventListener) listeners.get(band)
+                            );
 
-                    // Unregister the client
-                    try {
-                        client.getSensorManager().unregisterGsrEventListener(
-                                (BandGsrEventListener) listeners.get(band)
-                        );
-
-                        // Remove listener from list
-                        listeners.remove(band);
-                        // Remove client from list
-                        clients.remove(band);
-                    } catch (BandIOException e) {
-                        e.printStackTrace();
+                            // Remove listener from list
+                            listeners.remove(band);
+                            // Remove client from list
+                            clients.remove(band);
+                        } catch (BandIOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-            return null;
+            };
+        }
+
+        @Override
+        public void run() {
+            r.run();
         }
     }
 

@@ -55,120 +55,13 @@ public class AccelerometerManager extends DataManager {
     @Override
     protected void subscribe(final BandInfo info) {
         Log.v(TAG, "Subscribing to " + T_ACCEL);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!clients.containsKey(info)) {
-                        // No registered clients streaming accelerometer data
-//                        Log.v(TAG, "Getting client");
-                        BandClient client = connectBandClient(info, null);
-                        if (client != null &&
-                                client.getConnectionState() == ConnectionState.CONNECTED) {
-
-//                            Log.v(TAG, "Creating listener");
-                            // Create the listener
-                            BandAccelerometerEventListenerCustom aListener =
-                                    new BandAccelerometerEventListenerCustom(info, studyName);
-
-//                            Log.v(TAG, "Registering listener");
-                            // Register the listener
-                            client.getSensorManager().registerAccelerometerEventListener(
-                                    aListener, frequency);
-
-                            // Save the listener and client
-//                            Log.v(TAG, "putting listener");
-                            listeners.put(info, aListener);
-//                            Log.v(TAG, "Putting client");
-                            clients.put(info, client);
-
-                            // Toast saying connection successful
-                            toastStreaming(T_ACCEL);
-//                            Log.e(TAG, "Timeout task is ");// + mTimeoutTask);
-                            if (!timeoutTask.isAlive()) {
-                                timeoutTask.start();
-                            }
-                        } else {
-                            Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
-                                    "the band is in range.\n");
-
-                            toastFailure();
-                        }
-                    } else {
-                        Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
-                        Log.v(TAG, listeners.toString());
-                    }
-                } catch (BandException e) {
-                    String exceptionMessage;
-                    switch (e.getErrorType()) {
-                        case UNSUPPORTED_SDK_VERSION_ERROR:
-                            exceptionMessage = "Microsoft Health BandService doesn't support your " +
-                                    "SDK Version. Please update to latest SDK.\n";
-                            break;
-                        case SERVICE_ERROR:
-                            exceptionMessage = "Microsoft Health BandService is not available. " +
-                                    "Please make sure Microsoft Health is installed and that you " +
-                                    "have the correct permissions.\n";
-                            break;
-                        default:
-                            exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
-                            break;
-                    }
-                    Log.e(TAG, exceptionMessage);
-
-                } catch (Exception e) {
-                    Log.e(TAG, "Unknown error occurred when getting accelerometer data");
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "Unknown error connecting to "
-                                    + T_ACCEL, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        new SubscribeThread(info).start();
     }
 
     @Override
     protected void unSubscribe(final BandInfo info) {
         Log.v(TAG, "Unsubscribing from " + T_ACCEL);
-        Thread AccelerometerUnsubscribe = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (info != null) {
-                    if (clients.containsKey(info)) {
-                        BandClient client = clients.get(info);
-
-                        // Unregister the client
-                        try {
-                            Log.e(TAG, "Unsubscribing...");
-                            client.getSensorManager().unregisterAccelerometerEventListener(
-                                    (BandAccelerometerEventListener) listeners.get(info)
-                            );
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(context, "Unsubscribed from accel", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            Log.v(TAG, "Removing from lists");
-                            // Remove listener from list
-                            listeners.remove(info);
-                            // Remove client from list
-                            clients.remove(info);
-//                        toastFailure();
-                        } catch (BandIOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        Log.e(TAG, "Tried to unsubscribe from band, but clients doesn't contain the info");
-                    }
-                }
-            }
-        });
-        AccelerometerUnsubscribe.start();
+        new UnsubscribeThread(info).start();
     }
 
 
@@ -176,8 +69,139 @@ public class AccelerometerManager extends DataManager {
         super(sName, "AccelerometerManager", dbHelper, context);
     }
 
+    /* ******************************** THREADS ********************************************* */
 
-    private Thread timeoutTask = new Thread(new Runnable() {
+    private class SubscribeThread extends Thread {
+        private Runnable r;
+
+        public SubscribeThread(final BandInfo info) {
+            super();
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (!clients.containsKey(info)) {
+                            // No registered clients streaming accelerometer data
+//                        Log.v(TAG, "Getting client");
+                            BandClient client = connectBandClient(info, null);
+                            if (client != null &&
+                                    client.getConnectionState() == ConnectionState.CONNECTED) {
+
+//                            Log.v(TAG, "Creating listener");
+                                // Create the listener
+                                BandAccelerometerEventListenerCustom aListener =
+                                        new BandAccelerometerEventListenerCustom(info, studyName);
+
+                                // Register the listener
+                                client.getSensorManager().registerAccelerometerEventListener(
+                                        aListener, frequency);
+
+                                // Save the listener and client
+                                listeners.put(info, aListener);
+                                clients.put(info, client);
+
+                                // Toast saying connection successful
+                                toastStreaming(T_ACCEL);
+                                if (timeoutThread.getState() == State.NEW ||
+                                        timeoutThread.getState() == State.TERMINATED) {
+                                    timeoutThread.start();
+                                }
+                            } else {
+                                Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
+                                        "the band is in range.\n");
+
+                                toastFailure();
+                            }
+                        } else {
+                            Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
+                            Log.v(TAG, listeners.toString());
+                        }
+                    } catch (BandException e) {
+                        String exceptionMessage;
+                        switch (e.getErrorType()) {
+                            case UNSUPPORTED_SDK_VERSION_ERROR:
+                                exceptionMessage = "Microsoft Health BandService doesn't support your " +
+                                        "SDK Version. Please update to latest SDK.\n";
+                                break;
+                            case SERVICE_ERROR:
+                                exceptionMessage = "Microsoft Health BandService is not available. " +
+                                        "Please make sure Microsoft Health is installed and that you " +
+                                        "have the correct permissions.\n";
+                                break;
+                            default:
+                                exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
+                                break;
+                        }
+                        Log.e(TAG, exceptionMessage);
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Unknown error occurred when getting accelerometer data");
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Unknown error connecting to "
+                                        + T_ACCEL, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        e.printStackTrace();
+                    }
+                }
+            };
+        }
+
+        @Override
+        public void run() {
+            r.run();
+        }
+    }
+
+    private class UnsubscribeThread extends Thread{
+        private Runnable r;
+
+        @Override
+        public void run () {r.run();}
+
+        public UnsubscribeThread(final BandInfo info) {
+            super();
+
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    if (info != null) {
+                        if (clients.containsKey(info)) {
+                            BandClient client = clients.get(info);
+
+                            // Unregister the client
+                            try {
+                                Log.v(TAG, "Unsubscribing...");
+                                client.getSensorManager().unregisterAccelerometerEventListener(
+                                        (BandAccelerometerEventListener) listeners.get(info)
+                                );
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(context, "Unsubscribed from accel", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                Log.v(TAG, "Removing from lists");
+                                // Remove listener from list
+                                listeners.remove(info);
+                                // Remove client from list
+                                clients.remove(info);
+//                        toastFailure();
+                            } catch (BandIOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Log.e(TAG, "Tried to unsubscribe from band, but clients doesn't contain the info");
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    private Thread timeoutThread = new Thread(new Runnable() {
         @Override
         public void run() {
             while (true) {
@@ -192,13 +216,14 @@ public class AccelerometerManager extends DataManager {
                     if (timeout != 0
                             && interval > TIMEOUT_INTERVAL) {
                         // Timeout occurred, unsubscribe the current listener
-                        unSubscribe(((BandAccelerometerEventListenerCustom) listener).info);
+                        new UnsubscribeThread(((BandAccelerometerEventListenerCustom) listener).info).run();
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 Toast.makeText(context, "Accelerometer timeout detected...", Toast.LENGTH_SHORT).show();
                             }
                         });
+
                         // Subscribe again
                         subscribe(((BandAccelerometerEventListenerCustom) listener).info);
                         final int innerCount = restartCount++;
@@ -219,7 +244,6 @@ public class AccelerometerManager extends DataManager {
                 }
                 if (listeners.size() == 0) {
                     // All listeners have been unsubscribed
-                    timeoutTask.interrupt();
                     break;
                 }
             }
