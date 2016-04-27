@@ -86,7 +86,7 @@ public class AccelerometerManager extends DataManager {
                             toastStreaming(T_ACCEL);
 //                            Log.e(TAG, "Timeout task is ");// + mTimeoutTask);
                             if (!timeoutTask.isAlive()) {
-                                timeoutTask.run();
+                                timeoutTask.start();
                             }
                         } else {
                             Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -128,7 +128,7 @@ public class AccelerometerManager extends DataManager {
                     e.printStackTrace();
                 }
             }
-        }).run();
+        }).start();
     }
 
     @Override
@@ -147,7 +147,12 @@ public class AccelerometerManager extends DataManager {
                             client.getSensorManager().unregisterAccelerometerEventListener(
                                     (BandAccelerometerEventListener) listeners.get(info)
                             );
-
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(context, "Unsubscribed from accel", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                             Log.v(TAG, "Removing from lists");
                             // Remove listener from list
                             listeners.remove(info);
@@ -163,7 +168,7 @@ public class AccelerometerManager extends DataManager {
                 }
             }
         });
-        AccelerometerUnsubscribe.run();
+        AccelerometerUnsubscribe.start();
     }
 
 
