@@ -2,15 +2,20 @@ package com.northwestern.habits.datagathering;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -88,8 +93,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    /******************************* BUTTON HANDLERS *******************************/
+    /*******************************
+     * BUTTON HANDLERS
+     *******************************/
     private final int REQUEST_ENABLE_BT = 1;
 
     public void startStudyClicked(View view) {
@@ -145,8 +151,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
     private boolean btEnabled() {
         // Check for bluetooth connection
         BluetoothAdapter adapter = BluetoothConnectionLayer.getAdapter();
@@ -192,7 +196,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 0;
-    private void locEnabled( ) {
+
+    private void locEnabled() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -247,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
     public SQLiteDatabase db;
     DataStorageContract.BluetoothDbHelper mDbHelper;
 
-    public void onDeleteDatabase( View view ) {
+    public void onDeleteDatabase(View view) {
         db = mDbHelper.getWritableDatabase();
 
 
@@ -261,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
         String studyId = "0";
 
         // Querry databse for the study name
-        String[] projection = new String[] {
+        String[] projection = new String[]{
                 DataStorageContract.StudyTable._ID,
                 DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID
         };
@@ -271,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
                 DataStorageContract.StudyTable.TABLE_NAME,
                 projection,
                 DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID + "=?",
-                new String[] { studyId },
+                new String[]{studyId},
                 null,
                 null,
                 null
@@ -286,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
         File dattabsefile = new File(db.getPath());
 
         Intent i = new Intent(Intent.ACTION_SEND);
-        i.putExtra(Intent.EXTRA_EMAIL, new String[] {"williamstogin2018@u.northwestern.edu"});
+        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"williamstogin2018@u.northwestern.edu"});
         i.putExtra(Intent.EXTRA_SUBJECT, "Database");
         i.putExtra(Intent.EXTRA_TEXT, "Attached is (hopefully) the database");
         i.setType("application/octet-stream");
@@ -295,8 +300,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void onSendDatabase (View view) {
+    // Progress dialog for sending the database
+    public static ProgressDialog dialog;
+
+    private Handler updateDialogHandler;
+    public static final String PROGRESS_BROADCAST_EXTRA = "PROGRESS";
+    public static final String PROGRESS_EXTRA = "progress";
+
+
+    private BroadcastReceiver progressReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == PROGRESS_BROADCAST_EXTRA) {
+                // Update the progress dialog
+                if (dialog != null) {
+                    dialog.setProgress(intent.getIntExtra(PROGRESS_EXTRA, 5));
+                }
+            }
+        }
+    };
+    public void onSendDatabase(View view) {
         Log.v(TAG, "Send database clicked");
+        dialog = new ProgressDialog(this);
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.show();
+        dialog.setProgress(0);
+
+        registerReceiver(progressReceiver, new IntentFilter(PROGRESS_BROADCAST_EXTRA));
         // Stop streaming
         endStudyClicked(view);
 
@@ -304,8 +334,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ServerCommunicationService.class);
         startService(intent);
     }
-
-
 
 
 }

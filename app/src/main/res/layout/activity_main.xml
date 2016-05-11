@@ -100,10 +100,12 @@
                 android:layout_height="wrap_content"
                 android:text="Test"
                 android:onClick="onSendDatabase"/>
-                android:text="send database to Shibo"
-                android:id="@+id/displayDbButton"
-                android:onClick="onReadDatabase"
-                android:enabled="true"/>
+
+            <ProgressBar
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/postProgress"
+                android:progress="50"/>
 
             <Button
                 android:layout_width="match_parent"
@@ -130,7 +132,9 @@
         android:background="@color/transparent"
         android:elevation="4dp"
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+
 
 
 
