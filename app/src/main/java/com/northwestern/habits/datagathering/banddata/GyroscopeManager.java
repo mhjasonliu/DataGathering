@@ -93,13 +93,11 @@ public class GyroscopeManager extends DataManager {
                                 // Save the listener and client
                                 listeners.put(info, aListener);
                                 clients.put(info, client);
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(context, "Successfully connected to gyroscope", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                                if (!mTimeoutThread.isAlive()) {
+
+                                // Toast saying connection successful
+                                toastStreaming(T_Gyro);
+                                if (mTimeoutThread.getState() == State.NEW ||
+                                        mTimeoutThread.getState() == State.TERMINATED) {
                                     mTimeoutThread.start();
                                 }
                             } else {
@@ -202,20 +200,21 @@ public class GyroscopeManager extends DataManager {
                     if (timeout != 0
                             && interval > TIMEOUT_INTERVAL) {
                         // Timeout occurred, unsubscribe the current listener
-                        new UnsubscribeThread(((CustomBandGyroEventListener) listener).info).start();
+                        new UnsubscribeThread(((CustomBandGyroEventListener) listener).info).run();
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context, "Gyroscope timeout detected...", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, "Gryo timeout detected...", Toast.LENGTH_SHORT).show();
                             }
                         });
+
                         // Subscribe again
-                        new SubscriptionThread((((CustomBandGyroEventListener) listener).info)).start();
+                        subscribe(((CustomBandGyroEventListener) listener).info);
                         final int innerCount = restartCount++;
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context, "Successfully restarted Gyroscope for the " +
+                                Toast.makeText(context, "Successfully restarted Gyro for the " +
                                         Integer.toString(innerCount) +
                                         "th time", Toast.LENGTH_SHORT).show();
                             }
@@ -228,7 +227,7 @@ public class GyroscopeManager extends DataManager {
                     e.printStackTrace();
                 }
                 if (listeners.size() == 0) {
-                    // All listeners unsubscribed from
+                    // All listeners have been unsubscribed
                     break;
                 }
             }
@@ -315,7 +314,7 @@ public class GyroscopeManager extends DataManager {
                 }
 
                 // Add new entry to the gyro table
-                Log.v(TAG, "Gyro received");
+                Log.v(TAG, "G");
 //                Log.v(TAG, "Study name is: " + uName);
 //                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
 //                Log.v(TAG, "Device ID is: " + Integer.toString(devId));

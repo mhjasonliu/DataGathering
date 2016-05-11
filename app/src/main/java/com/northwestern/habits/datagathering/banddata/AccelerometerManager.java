@@ -348,6 +348,7 @@ public class AccelerometerManager extends DataManager {
 //                        "Y: " + Double.toString(event.getAccelerationY()) +
 //                        "Z: " + Double.toString(event.getAccelerationZ()));
 //                Log.v(TAG, getDateTime(event));
+                Log.v(TAG, "A");
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));

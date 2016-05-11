@@ -27,13 +27,19 @@ public class CrashActivity extends Activity implements View.OnClickListener {
         setFinishOnTouchOutside(false); // prevent users from dismissing the dialog by tapping outside
         setContentView(R.layout.activity_crash);
         findViewById(R.id.button).setOnClickListener(this);
+        findViewById(R.id.button2).setOnClickListener(this);
     }
 
     @Override
     public void onClick (View v)
     {
         Log.v(TAG, "Clicked!");
-        sendLogFile();
+        if (v.equals(findViewById(R.id.button))) {
+            sendLogFile();
+        } else {
+            moveTaskToBack(true);
+            finish();
+        }
     }
 
     private void sendLogFile ()
@@ -137,6 +143,7 @@ public class CrashActivity extends Activity implements View.OnClickListener {
             Log.e(TAG, "Failed to send log");
             return null;
         }
+        System.exit(1);
         return fullName;
     }
 }
