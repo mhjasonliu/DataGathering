@@ -11,6 +11,10 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,7 +41,7 @@ public class ServerCommunicationService extends Service {
     private Message message;
 
     private final String TAG = "Server communication";
-    private final String urlBase = "https://vfsmpmapps10.fsm.northwestern.edu/php/pdotest.cgi";
+    private final String urlBase = "https://vfsmpmapps10.fsm.northwestern.edu/php/";
     private SQLiteDatabase db;
     private Handler mHandler = new Handler(Looper.getMainLooper());
 
@@ -45,6 +49,7 @@ public class ServerCommunicationService extends Service {
     private final int DEVICE = 1;
     private final int SENSOR = 2;
     private final int ACCEL = 3;
+    private final int LIMIT = 200;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -200,7 +205,10 @@ public class ServerCommunicationService extends Service {
 
             // Send accelerometer table
             Log.v(TAG, "Querying Accel table");
-            accelCursor.moveToFirst();
+            accelCursor = db.rawQuery("SELECT * FROM " +
+                    DataStorageContract.AccelerometerTable.TABLE_NAME +
+                    " ORDER BY " + DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME +
+                    " LIMIT " + Integer.toString(LIMIT), null);
             id_col = accelCursor.getColumnIndex(DataStorageContract.AccelerometerTable._ID);
             int sensor_id_col = accelCursor.getColumnIndex(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID);
             int date_col = accelCursor.getColumnIndex(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME);
@@ -208,25 +216,58 @@ public class ServerCommunicationService extends Service {
             int y_col = accelCursor.getColumnIndex(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y);
             int z_col = accelCursor.getColumnIndex(DataStorageContract.AccelerometerTable.COLUMN_NAME_Z);
 
-            while (!accelCursor.isAfterLast()) {
-                HashMap<String, String> sparams = new HashMap<>();
+            while (accelCursor.getCount() > 0) {
+                accelCursor.moveToFirst();
+                // Create a new accelerometer json array
+                JSONArray accJArray = new JSONArray();
+                HashMap<String, String> sparams1 = new HashMap<>();
+                while (!accelCursor.isAfterLast()) {
 
-                sparams.put(dbNameField, dbName);
-                sparams.put(writeField, write);
+                    sparams1.put(dbNameField, dbName);
+                    sparams1.put(writeField, write);
 
-                sparams.put(tableNameField, "accelerometer_data");
-                sparams.put("ID", Integer.toString(accelCursor.getInt(id_col)));
-                sparams.put("sensor_id", Integer.toString(accelCursor.getInt(sensor_id_col)));
-                sparams.put("date", "'" + accelCursor.getString(date_col) + "'");
-                sparams.put("x", Float.toString(accelCursor.getFloat(x_col)));
-                sparams.put("y", Float.toString(accelCursor.getFloat(y_col)));
-                sparams.put("z", Float.toString(accelCursor.getFloat(z_col)));
+                    sparams1.put(tableNameField, "accelerometer_data");
+//                sparams.put("ID", Integer.toString(accelCursor.getInt(id_col)));
+//                sparams.put("sensor_id", Integer.toString(accelCursor.getInt(sensor_id_col)));
+//                sparams.put("date", "'" + accelCursor.getString(date_col) + "'");
+//                sparams.put("x", Float.toString(accelCursor.getFloat(x_col)));
+//                sparams.put("y", Float.toString(accelCursor.getFloat(y_col)));
+//                sparams.put("z", Float.toString(accelCursor.getFloat(z_col)));
+//
+//                sendBytes(sparams);
+                    accJArray.put(accelCursor.getInt(id_col));
+                    accJArray.put(accelCursor.getInt(sensor_id_col));
+                    accJArray.put("'" + accelCursor.getString(date_col) + "'");
+                    accJArray.put(Float.toString(accelCursor.getFloat(x_col)));
+                    accJArray.put(Float.toString(accelCursor.getFloat(y_col)));
+                    accJArray.put(Float.toString(accelCursor.getFloat(z_col)));
 
-                sendBytes(sparams);
-                accelCursor.moveToNext();
-                entriesSoFar++;
+                    accelCursor.moveToNext();
+                    entriesSoFar++;
+                }
+                JSONObject accobj = new JSONObject();
+                try {
+                    accobj.put("Data", accJArray);
+                    sendJSONObject(sparams1, accobj);
+                } catch (JSONException e) {
+                    Log.e(TAG, "Failed to put the json array in the json object");
+                    e.printStackTrace();
+                }
+
+                broadcastProgress(entriesSoFar / totalEntries * 100);
+                db.rawQuery("DELETE FROM " + DataStorageContract.AccelerometerTable.TABLE_NAME +
+                        " WHERE " + DataStorageContract.AccelerometerTable._ID +
+                        " IN (SELECT " + DataStorageContract.AccelerometerTable._ID +
+                        " FROM " + DataStorageContract.AccelerometerTable.TABLE_NAME +
+                        " ORDER BY " + DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME + " DESC " +
+                        "LIMIT " + Integer.toString(46) + ")", null);
+                accelCursor = db.rawQuery("SELECT * FROM " +
+                        DataStorageContract.AccelerometerTable.TABLE_NAME +
+                        " ORDER BY " + DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME + " DESC " +
+                        "LIMIT " + Integer.toString(LIMIT), null);
+                Log.v(TAG, "Cursor size: " + Integer.toString(accelCursor.getCount()));
+                break;
             }
-            broadcastProgress(entriesSoFar/totalEntries*100);
 
             // Send ambient light table
             Log.v(TAG, "Querying ambient light table");
@@ -372,7 +413,7 @@ public class ServerCommunicationService extends Service {
                 params.add(param);
             }
 
-            URL url = new URL(urlBase + "?" + getQuery(params));
+            URL url = new URL(urlBase + "pdotest.cgi" + "?" + getQuery(params));
             conn = null;
             Log.v(TAG, "Opening connection");
             conn = (HttpURLConnection) url.openConnection();
@@ -442,6 +483,57 @@ public class ServerCommunicationService extends Service {
         bIntent.putExtra(MainActivity.PROGRESS_EXTRA, Math.round(progress));
         Log.v(TAG, "BORADCSTING " + Float.toString(progress));
         sendBroadcast(bIntent);
+    }
+
+    private void sendJSONObject(HashMap<String,String> sparams, JSONObject object) {
+        HttpURLConnection conn = null;
+
+        sparams.put("Data", object.toString());
+        try {
+
+            List<Map.Entry> params = new ArrayList<>();
+            for (Map.Entry<String, String> param : sparams.entrySet()) {
+                params.add(param);
+            }
+
+            URL url = new URL(urlBase + "accelJSON.cgi" + "?" + getQuery(params));
+            conn = null;
+            Log.v(TAG, "Opening connection");
+            conn = (HttpURLConnection) url.openConnection();
+            Log.v(TAG, "opened");
+            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            Log.v(TAG, "Query: " + url.getQuery());
+            OutputStream os = conn.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os, "UTF-8"));
+            writer.write(getQuery(params));
+            Log.e(TAG, object.toString());
+            writer.write(object.toString());
+            Log.e(TAG, "1");
+            writer.flush();
+            writer.close();
+            conn.connect();
+            Log.v(TAG, "encoding is " + conn.getContentEncoding());
+
+            BufferedReader reader = null;
+            InputStream is = conn.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder builder = new StringBuilder();
+            for (String line = null; (line = reader.readLine()) != null; ) {
+                builder.append(line).append("\n");
+            }
+            Log.v(TAG, "Response: " + builder.toString());
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (conn != null)
+                conn.disconnect();
+        }
     }
 }
 
