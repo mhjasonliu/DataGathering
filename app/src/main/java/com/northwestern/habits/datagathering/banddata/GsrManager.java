@@ -23,14 +23,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.EventListener;
 
 /**
  * Created by William on 12/31/2015
  */
 public class GsrManager extends DataManager {
     public GsrManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "AmbientManager", db, context);
+        super(sName, "GsrManager", db, context);
+        STREAM_TYPE = "GSR";
     }
 
     @Override
@@ -44,6 +44,8 @@ public class GsrManager extends DataManager {
     }
 
     /* **************************** THREADS ********************************************** */
+
+    private TimeoutHandler timeoutThread = new TimeoutHandler();
 
     private class SubscriptionThread extends Thread {
         Runnable r;
@@ -71,6 +73,14 @@ public class GsrManager extends DataManager {
                                 // Save the listener and client
                                 listeners.put(bandInfo, aListener);
                                 clients.put(bandInfo, client);
+
+                                // Toast saying connection successful
+                                toastStreaming(STREAM_TYPE);
+                                if (timeoutThread.getState() != State.NEW) {
+                                    timeoutThread.makeThreadTerminate();
+                                    timeoutThread = new TimeoutHandler();
+                                }
+                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
@@ -100,6 +110,10 @@ public class GsrManager extends DataManager {
 
                     } catch (Exception e) {
                         Log.e(TAG, "Unknown error occurred when getting gsr data");
+
+
+                        // trigger crash
+                        ((BandInfo) null).getName();
                     }
                 }
             };
@@ -150,7 +164,8 @@ public class GsrManager extends DataManager {
 
     /* ***************************** LISTENER ***************************************** */
 
-    private class CustomBandGsrEventListener implements BandGsrEventListener, EventListener {
+    private class CustomBandGsrEventListener extends CustomListener
+            implements BandGsrEventListener {
         private BandInfo info;
         private String uName;
         private String location;
@@ -165,7 +180,6 @@ public class GsrManager extends DataManager {
         @Override
         public void onBandGsrChanged(final BandGsrEvent event) {
             if (event != null) {
-                String T_Gsr = "GSR";
 
                 int studyId, devId, sensId;
                 try {
@@ -208,7 +222,7 @@ public class GsrManager extends DataManager {
                 }
 
                 try {
-                    sensId = getSensorId(T_Gsr, devId, database);
+                    sensId = getSensorId(STREAM_TYPE, devId, database);
                 } catch (Resources.NotFoundException e) {
                     sensId = getNewSensor(database);
 
@@ -216,7 +230,7 @@ public class GsrManager extends DataManager {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_Gsr);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
 
                     database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
@@ -226,12 +240,12 @@ public class GsrManager extends DataManager {
                 }
 
                 // Add new entry to the Resistance table
-                Log.v(TAG, "Study name is: " + uName);
-                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
-                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
-                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-                Log.v(TAG, String.format("Resistance = %d kOhms\n", event.getResistance()));
-                Log.v(TAG, getDateTime(event));
+//                Log.v(TAG, "Study name is: " + uName);
+//                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
+//                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
+//                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
+//                Log.v(TAG, String.format("Resistance = %d kOhms\n", event.getResistance()));
+//                Log.v(TAG, getDateTime(event));
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.GsrTable.COLUMN_NAME_DATETIME, getDateTime(event));
@@ -255,7 +269,8 @@ public class GsrManager extends DataManager {
                 boolean fpExists = true;
                 if (!file.exists()) {
                     try {
-                        boolean fb = file.createNewFile();
+                        //noinspection ResultOfMethodCallIgnored
+                        file.createNewFile();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

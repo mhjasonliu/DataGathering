@@ -22,7 +22,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.EventListener;
 
 /**
  * Created by William on 12/31/2015
@@ -30,7 +29,8 @@ import java.util.EventListener;
 public class ContactManager extends DataManager {
 
     public ContactManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "AmbientManager", db, context);
+        super(sName, "ContactManager", db, context);
+        STREAM_TYPE = "CON";
     }
 
     @Override
@@ -43,13 +43,17 @@ public class ContactManager extends DataManager {
         new UnsubscribeThread(info).start();
     }
 
-        /* ***************************** THREADS ****************************************** */
+    /* ***************************** THREADS ****************************************** */
+
+    private TimeoutHandler timeoutThread = new TimeoutHandler();
 
     private class SubscriptionThread extends Thread {
         private Runnable r;
 
         @Override
-        public void run() {r.run();}
+        public void run() {
+            r.run();
+        }
 
         public SubscriptionThread(final BandInfo info) {
             super();
@@ -73,6 +77,14 @@ public class ContactManager extends DataManager {
                                 // Save the listener and client
                                 listeners.put(info, aListener);
                                 clients.put(info, client);
+
+                                // Toast saying connection successful
+                                toastStreaming(STREAM_TYPE);
+                                if (timeoutThread.getState() != State.NEW) {
+                                    timeoutThread.makeThreadTerminate();
+                                    timeoutThread = new TimeoutHandler();
+                                }
+                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
@@ -112,7 +124,9 @@ public class ContactManager extends DataManager {
         private Runnable r;
 
         @Override
-        public void run() {r.run();}
+        public void run() {
+            r.run();
+        }
 
         public UnsubscribeThread(final BandInfo info) {
             super();
@@ -145,7 +159,8 @@ public class ContactManager extends DataManager {
 
     /* ***************************** LISTENER ***************************************** */
 
-    private class CustomBandContactEventListener implements BandContactEventListener, EventListener {
+    private class CustomBandContactEventListener extends CustomListener
+            implements BandContactEventListener {
         private BandInfo info;
         private String uName;
         private String location;
@@ -160,7 +175,6 @@ public class ContactManager extends DataManager {
         @Override
         public void onBandContactChanged(final BandContactEvent event) {
             if (event != null) {
-                String T_CONTACT = "Contact";
 
                 int studyId, devId, sensId;
                 try {
@@ -203,7 +217,7 @@ public class ContactManager extends DataManager {
                 }
 
                 try {
-                    sensId = getSensorId(T_CONTACT, devId, database);
+                    sensId = getSensorId(STREAM_TYPE, devId, database);
                 } catch (Resources.NotFoundException e) {
                     sensId = getNewSensor(database);
 
@@ -211,7 +225,7 @@ public class ContactManager extends DataManager {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_CONTACT);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
 
                     database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
@@ -220,7 +234,7 @@ public class ContactManager extends DataManager {
                     );
                 }
                 String contactState;
-                switch(event.getContactState()){
+                switch (event.getContactState()) {
                     case NOT_WORN:
                         contactState = "Not Worn";
                         break;
@@ -265,7 +279,8 @@ public class ContactManager extends DataManager {
                 boolean fpExists = true;
                 if (!file.exists()) {
                     try {
-                        boolean fb = file.createNewFile();
+                        //noinspection ResultOfMethodCallIgnored
+                        file.createNewFile();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

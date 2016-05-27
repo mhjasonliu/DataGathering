@@ -34,12 +34,13 @@ public class CrashActivity extends Activity implements View.OnClickListener {
     public void onClick (View v)
     {
         Log.v(TAG, "Clicked!");
-        if (v.equals(findViewById(R.id.button))) {
+        if (v == findViewById(R.id.button)) {
             sendLogFile();
         } else {
             moveTaskToBack(true);
             finish();
         }
+
     }
 
     private void sendLogFile ()
@@ -55,6 +56,8 @@ public class CrashActivity extends Activity implements View.OnClickListener {
         intent.putExtra (Intent.EXTRA_STREAM, Uri.parse("file://" + fullName));
         intent.putExtra (Intent.EXTRA_TEXT, "Log file attached."); // do this so some email clients don't complain about empty body.
         startActivity (intent);
+        moveTaskToBack(true);
+        finish();
     }
 
     private String extractLogToFile()
@@ -72,7 +75,7 @@ public class CrashActivity extends Activity implements View.OnClickListener {
         // Make file name - file must be saved to external storage or it wont be readable by
         // the email app.
         String path = Environment.getExternalStorageDirectory() + "/" + "DataGathering/";
-        String fullName = path + "Error_Report";
+        String fullName = path + "Error_Report.log";
 
         // Extract to file.
         File file = new File (fullName);
@@ -143,7 +146,7 @@ public class CrashActivity extends Activity implements View.OnClickListener {
             Log.e(TAG, "Failed to send log");
             return null;
         }
-        System.exit(1);
+//        System.exit(1);
         return fullName;
     }
 }

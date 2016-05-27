@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.microsoft.band.BandClient;
@@ -20,6 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by William on 12/31/2015
@@ -39,7 +42,7 @@ public abstract class DataManager implements EventListener {
 
 
     // Fields
-    protected HashMap<BandInfo, EventListener> listeners = new HashMap<>();
+    protected HashMap<BandInfo, CustomListener> listeners = new HashMap<>();
     protected HashMap<BandInfo, BandClient> clients = new HashMap<>();
 
     String studyName;
@@ -48,6 +51,9 @@ public abstract class DataManager implements EventListener {
     SQLiteDatabase database; // Should be reset in the constructor
     protected Context context;
     protected Handler mHandler;
+    protected long TIMEOUT_INTERVAL = 1000;
+    protected int restartCount = 0;
+    protected String STREAM_TYPE;
 
     protected static boolean toastingFailure;
 
@@ -297,16 +303,34 @@ public abstract class DataManager implements EventListener {
         return tmp;
     }
 
-    protected BandClient connectBandClient(BandInfo band, BandClient client) throws InterruptedException, BandException {
+    protected BandClient connectBandClient(BandInfo band, BandClient client)
+            throws InterruptedException, BandException {
         if (client == null) {
+            Log.d(TAG, "a");
+            if (band == null) {
+                throw new NullPointerException();
+            }
             client = BandClientManager.getInstance().create(context, band);
+            Log.d(TAG, "b");
         } else if (ConnectionState.CONNECTED == client.getConnectionState()) {
+
+            Log.d(TAG, "c");
             return client;
         }
 
-        if (ConnectionState.CONNECTED == client.connect().await()) {
-            return client;
-        } else {
+        Log.d(TAG, "asdf");
+
+        try {
+            if (ConnectionState.CONNECTED == client.connect().await(15, TimeUnit.SECONDS)) {
+
+                Log.d(TAG, "d");
+                return client;
+            } else {
+
+                Log.d(TAG, "e");
+                return null;
+            }
+        } catch (TimeoutException e) {
             return null;
         }
     }
@@ -332,10 +356,84 @@ public abstract class DataManager implements EventListener {
         public void run() {
             if (cancelToast == null) {
                 cancelToast = Toast.makeText(context, "Band isn't connected. Please make sure bluetooth is on and " +
-                    "the band is in range.", Toast.LENGTH_LONG);
+                        "the band is in range.", Toast.LENGTH_LONG);
                 cancelToast.show();
             }
         }
     };
+
+    protected class TimeoutHandler extends Thread {
+        private boolean shouldTerminate = false;
+
+        public TimeoutHandler() {
+            super();
+            shouldTerminate = false;
+        }
+
+        public void makeThreadTerminate() {
+            shouldTerminate = true;
+        }
+
+        @Override
+        public void run() {
+            while (!shouldTerminate) {
+//                Log.e(TAG, "checking timeout");
+                // Iterate through stored event handlers
+                long timeout;
+                long interval;
+                for (BandInfo this_info : listeners.keySet()) {
+                    CustomListener listener = listeners.get(this_info);
+                    // Check timeout field
+                    timeout = listener.lastDataSample;
+                    interval = System.currentTimeMillis() - timeout;
+
+                    if (timeout != 0
+                            && interval > TIMEOUT_INTERVAL) {
+                        // Timeout occurred, un-subscribe the current listener
+                        unSubscribe(this_info);
+                        Log.d(TAG, STREAM_TYPE + " timeout detected");
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, STREAM_TYPE +
+                                        " timeout detected...", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        // Subscribe again
+                        subscribe(this_info);
+                        final int innerCount = restartCount++;
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Successfully restarted " +
+                                        STREAM_TYPE + " for the " + Integer.toString(innerCount) +
+                                        "th time", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+                try {
+                    Thread.sleep(TIMEOUT_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (listeners.size() == 0) {
+                    // All listeners have been unsubscribed
+                    break;
+                }
+            }
+        }
+    }
+
+    protected class CustomListener implements EventListener {
+        protected long lastDataSample;
+        protected BandInfo info;
+    }
 
 }

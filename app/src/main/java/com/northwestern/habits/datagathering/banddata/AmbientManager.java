@@ -22,7 +22,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.EventListener;
 
 /**
  * Created by William on 12/31/2015
@@ -31,6 +30,7 @@ public class AmbientManager extends DataManager {
 
     public AmbientManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
         super(sName, "AmbientManager", dbHelper, context);
+        STREAM_TYPE = "AMB";
     }
 
     @Override
@@ -45,6 +45,8 @@ public class AmbientManager extends DataManager {
 
 
     /* ******************************** THREADS ********************************************* */
+
+    private TimeoutHandler timeoutThread = new TimeoutHandler();
 
     private class SubscriptionThread extends Thread {
         Runnable runnable;
@@ -71,6 +73,15 @@ public class AmbientManager extends DataManager {
                                 // Save the listener and client
                                 listeners.put(bandInfo, aListener);
                                 clients.put(bandInfo, client);
+
+
+                                // Toast saying connection successful
+                                toastStreaming(STREAM_TYPE);
+                                if (timeoutThread.getState() != State.NEW) {
+                                    timeoutThread.makeThreadTerminate();
+                                    timeoutThread = new TimeoutHandler();
+                                }
+                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on " +
                                         "and the band is in range.\n");
@@ -152,7 +163,8 @@ public class AmbientManager extends DataManager {
 
     /* **************************** EVENT LISTENER ******************************************** */
 
-    private class CustomBandAmbientLightEventListener implements BandAmbientLightEventListener, EventListener {
+    private class CustomBandAmbientLightEventListener extends CustomListener
+            implements BandAmbientLightEventListener {
         private BandInfo info;
         private String uName;
         private String location;
@@ -167,7 +179,6 @@ public class AmbientManager extends DataManager {
         @Override
         public void onBandAmbientLightChanged(final BandAmbientLightEvent event) {
             if (event != null) {
-                String T_AMBIENT = "Ambient";
 
                 int studyId, devId, sensId;
                 try {
@@ -210,7 +221,7 @@ public class AmbientManager extends DataManager {
                 }
 
                 try {
-                    sensId = getSensorId(T_AMBIENT, devId, database);
+                    sensId = getSensorId(STREAM_TYPE, devId, database);
                 } catch (Resources.NotFoundException e) {
                     sensId = getNewSensor(database);
 
@@ -218,7 +229,7 @@ public class AmbientManager extends DataManager {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_AMBIENT);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
 
                     database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
@@ -257,7 +268,8 @@ public class AmbientManager extends DataManager {
                 boolean fpExists = true;
                 if (!file.exists()) {
                     try {
-                        boolean fb = file.createNewFile();
+                        //noinspection ResultOfMethodCallIgnored
+                        file.createNewFile();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

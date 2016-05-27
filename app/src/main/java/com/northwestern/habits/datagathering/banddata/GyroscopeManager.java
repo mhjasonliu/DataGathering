@@ -24,15 +24,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.EventListener;
 
 /**
  * Created by William on 12/31/2015
  */
 public class GyroscopeManager extends DataManager {
     private SampleRate frequency;
-    private final String T_Gyro = "Gyroscope";
-    private TimeoutThread mTimeoutThread = new TimeoutThread();
     private final long TIMEOUT_INTERVAL = 1000;
     private int restartCount = 1;
 
@@ -54,10 +51,12 @@ public class GyroscopeManager extends DataManager {
 
     public GyroscopeManager(String sName, SQLiteOpenHelper db, Context context) {
         super(sName, "GyroscopeManager", db, context);
+        STREAM_TYPE = "GYR";
     }
 
     @Override
     protected void subscribe(BandInfo info) {
+        Log.e(TAG, "BandInfo for gyro subscription is " + info);
         new SubscriptionThread(info).start();
     }
 
@@ -67,6 +66,8 @@ public class GyroscopeManager extends DataManager {
     }
 
     /* *********************************** THREADS *************************************** */
+
+    TimeoutHandler timeoutThread = new TimeoutHandler();
 
     private class SubscriptionThread extends Thread {
         private Runnable r;
@@ -95,11 +96,12 @@ public class GyroscopeManager extends DataManager {
                                 clients.put(info, client);
 
                                 // Toast saying connection successful
-                                toastStreaming(T_Gyro);
-                                if (mTimeoutThread.getState() == State.NEW ||
-                                        mTimeoutThread.getState() == State.TERMINATED) {
-                                    mTimeoutThread.start();
+                                toastStreaming(STREAM_TYPE);
+                                if (timeoutThread.getState() != State.NEW) {
+                                    timeoutThread.makeThreadTerminate();
+                                    timeoutThread = new TimeoutHandler();
                                 }
+                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
@@ -134,9 +136,12 @@ public class GyroscopeManager extends DataManager {
                             @Override
                             public void run() {
                                 Toast.makeText(context, "Unknown error connecting to "
-                                        + T_Gyro, Toast.LENGTH_LONG).show();
+                                        + STREAM_TYPE, Toast.LENGTH_LONG).show();
                             }
                         });
+
+                        // trigger crash
+                        ((BandInfo) null).getName();
                     }
                 }
             };
@@ -185,64 +190,15 @@ public class GyroscopeManager extends DataManager {
         }
     }
 
-    private class TimeoutThread extends Thread {
-        @Override
-        public void run() {
-            while (true) {
-                // Iterate through stored event handlers
-                long timeout;
-                long interval;
-                for (EventListener listener :
-                        listeners.values()) {
-                    // Check timeout field
-                    timeout = ((CustomBandGyroEventListener) listener).lastReceived;
-                    interval = System.currentTimeMillis() - timeout;
-                    if (timeout != 0
-                            && interval > TIMEOUT_INTERVAL) {
-                        // Timeout occurred, unsubscribe the current listener
-                        new UnsubscribeThread(((CustomBandGyroEventListener) listener).info).run();
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(context, "Gryo timeout detected...", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                        // Subscribe again
-                        subscribe(((CustomBandGyroEventListener) listener).info);
-                        final int innerCount = restartCount++;
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(context, "Successfully restarted Gyro for the " +
-                                        Integer.toString(innerCount) +
-                                        "th time", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                }
-                try {
-                    Thread.sleep(TIMEOUT_INTERVAL);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (listeners.size() == 0) {
-                    // All listeners have been unsubscribed
-                    break;
-                }
-            }
-        }
-    }
-
 
     /* **************************** LISTENER *********************************** */
 
-    private class CustomBandGyroEventListener implements BandGyroscopeEventListener, EventListener {
+    private class CustomBandGyroEventListener extends CustomListener
+            implements BandGyroscopeEventListener {
 
         private BandInfo info;
         private String uName;
         private String location;
-        private long lastReceived;
 
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
             super();
@@ -296,7 +252,7 @@ public class GyroscopeManager extends DataManager {
                 }
 
                 try {
-                    sensId = getSensorId(T_Gyro, devId, database);
+                    sensId = getSensorId(STREAM_TYPE, devId, database);
                 } catch (Resources.NotFoundException e) {
                     sensId = getNewSensor(database);
 
@@ -304,7 +260,7 @@ public class GyroscopeManager extends DataManager {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_Gyro);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
 
                     database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
@@ -326,7 +282,7 @@ public class GyroscopeManager extends DataManager {
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                lastReceived = System.currentTimeMillis();
+                lastDataSample = System.currentTimeMillis();
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.GyroTable.COLUMN_NAME_Y, event.getAccelerationY());
@@ -350,7 +306,8 @@ public class GyroscopeManager extends DataManager {
                 boolean fpExists = true;
                 if (!file.exists()) {
                     try {
-                        boolean fb = file.createNewFile();
+                        //noinspection ResultOfMethodCallIgnored
+                        file.createNewFile();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

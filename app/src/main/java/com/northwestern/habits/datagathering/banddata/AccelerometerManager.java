@@ -30,10 +30,7 @@ import java.util.EventListener;
  * Created by William on 12/31/2015
  */
 public class AccelerometerManager extends DataManager {
-    private static final long TIMEOUT_INTERVAL = 1000;
     private SampleRate frequency;
-    private final String T_ACCEL = "Accelerometer";
-    private int restartCount = 1;
 
     protected void setFrequency(String f) {
         switch (f) {
@@ -54,19 +51,20 @@ public class AccelerometerManager extends DataManager {
 
     @Override
     protected void subscribe(final BandInfo info) {
-        Log.v(TAG, "Subscribing to " + T_ACCEL);
+        Log.v(TAG, "Subscribing to " + STREAM_TYPE);
         new SubscribeThread(info).start();
     }
 
     @Override
     protected void unSubscribe(final BandInfo info) {
-        Log.v(TAG, "Unsubscribing from " + T_ACCEL);
+        Log.v(TAG, "Unsubscribing from " + STREAM_TYPE);
         new UnsubscribeThread(info).start();
     }
 
 
     public AccelerometerManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
         super(sName, "AccelerometerManager", dbHelper, context);
+        STREAM_TYPE = "Accelerometer";
     }
 
     /* ******************************** THREADS ********************************************* */
@@ -81,35 +79,41 @@ public class AccelerometerManager extends DataManager {
                 public void run() {
                     try {
                         if (!clients.containsKey(info)) {
+                            Log.d(TAG, "1");
                             // No registered clients streaming accelerometer data
 //                        Log.v(TAG, "Getting client");
                             BandClient client = connectBandClient(info, null);
+                            Log.d(TAG, "1.5");
                             if (client != null &&
                                     client.getConnectionState() == ConnectionState.CONNECTED) {
+                                Log.d(TAG, "2");
 
 //                            Log.v(TAG, "Creating listener");
                                 // Create the listener
                                 BandAccelerometerEventListenerCustom aListener =
                                         new BandAccelerometerEventListenerCustom(info, studyName);
 
+                                Log.d(TAG, "3");
                                 // Register the listener
                                 client.getSensorManager().registerAccelerometerEventListener(
                                         aListener, frequency);
 
+                                Log.d(TAG, "4");
                                 // Save the listener and client
                                 listeners.put(info, aListener);
                                 clients.put(info, client);
 
+                                Log.d(TAG, "5");
                                 // Toast saying connection successful
-                                toastStreaming(T_ACCEL);
-                                if (timeoutThread.getState() == State.NEW ||
-                                        timeoutThread.getState() == State.TERMINATED) {
-                                    timeoutThread.start();
+                                toastStreaming(STREAM_TYPE);
+                                if (timeoutThread.getState() != State.NEW) {
+                                    timeoutThread.makeThreadTerminate();
+                                    timeoutThread = new TimeoutHandler();
                                 }
+                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
-
                                 toastFailure();
                             }
                         } else {
@@ -126,21 +130,22 @@ public class AccelerometerManager extends DataManager {
                             case SERVICE_ERROR:
                                 exceptionMessage = "Microsoft Health BandService is not available. " +
                                         "Please make sure Microsoft Health is installed and that you " +
-                                        "have the correct permissions.\n";
+                                        "have the correct permissions. aka SERVICE ERROR.\n";
                                 break;
                             default:
                                 exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
                                 break;
                         }
                         Log.e(TAG, exceptionMessage);
-
+                        e.printStackTrace();
+                        ((Integer) null).toString();
                     } catch (Exception e) {
                         Log.e(TAG, "Unknown error occurred when getting accelerometer data");
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 Toast.makeText(context, "Unknown error connecting to "
-                                        + T_ACCEL, Toast.LENGTH_LONG).show();
+                                        + STREAM_TYPE, Toast.LENGTH_LONG).show();
                             }
                         });
                         e.printStackTrace();
@@ -201,62 +206,13 @@ public class AccelerometerManager extends DataManager {
         }
     }
 
-    private Thread timeoutThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (true) {
-                // Iterate through stored event handlers
-                long timeout;
-                long interval;
-                for (EventListener listener :
-                        listeners.values()) {
-                    // Check timeout field
-                    timeout = ((BandAccelerometerEventListenerCustom) listener).lastReceived;
-                    interval = System.currentTimeMillis() - timeout;
-                    if (timeout != 0
-                            && interval > TIMEOUT_INTERVAL) {
-                        // Timeout occurred, unsubscribe the current listener
-                        new UnsubscribeThread(((BandAccelerometerEventListenerCustom) listener).info).run();
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(context, "Accelerometer timeout detected...", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+    private TimeoutHandler timeoutThread = new TimeoutHandler();
 
-                        // Subscribe again
-                        subscribe(((BandAccelerometerEventListenerCustom) listener).info);
-                        final int innerCount = restartCount++;
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(context, "Successfully restarted Accelerometer for the " +
-                                        Integer.toString(innerCount) +
-                                        "the time", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                }
-                try {
-                    Thread.sleep(TIMEOUT_INTERVAL);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (listeners.size() == 0) {
-                    // All listeners have been unsubscribed
-                    break;
-                }
-            }
-        }
-    });
+    private class BandAccelerometerEventListenerCustom extends CustomListener
+            implements BandAccelerometerEventListener, EventListener {
 
-    private class BandAccelerometerEventListenerCustom implements BandAccelerometerEventListener, EventListener {
-
-        private BandInfo info;
         private String uName;
         private String location;
-        protected long lastReceived = 0;
-
         @Override
         public String toString() {
             StringBuilder builter = new StringBuilder();
@@ -321,7 +277,7 @@ public class AccelerometerManager extends DataManager {
                 }
 
                 try {
-                    sensId = getSensorId(T_ACCEL, devId, database);
+                    sensId = getSensorId(STREAM_TYPE, devId, database);
                 } catch (Resources.NotFoundException e) {
                     sensId = getNewSensor(database);
 
@@ -329,7 +285,7 @@ public class AccelerometerManager extends DataManager {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_ACCEL);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
 
                     database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
@@ -352,7 +308,7 @@ public class AccelerometerManager extends DataManager {
 
                 ContentValues values = new ContentValues();
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                lastReceived = System.currentTimeMillis();
+                lastDataSample = System.currentTimeMillis();
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
                 values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y, event.getAccelerationY());

@@ -22,14 +22,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.EventListener;
 
 /**
  * Created by William on 12/31/2015
  */
 public class HeartRateManager extends DataManager {
     public HeartRateManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "AmbientManager", db, context);
+        super(sName, "HeartRateManager", db, context);
+        STREAM_TYPE = "heartRate";
     }
 
     @Override
@@ -43,6 +43,8 @@ public class HeartRateManager extends DataManager {
     }
 
     /* ***************************** THREADS ****************************************** */
+
+    private TimeoutHandler timeoutThread = new TimeoutHandler();
 
     private class SubscriptionThread extends Thread {
         private Runnable r;
@@ -70,6 +72,15 @@ public class HeartRateManager extends DataManager {
                                 // Save the listener and client
                                 listeners.put(info,  aListener);
                                 clients.put(info, client);
+
+
+                                // Toast saying connection successful
+                                toastStreaming(STREAM_TYPE);
+                                if (timeoutThread.getState() != State.NEW) {
+                                    timeoutThread.makeThreadTerminate();
+                                    timeoutThread = new TimeoutHandler();
+                                }
+                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
@@ -151,7 +162,8 @@ public class HeartRateManager extends DataManager {
     /* ************************************* LISTENER ********************************** */
 
 
-    private class CustomBandHeartRateEventListener implements BandHeartRateEventListener, EventListener {
+    private class CustomBandHeartRateEventListener extends CustomListener
+            implements BandHeartRateEventListener {
 
         private BandInfo info;
         private String uName;
@@ -166,8 +178,6 @@ public class HeartRateManager extends DataManager {
         @Override
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
             if (event != null) {
-                String T_HR = "heartRate";
-
 
                 int studyId, devId, sensId;
                 try {
@@ -210,7 +220,7 @@ public class HeartRateManager extends DataManager {
                 }
 
                 try {
-                    sensId = getSensorId(T_HR, devId, database);
+                    sensId = getSensorId(STREAM_TYPE, devId, database);
                 } catch (Resources.NotFoundException e) {
                     sensId = getNewSensor(database);
 
@@ -218,7 +228,7 @@ public class HeartRateManager extends DataManager {
                     ContentValues values = new ContentValues();
                     values.put(DataStorageContract.SensorTable._ID, sensId);
                     values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, T_HR);
+                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
 
                     database.insert(
                             DataStorageContract.SensorTable.TABLE_NAME,
@@ -259,7 +269,8 @@ public class HeartRateManager extends DataManager {
                 boolean fpExists = true;
                 if (!file.exists()) {
                     try {
-                        boolean fb = file.createNewFile();
+                        //noinspection ResultOfMethodCallIgnored
+                        file.createNewFile();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
