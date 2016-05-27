@@ -118,7 +118,7 @@ public class AccelerometerManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
-                            Log.v(TAG, listeners.toString());
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

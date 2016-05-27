@@ -93,6 +93,7 @@ public class BarometerManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

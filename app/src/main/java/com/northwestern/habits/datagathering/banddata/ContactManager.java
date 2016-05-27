@@ -92,6 +92,7 @@ public class ContactManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Contact sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

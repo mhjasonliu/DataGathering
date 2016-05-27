@@ -88,6 +88,7 @@ public class SkinTempManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Skin Temp sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

@@ -91,6 +91,7 @@ public class CaloriesManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Calories sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

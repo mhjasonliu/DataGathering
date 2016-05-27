@@ -89,6 +89,7 @@ public class GsrManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream gsr sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

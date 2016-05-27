@@ -92,6 +92,7 @@ public class UvManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream UV sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

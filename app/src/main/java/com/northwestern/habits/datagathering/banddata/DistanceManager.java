@@ -90,6 +90,7 @@ public class DistanceManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Distance sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

@@ -89,6 +89,7 @@ public class AltimeterManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream altimeter from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

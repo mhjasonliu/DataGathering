@@ -110,6 +110,7 @@ public class GyroscopeManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Gyro sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

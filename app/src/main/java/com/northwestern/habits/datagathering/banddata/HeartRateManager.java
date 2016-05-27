@@ -89,6 +89,7 @@ public class HeartRateManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream heart rate sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

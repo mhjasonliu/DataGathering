@@ -93,6 +93,7 @@ public class PedometerManager extends DataManager {
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Pedometer sensor from this device ignored");
+                            toastAlreadyStreaming();
                         }
                     } catch (BandException e) {
                         String exceptionMessage;

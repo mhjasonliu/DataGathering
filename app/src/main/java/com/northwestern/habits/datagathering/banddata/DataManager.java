@@ -335,32 +335,50 @@ public abstract class DataManager implements EventListener {
         }
     }
 
+
+    /* ******************************** TOASTS ***************************** */
+
     protected void toastStreaming(final String type) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_SHORT).show();
             }
         });
         cancelToast = null;
     }
 
     protected void toastFailure() {
-        mHandler.post(r);
+        mHandler.post(failure_toast_runnable);
     }
+
+    protected void toastAlreadyStreaming() { mHandler.post(alreadyStreamingRunnable); }
 
     private static Toast cancelToast = null;
 
-    Runnable r = new Runnable() {
+    private Runnable alreadyStreamingRunnable = new Runnable() {
         @Override
         public void run() {
-            if (cancelToast == null) {
-                cancelToast = Toast.makeText(context, "Band isn't connected. Please make sure bluetooth is on and " +
-                        "the band is in range.", Toast.LENGTH_LONG);
-                cancelToast.show();
-            }
+//            if (cancelToast == null) {
+            cancelToast = Toast.makeText(context, "Band is already streaming " + STREAM_TYPE,
+                    Toast.LENGTH_SHORT);
+            cancelToast.show();
+//            }
         }
     };
+
+    private Runnable failure_toast_runnable = new Runnable() {
+        @Override
+        public void run() {
+//            if (cancelToast == null) {
+            cancelToast = Toast.makeText(context, "Could not connect to band. You may need to " +
+                    "restart the band and the app.", Toast.LENGTH_SHORT);
+            cancelToast.show();
+//            }
+        }
+    };
+
+    /* ******************************** TIMEOUT STUFF ***************************** */
 
     protected class TimeoutHandler extends Thread {
         private boolean shouldTerminate = false;
