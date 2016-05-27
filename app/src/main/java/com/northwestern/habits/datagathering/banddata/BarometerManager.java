@@ -144,6 +144,7 @@ public class BarometerManager extends DataManager {
                             client.getSensorManager().unregisterBarometerEventListener(
                                     (BandBarometerEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

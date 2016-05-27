@@ -143,6 +143,7 @@ public class UvManager extends DataManager {
                             client.getSensorManager().unregisterUVEventListener(
                                     (BandUVEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

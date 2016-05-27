@@ -173,6 +173,7 @@ public class GyroscopeManager extends DataManager {
                                     (BandGyroscopeEventListener) listeners.get(info)
                             );
 
+                            mHandler.post(unsubscribedToastRunnable);
                             // Remove listener from list
                             listeners.remove(info);
                             // Remove client from list

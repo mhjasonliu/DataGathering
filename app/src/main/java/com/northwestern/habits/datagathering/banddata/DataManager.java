@@ -378,6 +378,13 @@ public abstract class DataManager implements EventListener {
         }
     };
 
+    protected Runnable unsubscribedToastRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Toast.makeText(context, "Unsubscribed from " + STREAM_TYPE, Toast.LENGTH_SHORT).show();
+        }
+    };
+
     /* ******************************** TIMEOUT STUFF ***************************** */
 
     protected class TimeoutHandler extends Thread {

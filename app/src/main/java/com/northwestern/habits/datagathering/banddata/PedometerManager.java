@@ -149,6 +149,7 @@ public class PedometerManager extends DataManager {
                                     Toast.makeText(context, "Stopped pedometer", Toast.LENGTH_SHORT).show();
                                 }
                             });
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

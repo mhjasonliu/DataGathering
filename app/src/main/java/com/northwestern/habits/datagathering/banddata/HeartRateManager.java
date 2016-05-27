@@ -140,6 +140,7 @@ public class HeartRateManager extends DataManager {
                             client.getSensorManager().unregisterHeartRateEventListener(
                                     (BandHeartRateEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

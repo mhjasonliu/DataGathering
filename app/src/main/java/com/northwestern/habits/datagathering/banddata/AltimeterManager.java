@@ -143,6 +143,7 @@ public class AltimeterManager extends DataManager {
                             client.getSensorManager().unregisterAltimeterEventListener(
                                     (BandAltimeterEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             Log.v(TAG, "Unregistered listener");
                             // Remove listener from list

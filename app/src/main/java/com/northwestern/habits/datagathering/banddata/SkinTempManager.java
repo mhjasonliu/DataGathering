@@ -138,6 +138,7 @@ public class SkinTempManager extends DataManager {
                             client.getSensorManager().unregisterSkinTemperatureEventListener(
                                     (BandSkinTemperatureEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

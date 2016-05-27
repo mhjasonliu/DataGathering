@@ -142,6 +142,7 @@ public class AmbientManager extends DataManager {
                             client.getSensorManager().unregisterAmbientLightEventListener(
                                     (BandAmbientLightEventListener) listeners.get(bandInfo)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(bandInfo);

@@ -138,6 +138,7 @@ public class DistanceManager extends DataManager {
                             client.getSensorManager().unregisterDistanceEventListener(
                                     (BandDistanceEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

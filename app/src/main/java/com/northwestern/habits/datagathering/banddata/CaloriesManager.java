@@ -140,6 +140,7 @@ public class CaloriesManager extends DataManager {
                             client.getSensorManager().unregisterCaloriesEventListener(
                                     (BandCaloriesEventListener) listeners.get(info)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(info);

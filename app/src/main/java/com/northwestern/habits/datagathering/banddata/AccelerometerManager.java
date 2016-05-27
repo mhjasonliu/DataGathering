@@ -182,12 +182,7 @@ public class AccelerometerManager extends DataManager {
                                 client.getSensorManager().unregisterAccelerometerEventListener(
                                         (BandAccelerometerEventListener) listeners.get(info)
                                 );
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(context, "Unsubscribed from accel", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
+                                mHandler.post(unsubscribedToastRunnable);
                                 Log.v(TAG, "Removing from lists");
                                 // Remove listener from list
                                 listeners.remove(info);

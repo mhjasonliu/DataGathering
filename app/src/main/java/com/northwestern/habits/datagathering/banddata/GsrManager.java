@@ -143,6 +143,7 @@ public class GsrManager extends DataManager {
                             client.getSensorManager().unregisterGsrEventListener(
                                     (BandGsrEventListener) listeners.get(band)
                             );
+                            mHandler.post(unsubscribedToastRunnable);
 
                             // Remove listener from list
                             listeners.remove(band);
