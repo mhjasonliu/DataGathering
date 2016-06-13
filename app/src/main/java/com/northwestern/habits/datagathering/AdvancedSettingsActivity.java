@@ -4,16 +4,26 @@ package com.northwestern.habits.datagathering;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdvancedSettingsActivity extends Activity {
 
@@ -30,9 +40,10 @@ public class AdvancedSettingsActivity extends Activity {
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     /**
-     * The {@link ViewPager} that will host the section contents.
+     * The CustomViewPager that will host the section contents.
      */
-    private ViewPager mViewPager;
+    protected CustomViewPager mViewPager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +54,11 @@ public class AdvancedSettingsActivity extends Activity {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager = (CustomViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -87,7 +97,7 @@ public class AdvancedSettingsActivity extends Activity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            return PlaceholderFragment.newInstance(position + 1, mViewPager);
         }
 
         @Override
@@ -120,15 +130,18 @@ public class AdvancedSettingsActivity extends Activity {
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private CustomViewPager mPager;
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
+        public static PlaceholderFragment newInstance(int sectionNumber, CustomViewPager pager) {
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
+            fragment.mPager = pager;
             return fragment;
         }
 
@@ -147,15 +160,77 @@ public class AdvancedSettingsActivity extends Activity {
             // Get the views that you want to manipulate from the rootView
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
 
+            String titleText;
             switch (viewIndex) {
                 case 1:
-                    textView.setText(getString(R.string.section_format, viewIndex));
+                    // Create fragment to request new subject ID
+
+                    titleText = "Subject ID request fragment (aka section" +
+                            Integer.toString(viewIndex) + ")";
+                    textView.setText(titleText);
+
+                    rootView = inflater.inflate(R.layout.fragment_subject_id, container, false);
+                    Button requestButton = (Button) rootView.findViewById(R.id.request_id_button);
+                    Button continueButton = (Button) rootView.findViewById(R.id.continue_button);
+
+                    final List<View> visibleList = new ArrayList<>();
+                    visibleList.add(rootView.findViewById(R.id.request_id_progress));
+                    visibleList.add(rootView.findViewById(R.id.requesting_id_text));
+
+                    final List<View> enableList = new ArrayList<>();
+                    enableList.add(requestButton);
+                    enableList.add(continueButton);
+                    final CustomViewPager pager = mPager;
+
+                    requestButton.setOnClickListener(
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // TODO Perform the request
+                                    new IdRequestTask(visibleList, enableList, pager).execute();
+
+                                    // Make necessary views appear
+                                    for (View view : visibleList) {
+                                        view.setVisibility(View.VISIBLE);
+                                    }
+
+                                    // Make necessary views disappear
+                                    for (View view : enableList) {
+                                        view.setEnabled(false);
+                                    }
+
+                                    // Disable swiping
+                                    pager.setPagingEnabled(false);
+                                }
+                            }
+                    );
+
+                    continueButton.setOnClickListener(
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+
+                                }
+                            }
+                    );
+
+
                     break;
                 case 2:
-                    textView.setText(getString(R.string.section_format, viewIndex));
+                    // Create fragment to add sensors
+
+
+                    titleText = "Sensor management fragment (aka section" +
+                            Integer.toString(viewIndex) + ")";
+                    textView.setText(titleText);
                     break;
                 case 3:
-                    textView.setText(getString(R.string.section_format, viewIndex));
+                    // Create fragment to set password
+
+
+                    titleText = "Password fragment (aka section" +
+                            Integer.toString(viewIndex) + ")";
+                    textView.setText(titleText);
                     break;
                 default:
                     throw new IndexOutOfBoundsException();
@@ -163,6 +238,91 @@ public class AdvancedSettingsActivity extends Activity {
 
 
             return rootView;
+        }
+
+
+        private class IdRequestTask extends AsyncTask<Void,Void,Void> {
+            private String mResponse = "";
+            private List<View> hideViews;
+            List<View> enableViews;
+            private CustomViewPager pager;
+
+            public IdRequestTask(List<View> hViews, List<View> eViews, CustomViewPager p) {
+                super();
+                hideViews = hViews;
+                enableViews = eViews;
+                pager = p;
+            }
+
+            @Override
+            protected Void doInBackground(Void[] params) {
+                String dataUrl = "https://vfsmpmapps10.fsm.northwestern.edu/php/getUserID.cgi";
+                String dataUrlParameters = "";
+                URL url;
+                HttpURLConnection connection = null;
+                try {
+                    // Create connection
+                    Log.v(TAG, "connecting...");
+                    url = new URL(dataUrl);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+                    connection.setRequestProperty("Content-Length","" + Integer.toString(dataUrlParameters.getBytes().length));
+                    connection.setRequestProperty("Content-Language", "en-US");
+                    connection.setUseCaches(false);
+                    connection.setDoInput(true);
+                    connection.setDoOutput(true);
+                    // Send request
+                    Log.v(TAG, "Requesting...");
+                    DataOutputStream wr = new DataOutputStream(
+                            connection.getOutputStream());
+                    wr.writeBytes(dataUrlParameters);
+                    wr.flush();
+                    wr.close();
+                    // Get Response
+                    Log.v(TAG, "Reading response...");
+                    InputStream is = connection.getInputStream();
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                    String line;
+                    StringBuilder response = new StringBuilder();
+                    while ((line = rd.readLine()) != null) {
+                        response.append(line);
+                        response.append('\r');
+                    }
+                    rd.close();
+                    mResponse = response.toString();
+                    Log.v(TAG, mResponse);
+
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+
+                } finally {
+
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+
+                // set the visibility for progress bar
+                for (View view : hideViews) {
+                    view.setVisibility(View.INVISIBLE);
+                }
+
+                // Disable the buttons
+                for (View view : enableViews) {
+                    view.setEnabled(true);
+                }
+
+                // Disable swiping
+                pager.setPagingEnabled(true);
+            }
         }
     }
 }
