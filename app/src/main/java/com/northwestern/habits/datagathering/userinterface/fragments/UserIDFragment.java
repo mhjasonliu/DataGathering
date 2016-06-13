@@ -96,7 +96,7 @@ public class UserIDFragment extends Fragment {
         final List<View> enableList = new ArrayList<>();
         enableList.add(requestButton);
         enableList.add(continueButton);
-        final CustomViewPager pager = new CustomViewPager(getContext());
+        final CustomViewPager pager = (CustomViewPager) container;
 
         requestButton.setOnClickListener(
                 new View.OnClickListener() {
