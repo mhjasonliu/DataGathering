@@ -79,14 +79,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CrashActivity"
-            android:theme="@android:style/Theme.Dialog"
+        <activity
+            android:name=".CrashActivity"
             android:textAppearance="@android:style/TextAppearance.Large"
-            android:windowSoftInputMode="stateHidden">
+            android:theme="@android:style/Theme.Dialog"
+            android:windowSoftInputMode="stateHidden" >
             <intent-filter>
                 <action android:name="com.northwestern.habits.datagathering.SEND_LOG" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".AdvancedSettingsActivity"
+            android:label="@string/title_activity_advanced_settings" >
         </activity>
     </application>
 

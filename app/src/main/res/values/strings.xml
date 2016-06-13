@@ -29,6 +29,7 @@
         <item>31Hz</item>
         <item>62Hz</item>
     </string-array>
+    <string name="section_format">Hello World from section: %1$d</string>
 
 
 
