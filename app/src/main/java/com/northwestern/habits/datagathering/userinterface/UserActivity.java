@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.userinterface;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,6 +13,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import com.northwestern.habits.datagathering.R;
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {

@@ -1,9 +1,12 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.userinterface;
 
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -15,6 +18,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.northwestern.habits.datagathering.CustomViewPager;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
+import com.northwestern.habits.datagathering.R;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -56,8 +63,6 @@ public class AdvancedSettingsActivity extends Activity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (CustomViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-
-
     }
 
     @Override
@@ -170,7 +175,7 @@ public class AdvancedSettingsActivity extends Activity {
                     textView.setText(titleText);
 
                     rootView = inflater.inflate(R.layout.fragment_subject_id, container, false);
-                    Button requestButton = (Button) rootView.findViewById(R.id.request_id_button);
+                    final Button requestButton = (Button) rootView.findViewById(R.id.request_id_button);
                     Button continueButton = (Button) rootView.findViewById(R.id.continue_button);
 
                     final List<View> visibleList = new ArrayList<>();
@@ -186,7 +191,7 @@ public class AdvancedSettingsActivity extends Activity {
                             new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    // TODO Perform the request
+                                    // Perform the request
                                     new IdRequestTask(visibleList, enableList, pager).execute();
 
                                     // Make necessary views appear
@@ -205,11 +210,18 @@ public class AdvancedSettingsActivity extends Activity {
                             }
                     );
 
+                    final SharedPreferences prefs =
+                            getContext().getSharedPreferences(
+                                    DataGatheringApplication.PREFS_NAME, MODE_PRIVATE);
                     continueButton.setOnClickListener(
+
                             new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-
+                                    SharedPreferences.Editor editor = prefs.edit();
+                                    editor.remove(DataGatheringApplication.PREF_USER_ID);
+                                    editor.apply();
+                                    pager.setCurrentItem(1, true);
                                 }
                             }
                     );
@@ -322,6 +334,42 @@ public class AdvancedSettingsActivity extends Activity {
 
                 // Disable swiping
                 pager.setPagingEnabled(true);
+
+
+                final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
+                if (mResponse.equals("")) {
+                    // Handle failure
+                    alertBuilder.setTitle("Failed to get ID");
+                    alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
+                            "You may need to connect to a Northwestern VPN.");
+                    alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+
+                } else {
+                    // TODO Handle success
+                    alertBuilder.setTitle("Success!");
+                    alertBuilder.setMessage("Successfully received an ID for this user. (" +
+                            mResponse + ")");
+                    SharedPreferences prefs = getContext().getSharedPreferences(
+                            DataGatheringApplication.PREFS_NAME, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(DataGatheringApplication.PREFS_NAME, mResponse);
+                    editor.apply();
+
+                    alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                }
+                alertBuilder.create().show();
+
+
             }
         }
     }
