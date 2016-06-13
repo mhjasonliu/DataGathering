@@ -47,6 +47,8 @@ public class UserIDFragment extends Fragment {
     private String mParam2;
 
     private static final String TAG = "UserIDFragment";
+    private Button rButton;
+    private Context context;
 
     private OnFragmentInteractionListener mListener;
 
@@ -84,9 +86,12 @@ public class UserIDFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        context = container.getContext();
+
         // Create fragment to request new user ID
         View rootView = inflater.inflate(R.layout.fragment_subject_id, container, false);
-        final Button requestButton = (Button) rootView.findViewById(R.id.request_id_button);
+        rButton = (Button) rootView.findViewById(R.id.request_id_button);
+        final Button requestButton = rButton;
         Button continueButton = (Button) rootView.findViewById(R.id.continue_button);
 
         final List<View> visibleList = new ArrayList<>();
@@ -96,7 +101,12 @@ public class UserIDFragment extends Fragment {
         final List<View> enableList = new ArrayList<>();
         enableList.add(requestButton);
         enableList.add(continueButton);
-        final CustomViewPager pager = (CustomViewPager) container;
+        final CustomViewPager pager;
+        if (container instanceof CustomViewPager) {
+            pager = (CustomViewPager) container;
+        } else {
+            pager = null;
+        }
 
         requestButton.setOnClickListener(
                 new View.OnClickListener() {
@@ -116,23 +126,26 @@ public class UserIDFragment extends Fragment {
                         }
 
                         // Disable swiping
-                        pager.setPagingEnabled(false);
+                        if (pager != null) {
+                            pager.setPagingEnabled(false);
+                        }
                     }
                 }
         );
 
         final SharedPreferences prefs =
-                getContext().getSharedPreferences(
+                context.getSharedPreferences(
                         DataGatheringApplication.PREFS_NAME, Context.MODE_PRIVATE);
         continueButton.setOnClickListener(
-
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.remove(DataGatheringApplication.PREF_USER_ID);
                         editor.apply();
-                        pager.setCurrentItem(1, true);
+                        if (pager != null) {
+                            pager.setCurrentItem(1, true);
+                        }
                     }
                 }
         );
@@ -159,6 +172,18 @@ public class UserIDFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        context = null;
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
@@ -178,7 +203,8 @@ public class UserIDFragment extends Fragment {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
-    private class IdRequestTask extends AsyncTask<Void,Void,Void> {
+
+    private class IdRequestTask extends AsyncTask<Void, Void, Void> {
         private String mResponse = "";
         private List<View> hideViews;
         List<View> enableViews;
@@ -203,8 +229,8 @@ public class UserIDFragment extends Fragment {
                 url = new URL(dataUrl);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-                connection.setRequestProperty("Content-Length","" + Integer.toString(dataUrlParameters.getBytes().length));
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Content-Length", "" + Integer.toString(dataUrlParameters.getBytes().length));
                 connection.setRequestProperty("Content-Language", "en-US");
                 connection.setUseCaches(false);
                 connection.setDoInput(true);
@@ -261,7 +287,7 @@ public class UserIDFragment extends Fragment {
             pager.setPagingEnabled(true);
 
 
-            final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
+            final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
             if (mResponse.equals("")) {
                 // Handle failure
                 alertBuilder.setTitle("Failed to get ID");
@@ -275,11 +301,11 @@ public class UserIDFragment extends Fragment {
                 });
 
             } else {
-                // TODO Handle success
+                // Handle success
                 alertBuilder.setTitle("Success!");
                 alertBuilder.setMessage("Successfully received an ID for this user. (" +
                         mResponse + ")");
-                SharedPreferences prefs = getContext().getSharedPreferences(
+                SharedPreferences prefs = context.getSharedPreferences(
                         DataGatheringApplication.PREFS_NAME, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString(DataGatheringApplication.PREFS_NAME, mResponse);
