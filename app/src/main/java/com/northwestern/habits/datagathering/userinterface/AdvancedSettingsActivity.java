@@ -2,12 +2,8 @@ package com.northwestern.habits.datagathering.userinterface;
 
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.util.Log;
@@ -16,21 +12,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.CustomViewPager;
-import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.R;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
 public class AdvancedSettingsActivity extends Activity {
 
@@ -170,62 +156,8 @@ public class AdvancedSettingsActivity extends Activity {
                 case 1:
                     // Create fragment to request new subject ID
 
-                    titleText = "Subject ID request fragment (aka section" +
-                            Integer.toString(viewIndex) + ")";
-                    textView.setText(titleText);
-
-                    rootView = inflater.inflate(R.layout.fragment_subject_id, container, false);
-                    final Button requestButton = (Button) rootView.findViewById(R.id.request_id_button);
-                    Button continueButton = (Button) rootView.findViewById(R.id.continue_button);
-
-                    final List<View> visibleList = new ArrayList<>();
-                    visibleList.add(rootView.findViewById(R.id.request_id_progress));
-                    visibleList.add(rootView.findViewById(R.id.requesting_id_text));
-
-                    final List<View> enableList = new ArrayList<>();
-                    enableList.add(requestButton);
-                    enableList.add(continueButton);
-                    final CustomViewPager pager = mPager;
-
-                    requestButton.setOnClickListener(
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    // Perform the request
-                                    new IdRequestTask(visibleList, enableList, pager).execute();
-
-                                    // Make necessary views appear
-                                    for (View view : visibleList) {
-                                        view.setVisibility(View.VISIBLE);
-                                    }
-
-                                    // Make necessary views disappear
-                                    for (View view : enableList) {
-                                        view.setEnabled(false);
-                                    }
-
-                                    // Disable swiping
-                                    pager.setPagingEnabled(false);
-                                }
-                            }
-                    );
-
-                    final SharedPreferences prefs =
-                            getContext().getSharedPreferences(
-                                    DataGatheringApplication.PREFS_NAME, MODE_PRIVATE);
-                    continueButton.setOnClickListener(
-
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    SharedPreferences.Editor editor = prefs.edit();
-                                    editor.remove(DataGatheringApplication.PREF_USER_ID);
-                                    editor.apply();
-                                    pager.setCurrentItem(1, true);
-                                }
-                            }
-                    );
-
+                    rootView = UserIDFragment.newInstance("","").onCreateView(inflater,
+                            container, savedInstanceState);
 
                     break;
                 case 2:
@@ -253,124 +185,6 @@ public class AdvancedSettingsActivity extends Activity {
         }
 
 
-        private class IdRequestTask extends AsyncTask<Void,Void,Void> {
-            private String mResponse = "";
-            private List<View> hideViews;
-            List<View> enableViews;
-            private CustomViewPager pager;
 
-            public IdRequestTask(List<View> hViews, List<View> eViews, CustomViewPager p) {
-                super();
-                hideViews = hViews;
-                enableViews = eViews;
-                pager = p;
-            }
-
-            @Override
-            protected Void doInBackground(Void[] params) {
-                String dataUrl = "https://vfsmpmapps10.fsm.northwestern.edu/php/getUserID.cgi";
-                String dataUrlParameters = "";
-                URL url;
-                HttpURLConnection connection = null;
-                try {
-                    // Create connection
-                    Log.v(TAG, "connecting...");
-                    url = new URL(dataUrl);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("POST");
-                    connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-                    connection.setRequestProperty("Content-Length","" + Integer.toString(dataUrlParameters.getBytes().length));
-                    connection.setRequestProperty("Content-Language", "en-US");
-                    connection.setUseCaches(false);
-                    connection.setDoInput(true);
-                    connection.setDoOutput(true);
-                    // Send request
-                    Log.v(TAG, "Requesting...");
-                    DataOutputStream wr = new DataOutputStream(
-                            connection.getOutputStream());
-                    wr.writeBytes(dataUrlParameters);
-                    wr.flush();
-                    wr.close();
-                    // Get Response
-                    Log.v(TAG, "Reading response...");
-                    InputStream is = connection.getInputStream();
-                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                    String line;
-                    StringBuilder response = new StringBuilder();
-                    while ((line = rd.readLine()) != null) {
-                        response.append(line);
-                        response.append('\r');
-                    }
-                    rd.close();
-                    mResponse = response.toString();
-                    Log.v(TAG, mResponse);
-
-                } catch (Exception e) {
-
-                    e.printStackTrace();
-
-                } finally {
-
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                // set the visibility for progress bar
-                for (View view : hideViews) {
-                    view.setVisibility(View.INVISIBLE);
-                }
-
-                // Disable the buttons
-                for (View view : enableViews) {
-                    view.setEnabled(true);
-                }
-
-                // Disable swiping
-                pager.setPagingEnabled(true);
-
-
-                final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
-                if (mResponse.equals("")) {
-                    // Handle failure
-                    alertBuilder.setTitle("Failed to get ID");
-                    alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
-                            "You may need to connect to a Northwestern VPN.");
-                    alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-
-                } else {
-                    // TODO Handle success
-                    alertBuilder.setTitle("Success!");
-                    alertBuilder.setMessage("Successfully received an ID for this user. (" +
-                            mResponse + ")");
-                    SharedPreferences prefs = getContext().getSharedPreferences(
-                            DataGatheringApplication.PREFS_NAME, MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(DataGatheringApplication.PREFS_NAME, mResponse);
-                    editor.apply();
-
-                    alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                }
-                alertBuilder.create().show();
-
-
-            }
-        }
     }
 }
