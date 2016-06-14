@@ -123,25 +123,18 @@ public class UserIDFragment extends Fragment {
                 }
         );
 
-        final SharedPreferences prefs =
-                context.getSharedPreferences(
-                        DataGatheringApplication.PREFS_NAME, Context.MODE_PRIVATE);
         continueButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.remove(DataGatheringApplication.PREF_USER_ID);
-                        editor.apply();
-                        Log.v(TAG, "Removed preference");
-                        Log.v(TAG, DataGatheringApplication.PREF_USER_ID + " " +
-                                prefs.getString(DataGatheringApplication.PREF_USER_ID, "null"));
                         advanceScroll();
                     }
                 }
         );
 
         // If there is no user ID, disable the continue button and freeze the scrolling
+        SharedPreferences prefs = context.getSharedPreferences(
+                        DataGatheringApplication.PREFS_NAME, Context.MODE_PRIVATE);
         boolean notContainsID = !prefs.contains(DataGatheringApplication.PREF_USER_ID);
         if (notContainsID) {
             continueButton.setEnabled(false);
