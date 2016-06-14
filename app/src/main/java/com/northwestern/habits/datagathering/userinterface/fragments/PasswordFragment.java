@@ -43,8 +43,6 @@ public class PasswordFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//            mParam2 = getArguments().getString(ARG_PARAM2);
 //        }
     }
 
@@ -53,6 +51,10 @@ public class PasswordFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_password, container, false);
+
+        // TODO Set up the checkbox to change when correct old password is set
+
+        // TODO Set up the checkbox to change when the new passwords match
     }
 
     @Override
