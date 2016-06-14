@@ -1,6 +1,5 @@
 package com.northwestern.habits.datagathering.userinterface;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -14,10 +13,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.R;
 
-public class UserActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class UserActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +41,9 @@ public class UserActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        if (navigationView != null) {
+            navigationView.setNavigationItemSelectedListener(new CustomDrawerListener(this, drawer));
+        }
     }
 
     @Override
@@ -77,27 +78,6 @@ public class UserActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
 
-        if (id == R.id.advanced_options) {
-            Intent intent = new Intent(this, AdvancedSettingsActivity.class);
-            startActivity(intent);
-        } else if (id == R.id.activity_history) {
 
-        } else if (id == R.id.eating_probability) {
-
-        } else if (id == R.id.settings) {
-
-        } else if (id == R.id.feedback) {
-
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
 }

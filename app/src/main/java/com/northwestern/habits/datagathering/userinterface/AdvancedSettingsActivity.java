@@ -6,7 +6,6 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.fragments.PasswordFragment;
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
@@ -53,12 +51,6 @@ public class AdvancedSettingsActivity extends Activity
         mViewPager = (CustomViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        // Check for no User ID
-        if (getApplicationContext().getSharedPreferences(Preferences.NAME,0).
-                contains(Preferences.USER_ID)) {
-            Log.e(TAG, "No user ID");
-//            UserIDFragment.newInstance().IdRequestTask()
-        }
     }
 
     @Override
