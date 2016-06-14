@@ -2,20 +2,18 @@ package com.northwestern.habits.datagathering.userinterface.fragments;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.northwestern.habits.datagathering.CustomViewPager;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.R;
 
@@ -31,7 +29,7 @@ import java.util.List;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link UserIDFragment.OnFragmentInteractionListener} interface
+ * {@link OnUserIdFragmentScrollLockHandler} interface
  * to handle interaction events.
  * Use the {@link UserIDFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -50,22 +48,22 @@ public class UserIDFragment extends Fragment {
     private Button rButton;
     private Context context;
 
-    private OnFragmentInteractionListener mListener;
+    private OnUserIdFragmentScrollLockHandler mListener;
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
+//     * @param param1 Parameter 1.
+//     * @param param2 Parameter 2.
      * @return A new instance of fragment UserIDFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static UserIDFragment newInstance(String param1, String param2) {
+    public static UserIDFragment newInstance() {
         UserIDFragment fragment = new UserIDFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+//        args.putString(ARG_PARAM1, param1);
+//        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -101,19 +99,13 @@ public class UserIDFragment extends Fragment {
         final List<View> enableList = new ArrayList<>();
         enableList.add(requestButton);
         enableList.add(continueButton);
-        final CustomViewPager pager;
-        if (container instanceof CustomViewPager) {
-            pager = (CustomViewPager) container;
-        } else {
-            pager = null;
-        }
 
         requestButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         // Perform the request
-                        new IdRequestTask(visibleList, enableList, pager).execute();
+                        new IdRequestTask(visibleList, enableList).execute();
 
                         // Make necessary views appear
                         for (View view : visibleList) {
@@ -126,9 +118,7 @@ public class UserIDFragment extends Fragment {
                         }
 
                         // Disable swiping
-                        if (pager != null) {
-                            pager.setPagingEnabled(false);
-                        }
+                        scrollLockRequest(true);
                     }
                 }
         );
@@ -143,20 +133,33 @@ public class UserIDFragment extends Fragment {
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.remove(DataGatheringApplication.PREF_USER_ID);
                         editor.apply();
-                        if (pager != null) {
-                            pager.setCurrentItem(1, true);
-                        }
+                        Log.v(TAG, "Removed preference");
+                        Log.v(TAG, DataGatheringApplication.PREF_USER_ID + " " +
+                                prefs.getString(DataGatheringApplication.PREF_USER_ID, "null"));
+                        advanceScroll();
                     }
                 }
         );
 
+        // If there is no user ID, disable the continue button and freeze the scrolling
+        boolean notContainsID = !prefs.contains(DataGatheringApplication.PREF_USER_ID);
+        if (notContainsID) {
+            continueButton.setEnabled(false);
+            scrollLockRequest(true);
+        }
+
         return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
+    public void scrollLockRequest(boolean shouldLock) {
         if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+            mListener.onScrollLockRequest(shouldLock);
+        }
+    }
+
+    public void advanceScroll() {
+        if (mListener != null) {
+            mListener.advanceScroll();
         }
     }
 
@@ -164,17 +167,25 @@ public class UserIDFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (OnFragmentInteractionListener) activity;
+            mListener = (OnUserIdFragmentScrollLockHandler) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement OnUserIdFragmentScrollLockHandler");
         }
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
 
+    @Override
+    public void setMenuVisibility(boolean menuVisible) {
+        super.setMenuVisibility(menuVisible);
+
+        boolean notContainsID = getActivity() != null &&
+                !getActivity().getSharedPreferences(DataGatheringApplication.PREFS_NAME, 0).
+                        contains(DataGatheringApplication.PREF_USER_ID);
     }
 
     @Override
@@ -199,22 +210,20 @@ public class UserIDFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        public void onFragmentInteraction(Uri uri);
+    public interface OnUserIdFragmentScrollLockHandler {
+        public void onScrollLockRequest(boolean shouldLock);
+        public void advanceScroll();
     }
 
-    private class IdRequestTask extends AsyncTask<Void, Void, Void> {
+    public class IdRequestTask extends AsyncTask<Void, Void, Void> {
         private String mResponse = "";
         private List<View> hideViews;
         List<View> enableViews;
-        private CustomViewPager pager;
 
-        public IdRequestTask(List<View> hViews, List<View> eViews, CustomViewPager p) {
+        public IdRequestTask(List<View> hViews, List<View> eViews) {
             super();
             hideViews = hViews;
             enableViews = eViews;
-            pager = p;
         }
 
         @Override
@@ -225,7 +234,7 @@ public class UserIDFragment extends Fragment {
             HttpURLConnection connection = null;
             try {
                 // Create connection
-                Log.v(TAG, "connecting...");
+//                Log.v(TAG, "connecting...");
                 url = new URL(dataUrl);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -236,14 +245,14 @@ public class UserIDFragment extends Fragment {
                 connection.setDoInput(true);
                 connection.setDoOutput(true);
                 // Send request
-                Log.v(TAG, "Requesting...");
+//                Log.v(TAG, "Requesting...");
                 DataOutputStream wr = new DataOutputStream(
                         connection.getOutputStream());
                 wr.writeBytes(dataUrlParameters);
                 wr.flush();
                 wr.close();
                 // Get Response
-                Log.v(TAG, "Reading response...");
+//                Log.v(TAG, "Reading response...");
                 InputStream is = connection.getInputStream();
                 BufferedReader rd = new BufferedReader(new InputStreamReader(is));
                 String line;
@@ -255,6 +264,11 @@ public class UserIDFragment extends Fragment {
                 rd.close();
                 mResponse = response.toString();
                 Log.v(TAG, mResponse);
+
+                SharedPreferences.Editor e = getContext().
+                        getSharedPreferences(DataGatheringApplication.PREFS_NAME, 0).edit();
+                e.putString(DataGatheringApplication.PREF_USER_ID, mResponse);
+                e.commit();
 
             } catch (Exception e) {
 
@@ -284,7 +298,7 @@ public class UserIDFragment extends Fragment {
             }
 
             // Disable swiping
-            pager.setPagingEnabled(true);
+            scrollLockRequest(false);
 
 
             final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);

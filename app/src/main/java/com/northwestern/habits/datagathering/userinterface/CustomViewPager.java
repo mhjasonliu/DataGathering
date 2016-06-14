@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.userinterface;
 
 import android.content.Context;
 import android.support.v4.view.ViewPager;

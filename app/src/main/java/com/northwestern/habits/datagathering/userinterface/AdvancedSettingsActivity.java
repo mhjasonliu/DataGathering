@@ -14,11 +14,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.northwestern.habits.datagathering.CustomViewPager;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
-public class AdvancedSettingsActivity extends Activity {
+public class AdvancedSettingsActivity extends Activity
+    implements UserIDFragment.OnUserIdFragmentScrollLockHandler {
 
     private static final String TAG = "AdvancedSettings";
 
@@ -49,6 +50,12 @@ public class AdvancedSettingsActivity extends Activity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (CustomViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+
+        // Check for no User ID
+        if (getApplicationContext().getSharedPreferences(DataGatheringApplication.PREFS_NAME,0).contains(DataGatheringApplication.PREF_USER_ID)) {
+            Log.e(TAG, "No user ID");
+//            UserIDFragment.newInstance().IdRequestTask()
+        }
     }
 
     @Override
@@ -73,6 +80,16 @@ public class AdvancedSettingsActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onScrollLockRequest(boolean shouldLock) {
+        mViewPager.setPagingEnabled(!shouldLock);
+    }
+
+    @Override
+    public void advanceScroll() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1);
+    }
+
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -88,6 +105,10 @@ public class AdvancedSettingsActivity extends Activity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
+            switch (position) {
+                case 0:// Create fragment to request new subject ID
+                    return UserIDFragment.newInstance();
+            }
             return PlaceholderFragment.newInstance(position + 1);
         }
 
@@ -140,7 +161,6 @@ public class AdvancedSettingsActivity extends Activity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             int viewIndex = getArguments().getInt(ARG_SECTION_NUMBER);
-            Log.v(TAG, "Creating view! " + viewIndex);
 
 
             View rootView = inflater.inflate(R.layout.fragment_advanced_settings, container, false);
@@ -153,7 +173,7 @@ public class AdvancedSettingsActivity extends Activity {
                 case 1:
                     // Create fragment to request new subject ID
 
-                    rootView = UserIDFragment.newInstance("","").onCreateView(inflater,
+                    rootView = UserIDFragment.newInstance().onCreateView(inflater,
                             container, savedInstanceState);
 
                     break;
@@ -180,8 +200,5 @@ public class AdvancedSettingsActivity extends Activity {
 
             return rootView;
         }
-
-
-
     }
 }
