@@ -64,9 +64,8 @@ public class PasswordFragment extends Fragment {
 
         // TODO Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
-            private final String pwd = getContext().getSharedPreferences(
-                    Preferences.NAME,0).getString(
-                    Preferences.USER_ID, "");
+            private final String pwd = getContext().getSharedPreferences(Preferences.NAME,0)
+                    .getString(Preferences.PASSWORD, "");
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

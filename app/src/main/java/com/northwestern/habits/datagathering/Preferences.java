@@ -9,5 +9,5 @@ public class Preferences {
 
     // Preference fields
     public static final String USER_ID = "userID";
-    public static final String PREF_PASSWORD = "password";
+    public static final String PASSWORD = "password";
 }
