@@ -12,8 +12,6 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     private static DataGatheringApplication ourInstance = new DataGatheringApplication();
 
     public static DataGatheringApplication getInstance() { return ourInstance; }
-    public static final String PREFS_NAME = "my_prefs";
-    public static final String PREF_USER_ID = "userID";
 
     @Override
     public void onCreate() {

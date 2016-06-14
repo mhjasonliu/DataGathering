@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.northwestern.habits.datagathering.DataGatheringApplication;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 
 import java.io.BufferedReader;
@@ -134,8 +134,8 @@ public class UserIDFragment extends Fragment {
 
         // If there is no user ID, disable the continue button and freeze the scrolling
         SharedPreferences prefs = context.getSharedPreferences(
-                        DataGatheringApplication.PREFS_NAME, Context.MODE_PRIVATE);
-        boolean notContainsID = !prefs.contains(DataGatheringApplication.PREF_USER_ID);
+                        Preferences.NAME, Context.MODE_PRIVATE);
+        boolean notContainsID = !prefs.contains(Preferences.USER_ID);
         if (notContainsID) {
             continueButton.setEnabled(false);
             scrollLockRequest(true);
@@ -177,8 +177,8 @@ public class UserIDFragment extends Fragment {
         super.setMenuVisibility(menuVisible);
 
         boolean notContainsID = getActivity() != null &&
-                !getActivity().getSharedPreferences(DataGatheringApplication.PREFS_NAME, 0).
-                        contains(DataGatheringApplication.PREF_USER_ID);
+                !getActivity().getSharedPreferences(Preferences.NAME, 0).
+                        contains(Preferences.USER_ID);
     }
 
     @Override
@@ -217,6 +217,60 @@ public class UserIDFragment extends Fragment {
             super();
             hideViews = hViews;
             enableViews = eViews;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            // set the visibility for progress bar
+            for (View view : hideViews) {
+                view.setVisibility(View.INVISIBLE);
+            }
+
+            // Disable the buttons
+            for (View view : enableViews) {
+                view.setEnabled(true);
+            }
+
+            // Disable swiping
+            scrollLockRequest(false);
+
+
+            final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
+            if (mResponse.equals("")) {
+                // Handle failure
+                alertBuilder.setTitle("Failed to get ID");
+                alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
+                        "You may need to connect to a Northwestern VPN.");
+                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+            } else {
+                // Handle success
+                alertBuilder.setTitle("Success!");
+                alertBuilder.setMessage("Successfully received an ID for this user. (" +
+                        mResponse + ")");
+                SharedPreferences prefs = context.getSharedPreferences(
+                        Preferences.NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(Preferences.NAME, mResponse);
+                editor.apply();
+
+                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+            }
+            alertBuilder.create().show();
+
+
         }
 
         @Override
@@ -259,8 +313,8 @@ public class UserIDFragment extends Fragment {
                 Log.v(TAG, mResponse);
 
                 SharedPreferences.Editor e = getContext().
-                        getSharedPreferences(DataGatheringApplication.PREFS_NAME, 0).edit();
-                e.putString(DataGatheringApplication.PREF_USER_ID, mResponse);
+                        getSharedPreferences(Preferences.NAME, 0).edit();
+                e.putString(Preferences.USER_ID, mResponse);
                 e.commit();
 
             } catch (Exception e) {
@@ -274,60 +328,6 @@ public class UserIDFragment extends Fragment {
                 }
             }
             return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            // set the visibility for progress bar
-            for (View view : hideViews) {
-                view.setVisibility(View.INVISIBLE);
-            }
-
-            // Disable the buttons
-            for (View view : enableViews) {
-                view.setEnabled(true);
-            }
-
-            // Disable swiping
-            scrollLockRequest(false);
-
-
-            final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
-            if (mResponse.equals("")) {
-                // Handle failure
-                alertBuilder.setTitle("Failed to get ID");
-                alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
-                        "You may need to connect to a Northwestern VPN.");
-                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-            } else {
-                // Handle success
-                alertBuilder.setTitle("Success!");
-                alertBuilder.setMessage("Successfully received an ID for this user. (" +
-                        mResponse + ")");
-                SharedPreferences prefs = context.getSharedPreferences(
-                        DataGatheringApplication.PREFS_NAME, Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(DataGatheringApplication.PREFS_NAME, mResponse);
-                editor.apply();
-
-                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-            }
-            alertBuilder.create().show();
-
-
         }
     }
 }

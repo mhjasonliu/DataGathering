@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import com.northwestern.habits.datagathering.DataGatheringApplication;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 
 /**
@@ -65,8 +65,8 @@ public class PasswordFragment extends Fragment {
         // TODO Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
             private final String pwd = getContext().getSharedPreferences(
-                    DataGatheringApplication.PREFS_NAME,0).getString(
-                    DataGatheringApplication.PREF_USER_ID, "");
+                    Preferences.NAME,0).getString(
+                    Preferences.USER_ID, "");
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
