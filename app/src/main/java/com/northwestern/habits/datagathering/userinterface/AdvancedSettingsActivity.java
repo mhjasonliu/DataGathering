@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.userinterface.fragments.PasswordFragment;
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
 public class AdvancedSettingsActivity extends Activity
@@ -106,8 +107,10 @@ public class AdvancedSettingsActivity extends Activity
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch (position) {
-                case 0:// Create fragment to request new subject ID
+                case 0: // Create fragment to request new subject ID
                     return UserIDFragment.newInstance();
+                case 2: // Create fragment to set
+                    return PasswordFragment.newInstance();
             }
             return PlaceholderFragment.newInstance(position + 1);
         }
