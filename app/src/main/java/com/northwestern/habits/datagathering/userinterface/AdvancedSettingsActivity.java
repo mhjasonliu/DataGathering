@@ -20,7 +20,8 @@ import com.northwestern.habits.datagathering.userinterface.fragments.PasswordFra
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
 public class AdvancedSettingsActivity extends Activity
-    implements UserIDFragment.OnUserIdFragmentScrollLockHandler {
+    implements UserIDFragment.OnUserIdFragmentScrollLockHandler,
+        PasswordFragment.OnPasswordFragmentInterractionListener {
 
     private static final String TAG = "AdvancedSettings";
 
