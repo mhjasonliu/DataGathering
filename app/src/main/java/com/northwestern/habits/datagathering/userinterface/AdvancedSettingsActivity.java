@@ -105,8 +105,9 @@ public class AdvancedSettingsActivity extends Activity
                     return UserIDFragment.newInstance();
                 case 2: // Create fragment to set
                     return PasswordFragment.newInstance();
+                default:
+                    return PlaceholderFragment.newInstance(position + 1);
             }
-            return PlaceholderFragment.newInstance(position + 1);
         }
 
         @Override
