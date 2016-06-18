@@ -213,6 +213,9 @@ public class PasswordFragment extends Fragment {
             oldPword.setText("");
             newPwd.setText("");
             confirmPwd.setText("");
+            InputMethodManager mgr = (InputMethodManager) (v.getContext()
+                    .getSystemService(Context.INPUT_METHOD_SERVICE));
+            mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
         }
     };
 
