@@ -37,7 +37,11 @@ public class CustomDrawerListener
         if (id == R.id.advanced_options) {
             String password = mContext.getSharedPreferences(Preferences.NAME, 0)
                     .getString(Preferences.PASSWORD, "");
-            promptAdminPassword();
+            if (password.equals("")) {
+                startAdvancedSettings(mContext);
+            } else {
+                promptAdminPassword();
+            }
         } else if (id == R.id.activity_history) {
 
         } else if (id == R.id.eating_probability) {
@@ -62,13 +66,14 @@ public class CustomDrawerListener
     }
 
 
+    protected static void startAdvancedSettings(Context context) {
+        Intent i = new Intent(context, AdvancedSettingsActivity.class);
+        context.startActivity(i);
+    }
+
     private static class CustomAlertDialog extends AlertDialog {
         String password;
 
-        private void startAdvancedSettings(Context context) {
-            Intent i = new Intent(context, AdvancedSettingsActivity.class);
-            context.startActivity(i);
-        }
 
         protected CustomAlertDialog(final Context context) {
             super(context);
@@ -76,63 +81,51 @@ public class CustomDrawerListener
             password = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE)
                     .getString(Preferences.PASSWORD, "");
 
-            boolean passwordExists = true;
-            // No password, just let them in
-            if (password.equals("")) {
-//                startAdvancedSettings(context);
-                passwordExists = false;
-            }
+            input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+            input.setTransformationMethod(PasswordTransformationMethod.getInstance());
 
-            if (passwordExists) {
-                input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-                input.setTransformationMethod(PasswordTransformationMethod.getInstance());
+            setView(input);
+            setTitle("Password required for Advanced Settings");
+            this.setButton(BUTTON_POSITIVE, "Enter", new OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
 
-                setView(input);
-                setTitle("Password required for Advanced Settings");
-                this.setButton(BUTTON_POSITIVE, "Enter", new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    Log.v("a", "Password: '" + password + "', given: '" + input.getText() + "'");
 
-                        Log.v("a", "Password: '" + password + "', given: '" + input.getText() + "'");
+                    // Check password and possibly start new activity
+                    if ((input.getText().toString()).equals(password)) {
+                        // Correct password, let them in
+                        startAdvancedSettings(context);
+                    } else {
+                        // Let them know that their password was wrong
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setCancelable(true);
+                        builder.setTitle("Wrong password");
 
-                        // Check password and possibly start new activity
-                        if ((input.getText().toString()).equals(password)) {
-                            // Correct password, let them in
-                            startAdvancedSettings(context);
-                        } else {
-                            // Let them know that their password was wrong
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                            builder.setCancelable(true);
-                            builder.setTitle("Wrong password");
-
-                            builder.setPositiveButton("Retry", new OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    cancel();
-                                    new CustomAlertDialog(context).show();
-                                }
-                            });
-                            builder.setNegativeButton("Cancel", new OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    cancel();
-                                }
-                            });
-                            builder.create().show();
-                        }
+                        builder.setPositiveButton("Retry", new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                cancel();
+                                new CustomAlertDialog(context).show();
+                            }
+                        });
+                        builder.setNegativeButton("Cancel", new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                cancel();
+                            }
+                        });
+                        builder.create().show();
                     }
-                });
+                }
+            });
 
-                this.setButton(BUTTON_NEGATIVE, "Cancel", new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dismiss();
-                    }
-                });
-            } else {
-                this.dismiss();
-                startAdvancedSettings(context);
-            }
+            this.setButton(BUTTON_NEGATIVE, "Cancel", new OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dismiss();
+                }
+            });
         }
     }
 }
