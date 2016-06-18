@@ -55,9 +55,12 @@ public class ServerCommunicationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Started service");
 
-        Bundle extras = intent.getExtras();
-        if (extras != null) {message = (Message) extras.get(MESSAGE_EXTRA);
-            Log.v(TAG, "message is " + message.toString());
+        if (intent != null) {
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                message = (Message) extras.get(MESSAGE_EXTRA);
+                Log.v(TAG, "message is " + message.toString());
+            }
         }
         db = (new DataStorageContract.BluetoothDbHelper(getApplicationContext())).getWritableDatabase();
         if (db != null) {
@@ -128,7 +131,7 @@ public class ServerCommunicationService extends Service {
             studyCursor.moveToFirst();
             int id_col = studyCursor.getColumnIndex(DataStorageContract.StudyTable._ID);
             int name_col = studyCursor.getColumnIndex(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID);
-
+            Log.v(TAG, Integer.toString(studyCursor.getCount()));
             while (!studyCursor.isAfterLast()) {
                 HashMap<String, String> sparams = new HashMap<>();
                 sparams.put(writeField, write);
@@ -140,6 +143,7 @@ public class ServerCommunicationService extends Service {
                 sendBytes(sparams);
 
                 entriesSoFar++;
+                Log.v(TAG, "Sending study table");
                 studyCursor.moveToNext();
             }
 
@@ -291,8 +295,7 @@ public class ServerCommunicationService extends Service {
                 ambientCursor.moveToNext();
                 entriesSoFar++;
             }
-            broadcastProgress(entriesSoFar/totalEntries*100);
-
+//            broadcastProgress(entriesSoFar/totalEntries*100);
 
             // Send gsr table
             Log.v(TAG, "Querying gsr table");
@@ -317,7 +320,7 @@ public class ServerCommunicationService extends Service {
                 gsrCursor.moveToNext();
                 entriesSoFar++;
             }
-            broadcastProgress(entriesSoFar/totalEntries*100);
+//            broadcastProgress(entriesSoFar/totalEntries*100);
 
             // Send gyroscope table
             Log.v(TAG, "Querying Gyro table");
@@ -347,7 +350,7 @@ public class ServerCommunicationService extends Service {
                 gyroCursor.moveToNext();
                 entriesSoFar++;
             }
-            broadcastProgress(entriesSoFar/totalEntries*100);
+//            broadcastProgress(entriesSoFar/totalEntries*100);
 
             // Send heart table
             Log.v(TAG, "Querying heart table");
@@ -373,7 +376,7 @@ public class ServerCommunicationService extends Service {
                 heartCursor.moveToNext();
                 entriesSoFar++;
             }
-            broadcastProgress(entriesSoFar/totalEntries*100);
+//            broadcastProgress(entriesSoFar/totalEntries*100);
 
             // Send skin temp table
             Log.v(TAG, "Querying skin temp table");
@@ -397,7 +400,8 @@ public class ServerCommunicationService extends Service {
                 tempCursor.moveToNext();
                 entriesSoFar++;
             }
-            broadcastProgress(entriesSoFar / totalEntries * 100);
+//            broadcastProgress(entriesSoFar / totalEntries * 100);
+            broadcastProgress(100);
         }
     };
 
@@ -471,6 +475,8 @@ public class ServerCommunicationService extends Service {
                 result.append(URLEncoder.encode((String) pair.getValue(), "UTF-8"));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
+            } catch (NullPointerException e1) {
+                e1.printStackTrace();
             }
         }
 
