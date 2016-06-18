@@ -249,7 +249,7 @@ public class PasswordFragment extends Fragment {
         }
     };
 
-    private View.OnClickListener finishClickListener = new View.OnClickListener() {;;;;;;;;;;;;;;;;;
+    private View.OnClickListener finishClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             getActivity().onBackPressed();
