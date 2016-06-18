@@ -2,12 +2,16 @@ package com.northwestern.habits.datagathering.userinterface.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -15,6 +19,7 @@ import android.widget.EditText;
 
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.userinterface.AdvancedSettingsActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -76,7 +81,12 @@ public class PasswordFragment extends Fragment {
         newPwd = (EditText) rootView.findViewById(R.id.new_password_field);
         confirmPwd = (EditText) rootView.findViewById(R.id.confirm_password_field);
 
+        oldPword.setOnFocusChangeListener(hideKeyboardListener);
+        newPwd.setOnFocusChangeListener(hideKeyboardListener);
+        confirmPwd.setOnFocusChangeListener(hideKeyboardListener);
+
         changePasswordButton = (Button) rootView.findViewById(R.id.button_change_password);
+        changePasswordButton.setOnClickListener(changePasswordListener);
 
         // Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
@@ -93,7 +103,9 @@ public class PasswordFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                oldPasswordBox.setChecked(s.toString().equals(pwd));
+                oldPasswordBox.setChecked(s.toString()
+                        .equals(getContext().getSharedPreferences(Preferences.NAME, 0)
+                                .getString(Preferences.PASSWORD, "")));
             }
         });
 
@@ -102,45 +114,30 @@ public class PasswordFragment extends Fragment {
         newPwd.addTextChangedListener(newPasswordWatcher);
         confirmPwd.addTextChangedListener(newPasswordWatcher);
 
+        ((AdvancedSettingsActivity)getActivity()).mViewPager.addOnPageChangeListener(
+                new ViewPager.OnPageChangeListener() {
+                    @Override
+                    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+                    }
+
+                    @Override
+                    public void onPageSelected(int position) {
+
+                    }
+
+                    @Override
+                    public void onPageScrollStateChanged(int state) {
+                        View v = rootView;
+                        InputMethodManager mgr = (InputMethodManager) (getContext()
+                                .getSystemService(Context.INPUT_METHOD_SERVICE));
+                        mgr.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                    }
+                }
+        );
+
         return rootView;
     }
-
-    private TextWatcher newPasswordWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            newPasswordBox.setChecked(comparePasswords());
-        }
-    };
-
-    private boolean comparePasswords() {
-        return newPwd.getText().toString().equals(confirmPwd.getText().toString())
-                && !newPwd.getText().toString().equals("");
-    }
-
-    private CompoundButton.OnCheckedChangeListener checkedChangeListener = new CompoundButton.OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//            if (areBoxesChecked()) {
-//                changePasswordButton.setVisibility(View.VISIBLE);
-//            } else {
-//                changePasswordButton.setVisibility(View.INVISIBLE);
-//            }
-            changePasswordButton.setEnabled(areBoxesChecked());
-        }
-    };
-
-    private boolean areBoxesChecked() {
-        return newPasswordBox.isChecked() && oldPasswordBox.isChecked();
-    }
-
 
     @Override
     public void onAttach(Activity activity) {
@@ -171,5 +168,66 @@ public class PasswordFragment extends Fragment {
      */
     public interface OnPasswordFragmentInterractionListener {
     }
+
+
+    /* *************************** LISTENERS/HANDLERS *************************************** */
+
+    private TextWatcher newPasswordWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            newPasswordBox.setChecked(comparePasswords());
+        }
+    };
+
+    private boolean comparePasswords() {
+        return newPwd.getText().toString().equals(confirmPwd.getText().toString())
+                && !newPwd.getText().toString().equals("");
+    }
+
+    private CompoundButton.OnCheckedChangeListener checkedChangeListener = new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            changePasswordButton.setEnabled(areBoxesChecked());
+        }
+    };
+
+    private boolean areBoxesChecked() {
+        return newPasswordBox.isChecked() && oldPasswordBox.isChecked();
+    }
+
+    private View.OnClickListener changePasswordListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            SharedPreferences.Editor editor = getContext().getSharedPreferences(Preferences.NAME, 0).edit();
+            editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
+            editor.apply();
+
+            oldPword.setText("");
+            newPwd.setText("");
+            confirmPwd.setText("");
+        }
+    };
+
+    private View.OnFocusChangeListener hideKeyboardListener = new View.OnFocusChangeListener() {
+        @Override
+        public void onFocusChange(View v, boolean hasFocus) {
+            InputMethodManager mgr = (InputMethodManager) (v.getContext()
+                    .getSystemService(Context.INPUT_METHOD_SERVICE));
+            if (!hasFocus) {
+                mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            } else {
+                mgr.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT);
+            }
+        }
+    };
+
 
 }

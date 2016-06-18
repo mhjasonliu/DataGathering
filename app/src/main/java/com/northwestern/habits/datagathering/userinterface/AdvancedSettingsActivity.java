@@ -18,7 +18,7 @@ import com.northwestern.habits.datagathering.userinterface.fragments.PasswordFra
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
 public class AdvancedSettingsActivity extends Activity
-    implements UserIDFragment.OnUserIdFragmentScrollLockHandler,
+        implements UserIDFragment.OnUserIdFragmentScrollLockHandler,
         PasswordFragment.OnPasswordFragmentInterractionListener {
 
     private static final String TAG = "AdvancedSettings";
@@ -36,7 +36,7 @@ public class AdvancedSettingsActivity extends Activity
     /**
      * The CustomViewPager that will host the section contents.
      */
-    protected CustomViewPager mViewPager;
+    public CustomViewPager mViewPager;
 
 
     @Override
@@ -50,7 +50,6 @@ public class AdvancedSettingsActivity extends Activity
         // Set up the ViewPager with the sections adapter.
         mViewPager = (CustomViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-
     }
 
     @Override
@@ -82,7 +81,7 @@ public class AdvancedSettingsActivity extends Activity
 
     @Override
     public void advanceScroll() {
-        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1);
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
     }
 
 
