@@ -87,7 +87,7 @@ public class UserIDFragment extends Fragment {
         context = container.getContext();
 
         // Create fragment to request new user ID
-        View rootView = inflater.inflate(R.layout.fragment_subject_id, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_user_id, container, false);
         rButton = (Button) rootView.findViewById(R.id.request_id_button);
         final Button requestButton = rButton;
         Button continueButton = (Button) rootView.findViewById(R.id.continue_button);
