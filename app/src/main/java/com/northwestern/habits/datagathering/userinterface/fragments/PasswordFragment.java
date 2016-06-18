@@ -65,12 +65,16 @@ public class PasswordFragment extends Fragment {
     private EditText newPwd;
     private EditText confirmPwd;
     private Button changePasswordButton;
+    private Button finishButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_password, container, false);
+
+        finishButton = (Button) rootView.findViewById(R.id.button_finish_advanced);
+        finishButton.setOnClickListener(finishClickListener);
 
         oldPasswordBox = (CheckBox) rootView.findViewById(R.id.old_password_checkbox);
         newPasswordBox = (CheckBox) rootView.findViewById(R.id.comparison_checkbox);
@@ -135,6 +139,14 @@ public class PasswordFragment extends Fragment {
                     }
                 }
         );
+
+        if (getContext().getSharedPreferences(Preferences.NAME, 0).getString(Preferences.PASSWORD, "")
+                .equals("")) {
+            oldPasswordBox.setChecked(true);
+            oldPword.setEnabled(false);
+            finishButton.setEnabled(false);
+
+        }
 
         return rootView;
     }
@@ -216,6 +228,11 @@ public class PasswordFragment extends Fragment {
             InputMethodManager mgr = (InputMethodManager) (v.getContext()
                     .getSystemService(Context.INPUT_METHOD_SERVICE));
             mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
+
+            // Enable things that were disabled before
+            finishButton.setEnabled(true);
+            oldPword.setEnabled(true);
+
         }
     };
 
@@ -232,5 +249,11 @@ public class PasswordFragment extends Fragment {
         }
     };
 
+    private View.OnClickListener finishClickListener = new View.OnClickListener() {;;;;;;;;;;;;;;;;;
+        @Override
+        public void onClick(View v) {
+            getActivity().onBackPressed();
+        }
+    };
 
 }
