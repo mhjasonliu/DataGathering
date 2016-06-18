@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.widget.Space;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -66,6 +67,7 @@ public class PasswordFragment extends Fragment {
     private EditText confirmPwd;
     private Button changePasswordButton;
     private Button finishButton;
+    private Space topSpace;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,6 +77,8 @@ public class PasswordFragment extends Fragment {
 
         finishButton = (Button) rootView.findViewById(R.id.button_finish_advanced);
         finishButton.setOnClickListener(finishClickListener);
+        changePasswordButton = (Button) rootView.findViewById(R.id.button_change_password);
+        changePasswordButton.setOnClickListener(changePasswordListener);
 
         oldPasswordBox = (CheckBox) rootView.findViewById(R.id.old_password_checkbox);
         newPasswordBox = (CheckBox) rootView.findViewById(R.id.comparison_checkbox);
@@ -85,12 +89,11 @@ public class PasswordFragment extends Fragment {
         newPwd = (EditText) rootView.findViewById(R.id.new_password_field);
         confirmPwd = (EditText) rootView.findViewById(R.id.confirm_password_field);
 
-        oldPword.setOnFocusChangeListener(hideKeyboardListener);
-        newPwd.setOnFocusChangeListener(hideKeyboardListener);
-        confirmPwd.setOnFocusChangeListener(hideKeyboardListener);
+        oldPword.setOnFocusChangeListener(editTextFocusListener);
+        newPwd.setOnFocusChangeListener(editTextFocusListener);
+        confirmPwd.setOnFocusChangeListener(editTextFocusListener);
 
-        changePasswordButton = (Button) rootView.findViewById(R.id.button_change_password);
-        changePasswordButton.setOnClickListener(changePasswordListener);
+        topSpace = (Space) rootView.findViewById(R.id.password_top_space);
 
         // Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
@@ -236,15 +239,20 @@ public class PasswordFragment extends Fragment {
         }
     };
 
-    private View.OnFocusChangeListener hideKeyboardListener = new View.OnFocusChangeListener() {
+    private View.OnFocusChangeListener editTextFocusListener = new View.OnFocusChangeListener() {
         @Override
         public void onFocusChange(View v, boolean hasFocus) {
             InputMethodManager mgr = (InputMethodManager) (v.getContext()
                     .getSystemService(Context.INPUT_METHOD_SERVICE));
+
             if (!hasFocus) {
+                // Hide the keyboard, restore the weight to the space
                 mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                topSpace.setVisibility(View.VISIBLE);
             } else {
+                // Enable the keyboard, remove the space at the top
                 mgr.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT);
+                topSpace.setVisibility(View.GONE);
             }
         }
     };
