@@ -78,13 +78,13 @@ public class CustomDrawerListener
 
             boolean passwordExists = true;
             // No password, just let them in
-//            if (password.equals("")) {
+            if (password.equals("")) {
 //                startAdvancedSettings(context);
-//                passwordExists = false;
-//            }
+                passwordExists = false;
+            }
 
             if (passwordExists) {
-                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
                 input.setTransformationMethod(PasswordTransformationMethod.getInstance());
 
                 setView(input);
@@ -130,7 +130,8 @@ public class CustomDrawerListener
                     }
                 });
             } else {
-                cancel();
+                this.dismiss();
+                startAdvancedSettings(context);
             }
         }
     }
