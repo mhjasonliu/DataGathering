@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -313,6 +314,7 @@ public class UserIDFragment extends Fragment {
                 SharedPreferences.Editor e = getContext().
                         getSharedPreferences(Preferences.NAME, 0).edit();
                 e.putString(Preferences.USER_ID, mResponse);
+                e.putStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
                 e.commit();
 
             } catch (Exception e) {
