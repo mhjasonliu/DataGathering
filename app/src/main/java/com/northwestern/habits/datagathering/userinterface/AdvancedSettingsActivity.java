@@ -19,12 +19,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.userinterface.fragments.DevicesFragment;
 import com.northwestern.habits.datagathering.userinterface.fragments.PasswordFragment;
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
 public class AdvancedSettingsActivity extends Activity
         implements UserIDFragment.OnUserIdFragmentScrollLockHandler,
-        PasswordFragment.OnPasswordFragmentInterractionListener {
+        PasswordFragment.OnPasswordFragmentInterractionListener,
+DevicesFragment.OnDevicesFragmentInterractionListener {
 
     private static final String TAG = "AdvancedSettings";
 
@@ -90,6 +92,11 @@ public class AdvancedSettingsActivity extends Activity
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
     }
 
+    @Override
+    public void onDevicesFragmentInterraction(String id) {
+        throw new UnsupportedOperationException();
+    }
+
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -108,6 +115,8 @@ public class AdvancedSettingsActivity extends Activity
             switch (position) {
                 case 0: // Create fragment to request new subject ID
                     return UserIDFragment.newInstance();
+                case 1: // Create fragment to set devices/sensors
+                    return DevicesFragment.newInstance();
                 case 2: // Create fragment to set
                     return PasswordFragment.newInstance();
                 default:
