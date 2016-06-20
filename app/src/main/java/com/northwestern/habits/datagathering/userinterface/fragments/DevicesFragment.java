@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,8 +17,11 @@ import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DeviceListAdapter;
 import com.northwestern.habits.datagathering.DeviceListItem;
+import com.northwestern.habits.datagathering.ExpandableListAdapter;
 import com.northwestern.habits.datagathering.R;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,13 +45,13 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     /**
      * The fragment's ListView/GridView.
      */
-    private AbsListView mListView;
+    private ExpandableListView mListView;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    private ListAdapter mAdapter;
+    private ExpandableListAdapter mAdapter;
 
     // TODO: Rename and change types of parameters
     public static DevicesFragment newInstance() {
@@ -91,9 +94,8 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
         }
 
         // Create an adapter with a list of devices
-        DeviceListItem[] items = devices.toArray(new DeviceListItem[devices.size()]);
-        mAdapter = new DeviceListAdapter (getActivity(),
-                R.layout.device_list_item, items);
+        HashMap<String, List<String>> children = DeviceListAdapter.createChildren(devices);
+        mAdapter = new DeviceListAdapter(getContext(), new ArrayList<>(children.keySet()), children);
     }
 
     @Override
@@ -102,7 +104,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
         View view = inflater.inflate(R.layout.fragment_devices, container, false);
 
         // Set the adapter
-        mListView = (AbsListView) view.findViewById(android.R.id.list);
+        mListView = (ExpandableListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks

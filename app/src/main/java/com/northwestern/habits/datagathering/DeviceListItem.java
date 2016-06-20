@@ -12,7 +12,9 @@ public class DeviceListItem {
     private String name;
     private String MAC;
 
-    public DeviceListItem() {}
+    public DeviceListItem() {
+        type = DeviceType.OTHER;
+    }
 
     public DeviceListItem(BandInfo b) {
         name = b.getName();
