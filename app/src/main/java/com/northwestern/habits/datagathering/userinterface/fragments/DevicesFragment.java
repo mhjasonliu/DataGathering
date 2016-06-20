@@ -11,15 +11,16 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DeviceListAdapter;
 import com.northwestern.habits.datagathering.DeviceListItem;
 import com.northwestern.habits.datagathering.R;
-import com.northwestern.habits.datagathering.userinterface.fragments.dummy.DummyContent;
 
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -35,6 +36,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     private static final String TAG = "DevicesFragment";
 
     private OnDevicesFragmentInterractionListener mListener;
+    private List<DeviceListItem> devices;
 
     /**
      * The fragment's ListView/GridView.
@@ -66,7 +68,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LinkedList<DeviceListItem> devices = new LinkedList<>();
+        devices = new LinkedList<>();
 
         // Get a list of the other bluetooth devices
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -130,8 +132,12 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onDevicesFragmentInterraction(DummyContent.ITEMS.get(position).id);
+//            mListener.onDevicesFragmentInterraction(DummyContent.ITEMS.get(position).id);
         }
+
+        DeviceListItem item = devices.get(position);
+        Toast.makeText(getActivity(), item.getName() + " Clicked!"
+                , Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -160,5 +166,4 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     public interface OnDevicesFragmentInterractionListener {
         public void onDevicesFragmentInterraction(String id);
     }
-
 }
