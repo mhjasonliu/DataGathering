@@ -2,18 +2,24 @@ package com.northwestern.habits.datagathering.userinterface.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.bluetooth.BluetoothAdapter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import com.microsoft.band.BandClientManager;
+import com.microsoft.band.BandInfo;
+import com.northwestern.habits.datagathering.DeviceListAdapter;
+import com.northwestern.habits.datagathering.DeviceListItem;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.fragments.dummy.DummyContent;
+
+import java.util.LinkedList;
 
 /**
  * A fragment representing a list of Items.
@@ -60,9 +66,31 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        LinkedList<DeviceListItem> devices = new LinkedList<>();
+
+        // Get a list of the other bluetooth devices
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter != null) {
+
+            // Add this phone to the list of devices
+            DeviceListItem phone = new DeviceListItem();
+            phone.setName("This phone");
+            phone.setMAC(adapter.getAddress());
+            devices.add(phone);
+        }
+
+
+        // Get all connected bands and add them to devices list
+        BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
+        for (BandInfo band :
+                bands) {
+            devices.add(new DeviceListItem(band));
+        }
+
         // Create an adapter with a list of devices
-        mAdapter = new ArrayAdapter<>(getActivity(),
-                R.layout.device_list_item, R.id.title_text, DummyContent.ITEMS);
+        DeviceListItem[] items = devices.toArray(new DeviceListItem[devices.size()]);
+        mAdapter = new DeviceListAdapter (getActivity(),
+                R.layout.device_list_item, items);
     }
 
     @Override
@@ -72,7 +100,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
 
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
+        mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
