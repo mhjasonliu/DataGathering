@@ -60,9 +60,9 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: Change Adapter to display your content
+        // Create an adapter with a list of devices
         mAdapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
+                R.layout.device_list_item, R.id.title_text, DummyContent.ITEMS);
     }
 
     @Override
