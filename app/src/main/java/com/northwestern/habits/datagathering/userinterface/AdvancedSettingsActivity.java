@@ -369,7 +369,7 @@ public class AdvancedSettingsActivity extends Activity
                     String mResponse;
                     mResponse = response.toString();
                     Log.v(TAG, mResponse);
-                    e.putString(Preferences.USER_ID, mResponse);
+                    e.putString(Preferences.getDeviceKeyFromMac(mac), mResponse);
                     ids.put(mac, mResponse);
                 }
             } catch (Exception ex) {
