@@ -4,13 +4,18 @@ package com.northwestern.habits.datagathering.userinterface;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.R;
@@ -50,6 +55,7 @@ public class AdvancedSettingsActivity extends Activity
         // Set up the ViewPager with the sections adapter.
         mViewPager = (CustomViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.addOnPageChangeListener(pageChangeListener);
     }
 
     @Override
@@ -198,4 +204,38 @@ public class AdvancedSettingsActivity extends Activity
             return rootView;
         }
     }
+
+
+    private ViewPager.OnPageChangeListener pageChangeListener = new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+            // Update selection
+            Drawable selected = getDrawable(R.drawable.circle_filled);
+            Drawable notSelected = getDrawable(R.drawable.circle_empty);
+
+            LinearLayout ll = (LinearLayout) findViewById(R.id.indicator_layout);
+            for (int i = 0; i < ll.getChildCount(); i++) {
+                if (i == position) {
+                    ll.getChildAt(i).setBackground(selected);
+                } else {
+                    ll.getChildAt(i).setBackground(notSelected);
+                }
+            }
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+            AdvancedSettingsActivity outerThis = AdvancedSettingsActivity.this;
+            // If we are scrolling, we don't want any keyboards up
+            InputMethodManager mgr = (InputMethodManager) (outerThis
+                    .getSystemService(Context.INPUT_METHOD_SERVICE));
+            mgr.hideSoftInputFromWindow(outerThis.getWindow().getDecorView().getWindowToken(),
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    };
 }
