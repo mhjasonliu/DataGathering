@@ -10,7 +10,9 @@ import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.northwestern.habits.datagathering.userinterface.AdvancedSettingsActivity;
@@ -120,12 +122,25 @@ public class CustomDrawerListener
                 }
             });
 
+            this.setOnKeyListener(new OnKeyListener() {
+                @Override
+                public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                    if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                        getButton(BUTTON_POSITIVE).callOnClick();
+                    }
+                    return false;
+                }
+            });
+
             this.setButton(BUTTON_NEGATIVE, "Cancel", new OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dismiss();
                 }
             });
+
+
+            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
     }
 }

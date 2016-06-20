@@ -5,10 +5,11 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewPager;
-import android.widget.Space;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,7 +68,6 @@ public class PasswordFragment extends Fragment {
     private EditText confirmPwd;
     private Button changePasswordButton;
     private Button finishButton;
-    private Space topSpace;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -92,8 +92,7 @@ public class PasswordFragment extends Fragment {
         oldPword.setOnFocusChangeListener(editTextFocusListener);
         newPwd.setOnFocusChangeListener(editTextFocusListener);
         confirmPwd.setOnFocusChangeListener(editTextFocusListener);
-
-        topSpace = (Space) rootView.findViewById(R.id.password_top_space);
+        confirmPwd.setOnKeyListener(finalEnterListener);
 
         // Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
@@ -121,7 +120,7 @@ public class PasswordFragment extends Fragment {
         newPwd.addTextChangedListener(newPasswordWatcher);
         confirmPwd.addTextChangedListener(newPasswordWatcher);
 
-        ((AdvancedSettingsActivity)getActivity()).mViewPager.addOnPageChangeListener(
+        ((AdvancedSettingsActivity) getActivity()).mViewPager.addOnPageChangeListener(
                 new ViewPager.OnPageChangeListener() {
                     @Override
                     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -150,6 +149,9 @@ public class PasswordFragment extends Fragment {
             finishButton.setEnabled(false);
 
         }
+
+//        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams
+//                .SOFT_INPUT_STATE_VISIBLE|WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         return rootView;
     }
@@ -236,6 +238,10 @@ public class PasswordFragment extends Fragment {
             finishButton.setEnabled(true);
             oldPword.setEnabled(true);
 
+            // Alert the user that password changed
+            Snackbar.make(getActivity().getCurrentFocus(), "Password changed",
+                    Snackbar.LENGTH_SHORT).show();
+
         }
     };
 
@@ -246,14 +252,23 @@ public class PasswordFragment extends Fragment {
                     .getSystemService(Context.INPUT_METHOD_SERVICE));
 
             if (!hasFocus) {
-                // Hide the keyboard, restore the weight to the space
+                // Hide the keyboard
                 mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                topSpace.setVisibility(View.VISIBLE);
             } else {
-                // Enable the keyboard, remove the space at the top
+                // Enable the keyboard
                 mgr.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT);
-                topSpace.setVisibility(View.GONE);
             }
+        }
+    };
+
+    private View.OnKeyListener finalEnterListener = new View.OnKeyListener() {
+        @Override
+        public boolean onKey(View v, int keyCode, KeyEvent event) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER
+                    && changePasswordButton.isEnabled()) {
+               changePasswordButton.callOnClick();
+            }
+            return false;
         }
     };
 
