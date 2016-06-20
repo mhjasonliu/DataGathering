@@ -252,12 +252,6 @@ public class UserIDFragment extends Fragment {
                 alertBuilder.setTitle("Success!");
                 alertBuilder.setMessage("Successfully received an ID for this user. (" +
                         mResponse + ")");
-                SharedPreferences prefs = context.getSharedPreferences(
-                        Preferences.NAME, Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(Preferences.NAME, mResponse);
-                editor.apply();
-
 
                 alertBuilder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                     @Override
@@ -314,8 +308,10 @@ public class UserIDFragment extends Fragment {
                 SharedPreferences.Editor e = getContext().
                         getSharedPreferences(Preferences.NAME, 0).edit();
                 e.putString(Preferences.USER_ID, mResponse);
+
+                // Reset the registered devices so that they get reregistered
                 e.putStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-                e.commit();
+                e.apply();
 
             } catch (Exception e) {
 

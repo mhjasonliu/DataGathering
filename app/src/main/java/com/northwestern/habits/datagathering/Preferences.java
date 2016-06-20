@@ -15,4 +15,9 @@ public class Preferences {
     public static final String REGISTERED_DEVICES = "registered_devices";
 
 
+    public static String getDeviceKeyFromMac(String mac) {
+        return mac + "_ID";
+    }
+
+
 }
