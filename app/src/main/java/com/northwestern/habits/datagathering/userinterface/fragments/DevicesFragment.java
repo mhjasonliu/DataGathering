@@ -37,6 +37,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
 
     private OnDevicesFragmentInterractionListener mListener;
     private List<DeviceListItem> devices;
+    public List<DeviceListItem> getDevices() {return devices;}
 
     /**
      * The fragment's ListView/GridView.
@@ -107,6 +108,8 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
 
+        mListener.onDevicesFragmentInterraction(devices);
+
         return view;
     }
 
@@ -129,12 +132,6 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (null != mListener) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-//            mListener.onDevicesFragmentInterraction(DummyContent.ITEMS.get(position).id);
-        }
-
         DeviceListItem item = devices.get(position);
         Toast.makeText(getActivity(), item.getName() + " Clicked!"
                 , Toast.LENGTH_SHORT).show();
@@ -164,6 +161,6 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnDevicesFragmentInterractionListener {
-        public void onDevicesFragmentInterraction(String id);
+        public void onDevicesFragmentInterraction(List<DeviceListItem> deviceItems);
     }
 }

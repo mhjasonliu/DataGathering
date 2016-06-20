@@ -4,11 +4,17 @@ package com.northwestern.habits.datagathering.userinterface;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,15 +24,29 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.northwestern.habits.datagathering.DeviceListItem;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.fragments.DevicesFragment;
 import com.northwestern.habits.datagathering.userinterface.fragments.PasswordFragment;
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 public class AdvancedSettingsActivity extends Activity
         implements UserIDFragment.OnUserIdFragmentScrollLockHandler,
         PasswordFragment.OnPasswordFragmentInterractionListener,
-DevicesFragment.OnDevicesFragmentInterractionListener {
+        DevicesFragment.OnDevicesFragmentInterractionListener {
 
     private static final String TAG = "AdvancedSettings";
 
@@ -39,6 +59,7 @@ DevicesFragment.OnDevicesFragmentInterractionListener {
      * {@link android.support.v13.app.FragmentStatePagerAdapter}.
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
+    private List<DeviceListItem> devices;
 
     /**
      * The CustomViewPager that will host the section contents.
@@ -92,9 +113,11 @@ DevicesFragment.OnDevicesFragmentInterractionListener {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
     }
 
+    public void retreateScroll() { mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);}
+
     @Override
-    public void onDevicesFragmentInterraction(String id) {
-        throw new UnsupportedOperationException();
+    public void onDevicesFragmentInterraction(List<DeviceListItem> deviceItems) {
+        devices = deviceItems;
     }
 
 
@@ -235,6 +258,26 @@ DevicesFragment.OnDevicesFragmentInterractionListener {
                     ll.getChildAt(i).setBackground(notSelected);
                 }
             }
+
+            // Device fragment
+            if (position == 1) {
+
+                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+                Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+
+                // Register devices if necessary
+                LinkedList<String> toBeRegistered = new LinkedList<>();
+                for (DeviceListItem item :
+                        devices) {
+                    if (!macs.contains(item.getMAC())) {
+                        toBeRegistered.add(item.getMAC());
+                    }
+                }
+
+                if (toBeRegistered.size() > 0) {
+                    new DeviceRegistrationTask().execute(toBeRegistered);
+                }
+            }
         }
 
         @Override
@@ -247,4 +290,135 @@ DevicesFragment.OnDevicesFragmentInterractionListener {
                     InputMethodManager.HIDE_NOT_ALWAYS);
         }
     };
+
+
+    private class DeviceRegistrationTask extends AsyncTask<List<String>, Void, HashMap<String, String>> {
+
+        ProgressDialog progressDialog;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            // Alert user that devices are being registered
+//            ProgressDialog.Builder builder = new ProgressDialog.Builder(AdvancedSettingsActivity.this);
+//            builder.setTitle("Registering Devices");
+//            builder.setMessage("Please wait while your devices are being registered with " +
+//                    "the back end server.");
+//            builder.setCancelable(false);
+//            ProgressDialog dialog = builder.create();
+//
+//            builder.create().show();
+
+            progressDialog = new ProgressDialog(AdvancedSettingsActivity.this);
+
+//set the icon, title and progress style..
+
+            progressDialog.setIcon(android.R.drawable.ic_popup_sync);
+
+            progressDialog.setTitle("Registering Devices");
+
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+
+            progressDialog.show();
+        }
+
+        @Override
+        protected HashMap<String, String> doInBackground(List<String>[] params) {
+            List<String> macs = params[0];
+            HashMap<String, String> ids = new HashMap<>();
+
+            SharedPreferences.Editor e = getSharedPreferences(Preferences.NAME, 0).edit();
+            HttpURLConnection connection = null;
+
+            try {
+                for (String mac :
+                        macs) {
+                    ids.put(mac, "");
+                    String dataUrl = "https://vfsmpmapps10.fsm.northwestern.edu/php/getDeviceID.cgi";
+                    String dataUrlParameters = "MacAddress=" + mac;
+                    URL url;
+                    // Create connection
+//                Log.v(TAG, "connecting...");
+                    url = new URL(dataUrl);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    connection.setRequestProperty("Content-Length", "" + Integer.toString(dataUrlParameters.getBytes().length));
+                    connection.setRequestProperty("Content-Language", "en-US");
+                    connection.setUseCaches(false);
+                    connection.setDoInput(true);
+                    connection.setDoOutput(true);
+                    // Send request
+//                Log.v(TAG, "Requesting...");
+                    DataOutputStream wr = new DataOutputStream(
+                            connection.getOutputStream());
+                    wr.writeBytes(dataUrlParameters);
+                    wr.flush();
+                    wr.close();
+                    // Get Response
+//                Log.v(TAG, "Reading response...");
+                    InputStream is = connection.getInputStream();
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                    String line;
+                    StringBuilder response = new StringBuilder();
+                    while ((line = rd.readLine()) != null) {
+                        response.append(line);
+                        response.append('\r');
+                    }
+                    rd.close();
+                    String mResponse;
+                    mResponse = response.toString();
+                    Log.v(TAG, mResponse);
+                    e.putString(Preferences.USER_ID, mResponse);
+                    ids.put(mac, mResponse);
+                }
+            } catch (Exception ex) {
+
+                ex.printStackTrace();
+
+            } finally {
+                e.apply();
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+            return ids;
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String, String> responses) {
+            super.onPostExecute(responses);
+            AlertDialog.Builder builder = new AlertDialog.Builder(AdvancedSettingsActivity.this);
+            builder.setCancelable(false);
+
+            progressDialog.cancel();
+            if (responses.containsValue("")) {
+                // Post failure: ask for internet and kick the user back to the previous page
+                builder.setTitle("Failure");
+                builder.setMessage("Failed to register the devices. Please make sure that you" +
+                        " are connected to the internet.");
+                builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        AdvancedSettingsActivity.this.retreateScroll();
+                    }
+                });
+            } else {
+                // Post success
+                builder.setTitle("Success!");
+                builder.setMessage("Successfully received IDs for the devices. (" +
+                        responses.keySet() + ") (" + responses.values() + ")");
+                builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
+                // Add added devices to the list of mac addresses
+                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+                Set<String> devices = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+                devices.addAll(responses.keySet());
+                prefs.edit().putStringSet(Preferences.REGISTERED_DEVICES, devices).apply();
+            }
+            builder.create().show();
+        }
+    }
 }
