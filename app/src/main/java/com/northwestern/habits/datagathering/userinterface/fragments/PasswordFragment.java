@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -21,7 +20,6 @@ import android.widget.EditText;
 
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
-import com.northwestern.habits.datagathering.userinterface.AdvancedSettingsActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -120,27 +118,6 @@ public class PasswordFragment extends Fragment {
         newPwd.addTextChangedListener(newPasswordWatcher);
         confirmPwd.addTextChangedListener(newPasswordWatcher);
 
-        ((AdvancedSettingsActivity) getActivity()).mViewPager.addOnPageChangeListener(
-                new ViewPager.OnPageChangeListener() {
-                    @Override
-                    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-                    }
-
-                    @Override
-                    public void onPageSelected(int position) {
-
-                    }
-
-                    @Override
-                    public void onPageScrollStateChanged(int state) {
-                        View v = rootView;
-                        InputMethodManager mgr = (InputMethodManager) (getContext()
-                                .getSystemService(Context.INPUT_METHOD_SERVICE));
-                        mgr.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                    }
-                }
-        );
 
         if (getContext().getSharedPreferences(Preferences.NAME, 0).getString(Preferences.PASSWORD, "")
                 .equals("")) {
