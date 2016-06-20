@@ -53,9 +53,10 @@ public class UserIDFragment extends Fragment {
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
+     * <p/>
+     * //     * @param param1 Parameter 1.
+     * //     * @param param2 Parameter 2.
      *
-//     * @param param1 Parameter 1.
-//     * @param param2 Parameter 2.
      * @return A new instance of fragment UserIDFragment.
      */
     // TODO: Rename and change types and number of parameters
@@ -134,7 +135,7 @@ public class UserIDFragment extends Fragment {
 
         // If there is no user ID, disable the continue button and freeze the scrolling
         SharedPreferences prefs = context.getSharedPreferences(
-                        Preferences.NAME, Context.MODE_PRIVATE);
+                Preferences.NAME, Context.MODE_PRIVATE);
         boolean notContainsID = !prefs.contains(Preferences.USER_ID);
         if (notContainsID) {
             continueButton.setEnabled(false);
@@ -173,15 +174,6 @@ public class UserIDFragment extends Fragment {
     }
 
     @Override
-    public void setMenuVisibility(boolean menuVisible) {
-        super.setMenuVisibility(menuVisible);
-
-        boolean notContainsID = getActivity() != null &&
-                !getActivity().getSharedPreferences(Preferences.NAME, 0).
-                        contains(Preferences.USER_ID);
-    }
-
-    @Override
     public void onDestroyView() {
         super.onDestroyView();
         context = null;
@@ -205,6 +197,7 @@ public class UserIDFragment extends Fragment {
      */
     public interface OnUserIdFragmentScrollLockHandler {
         public void onScrollLockRequest(boolean shouldLock);
+
         public void advanceScroll();
     }
 
@@ -228,10 +221,8 @@ public class UserIDFragment extends Fragment {
                 view.setVisibility(View.INVISIBLE);
             }
 
-            // Disable the buttons
-            for (View view : enableViews) {
-                view.setEnabled(true);
-            }
+            rButton.setEnabled(true);
+
 
             // Disable swiping
             scrollLockRequest(false);
@@ -251,6 +242,11 @@ public class UserIDFragment extends Fragment {
                 });
 
             } else {
+                // Enable the buttons
+                for (View view : enableViews) {
+                    view.setEnabled(true);
+                }
+
                 // Handle success
                 alertBuilder.setTitle("Success!");
                 alertBuilder.setMessage("Successfully received an ID for this user. (" +
@@ -261,10 +257,12 @@ public class UserIDFragment extends Fragment {
                 editor.putString(Preferences.NAME, mResponse);
                 editor.apply();
 
-                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                alertBuilder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        advanceScroll();
                     }
                 });
             }

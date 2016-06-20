@@ -82,7 +82,7 @@
         <Button
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:text="Continue"
+            android:text="Skip"
             android:id="@+id/continue_button"
             android:layout_gravity="bottom"
             android:layout_weight="1"/>
