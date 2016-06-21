@@ -2,6 +2,12 @@ package com.northwestern.habits.datagathering;
 
 import android.content.Context;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.Arrays;
@@ -52,7 +58,65 @@ public class DeviceListAdapter extends ExpandableListAdapter {
         }
     }
 
-//    public View getView(int position, View convertView, ViewGroup parent) {
+    private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            Log.v(TAG, "Item selected");
+            switch (parent.getId()) {
+                case R.id.locationSpinner:
+                    //TODO
+                    break;
+                case R.id.frequencySpinner:
+                    Log.v(TAG, "Frequency change to " + parent.getItemAtPosition(position));
+                    //TODO
+                    break;
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+    };
+
+    @Override
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+
+        DeviceListItem.DeviceType type = devices.get(groupPosition).getType();
+
+        switch (type) {
+            case BAND:
+                LayoutInflater infalInflater = (LayoutInflater) context
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+                View rootView = infalInflater.inflate(R.layout.item_band_sensors, null);
+                // Prepare the location spinner
+                Spinner locationSpinner = (Spinner) rootView.findViewById(R.id.locationSpinner);
+                ArrayAdapter<CharSequence> locationAdapter = ArrayAdapter.createFromResource(context,
+                        R.array.locations_array, android.R.layout.simple_spinner_item);
+                // Specify the layout to use when the list of choices appears
+                locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Apply the locationAdapter to the spinner
+                locationSpinner.setAdapter(locationAdapter);
+                locationSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+
+                // Prepare the frequency spinner
+                Spinner frequencySpinner = (Spinner) rootView.findViewById(R.id.frequencySpinner);
+                ArrayAdapter<CharSequence> frequencyAdapter = ArrayAdapter.createFromResource(context,
+                        R.array.frequency_array, android.R.layout.simple_spinner_item);
+                // Specify the layout to use when the list of choices appears
+                frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Apply the frequencyAdapter to the spinner
+                frequencySpinner.setAdapter(frequencyAdapter);
+                frequencySpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+                return rootView;
+            case OTHER:
+            default:
+                return super.getChildView(groupPosition, childPosition, isLastChild, null, parent);
+        }
+    }
+
+    //    public View getView(int position, View convertView, ViewGroup parent) {
 //        ViewHolder holder = null;
 //        DeviceListItem item = (DeviceListItem)getChild()getItem(position);
 //        View viewToUse = null;

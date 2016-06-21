@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accelerometer"
+            android:id="@+id/accelerometerBox"
+            android:checked="false"
+            android:layout_row="0"
+            android:layout_column="0" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Altimeter"
+            android:id="@+id/altimeterBox"
+            android:checked="false"
+            android:enabled="true"
+            android:layout_row="0"
+            android:layout_column="1" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Barometer"
+            android:id="@+id/barometerBox"
+            android:checked="false"
+            android:enabled="true"
+            android:layout_row="1"
+            android:layout_column="0" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calories"
+            android:id="@+id/caloriesBox"
+            android:layout_row="1"
+            android:layout_column="1"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Contact"
+            android:id="@+id/contactBox"
+            android:layout_row="1"
+            android:layout_column="2"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Distance"
+            android:id="@+id/distanceBox"
+            android:layout_row="3"
+            android:layout_column="0"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GSR"
+            android:id="@+id/gsrBox"
+            android:checked="false"
+            android:enabled="true"
+            android:layout_row="3"
+            android:layout_column="1" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gyroscope"
+            android:id="@+id/gyroBox"
+            android:checked="false"
+            android:layout_row="3"
+            android:layout_column="2"
+            android:enabled="true" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Heart Rate"
+            android:id="@+id/heartRateBox"
+            android:checked="false"
+            android:enabled="true"
+            android:layout_row="4"
+            android:layout_column="0" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pedometer"
+            android:id="@+id/pedometerBox"
+            android:layout_row="4"
+            android:layout_column="1"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Skin Temp."
+            android:id="@+id/skinTempBox"
+            android:layout_row="4"
+            android:layout_column="2"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UV"
+            android:id="@+id/uvBox"
+            android:layout_row="6"
+            android:layout_column="0"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ambient Light"
+            android:id="@+id/ambientBox"
+            android:checked="false"
+            android:enabled="true"
+            android:layout_row="0"
+            android:layout_column="2" />
+    </GridLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="25dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Location:"
+            android:id="@+id/locationText"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="25dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Frequency:"
+            android:id="@+id/frequencyText"/>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/locationSpinner"
+            android:spinnerMode="dialog"
+            android:layout_gravity="left"/>
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/frequencySpinner"
+            android:spinnerMode="dialog"
+            android:layout_gravity="end"/>
+
+    </FrameLayout>
+</LinearLayout>

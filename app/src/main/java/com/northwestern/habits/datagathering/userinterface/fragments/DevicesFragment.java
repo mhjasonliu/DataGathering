@@ -17,7 +17,6 @@ import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DeviceListAdapter;
 import com.northwestern.habits.datagathering.DeviceListItem;
-import com.northwestern.habits.datagathering.ExpandableListAdapter;
 import com.northwestern.habits.datagathering.R;
 
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    private ExpandableListAdapter mAdapter;
+    private DeviceListAdapter mAdapter;
 
     // TODO: Rename and change types of parameters
     public static DevicesFragment newInstance() {
@@ -96,6 +95,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
         // Create an adapter with a list of devices
         HashMap<String, List<String>> children = DeviceListAdapter.createChildren(devices);
         mAdapter = new DeviceListAdapter(getContext(), new ArrayList<>(children.keySet()), children);
+        mAdapter.setDevices(devices);
     }
 
     @Override
