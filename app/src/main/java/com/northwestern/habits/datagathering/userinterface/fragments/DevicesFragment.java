@@ -19,7 +19,6 @@ import com.northwestern.habits.datagathering.DeviceListAdapter;
 import com.northwestern.habits.datagathering.DeviceListItem;
 import com.northwestern.habits.datagathering.R;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -92,9 +91,16 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
             devices.add(new DeviceListItem(band));
         }
 
+        List<String> deviceNames = new LinkedList<>();
+        for (DeviceListItem item :
+                devices) {
+            deviceNames.add(item.getName());
+        }
+
         // Create an adapter with a list of devices
         HashMap<String, List<String>> children = DeviceListAdapter.createChildren(devices);
-        mAdapter = new DeviceListAdapter(getContext(), new ArrayList<>(children.keySet()), children);
+        mAdapter = new DeviceListAdapter(getContext(), deviceNames, children);
+
         mAdapter.setDevices(devices);
     }
 
