@@ -80,6 +80,7 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
             DeviceListItem phone = new DeviceListItem();
             phone.setName("This phone");
             phone.setMAC(adapter.getAddress());
+            phone.setType(DeviceListItem.DeviceType.PHONE);
             devices.add(phone);
         }
 

@@ -23,7 +23,7 @@ public class DeviceListItem {
     }
 
     public enum DeviceType {
-        BAND, OTHER
+        BAND, OTHER, PHONE, NECKLACE
     }
 
     public void setType(DeviceType type) {
