@@ -93,7 +93,17 @@
         <activity
             android:name=".userinterface.AdvancedSettingsActivity"
             android:label="@string/title_activity_advanced_settings"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" >
+        </activity>
+        <activity
+            android:name=".userinterface.SplashActivity"
+            android:label="@string/title_activity_splash"
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 
