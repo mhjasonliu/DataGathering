@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnUserIdFragmentScrollLockHandler} interface
+ * {@link OnUserIdFragmentInterractionHandler} interface
  * to handle interaction events.
  * Use the {@link UserIDFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -49,7 +49,7 @@ public class UserIDFragment extends Fragment {
     private Button rButton;
     private Context context;
 
-    private OnUserIdFragmentScrollLockHandler mListener;
+    private OnUserIdFragmentInterractionHandler mListener;
 
     /**
      * Use this factory method to create a new instance of
@@ -92,7 +92,7 @@ public class UserIDFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_user_id, container, false);
         rButton = (Button) rootView.findViewById(R.id.request_id_button);
         final Button requestButton = rButton;
-        Button skipButton = (Button) rootView.findViewById(R.id.continue_button);
+        Button skipButton = (Button) rootView.findViewById(R.id.skip_button);
 
         final List<View> visibleList = new ArrayList<>();
         visibleList.add(rootView.findViewById(R.id.request_id_progress));
@@ -154,7 +154,7 @@ public class UserIDFragment extends Fragment {
 
     public void advanceScroll() {
         if (mListener != null) {
-            mListener.advanceScroll();
+            mListener.advanceScrollRequest();
         }
     }
 
@@ -162,10 +162,10 @@ public class UserIDFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (OnUserIdFragmentScrollLockHandler) activity;
+            mListener = (OnUserIdFragmentInterractionHandler) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnUserIdFragmentScrollLockHandler");
+                    + " must implement OnUserIdFragmentInterractionHandler");
         }
     }
 
@@ -196,10 +196,10 @@ public class UserIDFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnUserIdFragmentScrollLockHandler {
+    public interface OnUserIdFragmentInterractionHandler {
         public void onScrollLockRequest(boolean shouldLock);
 
-        public void advanceScroll();
+        public void advanceScrollRequest();
     }
 
     public class IdRequestTask extends AsyncTask<Void, Void, Void> {

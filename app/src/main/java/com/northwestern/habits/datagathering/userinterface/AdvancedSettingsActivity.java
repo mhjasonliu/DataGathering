@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Set;
 
 public class AdvancedSettingsActivity extends Activity
-        implements UserIDFragment.OnUserIdFragmentScrollLockHandler,
+        implements UserIDFragment.OnUserIdFragmentInterractionHandler,
         PasswordFragment.OnPasswordFragmentInterractionListener,
         DevicesFragment.OnDevicesFragmentInterractionListener {
 
@@ -59,7 +59,6 @@ public class AdvancedSettingsActivity extends Activity
      * {@link android.support.v13.app.FragmentStatePagerAdapter}.
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
-    private List<DeviceListItem> devices;
 
     /**
      * The CustomViewPager that will host the section contents.
@@ -109,15 +108,29 @@ public class AdvancedSettingsActivity extends Activity
     }
 
     @Override
-    public void advanceScroll() {
+    public void advanceScrollRequest() {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
     }
 
     public void retreateScroll() { mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);}
 
     @Override
-    public void onDevicesFragmentInterraction(List<DeviceListItem> deviceItems) {
-        devices = deviceItems;
+    public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems) {
+        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+
+        // Register devices if necessary
+        LinkedList<String> toBeRegistered = new LinkedList<>();
+        for (DeviceListItem item :
+                deviceItems) {
+            if (!macs.contains(item.getMAC())) {
+                toBeRegistered.add(item.getMAC());
+            }
+        }
+
+        if (toBeRegistered.size() > 0) {
+            new DeviceRegistrationTask().execute(toBeRegistered);
+        }
     }
 
 
@@ -256,26 +269,6 @@ public class AdvancedSettingsActivity extends Activity
                     ll.getChildAt(i).setBackground(selected);
                 } else {
                     ll.getChildAt(i).setBackground(notSelected);
-                }
-            }
-
-            // Device fragment
-            if (position == 1) {
-
-                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
-                Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-
-                // Register devices if necessary
-                LinkedList<String> toBeRegistered = new LinkedList<>();
-                for (DeviceListItem item :
-                        devices) {
-                    if (!macs.contains(item.getMAC())) {
-                        toBeRegistered.add(item.getMAC());
-                    }
-                }
-
-                if (toBeRegistered.size() > 0) {
-                    new DeviceRegistrationTask().execute(toBeRegistered);
                 }
             }
         }

@@ -35,7 +35,6 @@ public class DevicesFragment extends Fragment {
 
     private OnDevicesFragmentInterractionListener mListener;
     private List<DeviceListItem> devices;
-    public List<DeviceListItem> getDevices() {return devices;}
 
     /**
      * The fragment's ListView/GridView.
@@ -109,8 +108,21 @@ public class DevicesFragment extends Fragment {
                 mAdapter.unselectAllsensors();
             }
         });
+        rootView.findViewById(R.id.skip_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-        mListener.onDevicesFragmentInterraction(devices);
+            }
+        });
+
+        rootView.findViewById(R.id.skip_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.advanceScrollRequest();
+            }
+        });
+
+        mListener.onRequestDeviceRegistration(devices);
 
         return rootView;
     }
@@ -156,6 +168,7 @@ public class DevicesFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnDevicesFragmentInterractionListener {
-        public void onDevicesFragmentInterraction(List<DeviceListItem> deviceItems);
+        public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems);
+        public void advanceScrollRequest();
     }
 }
