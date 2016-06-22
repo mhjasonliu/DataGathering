@@ -1,8 +1,10 @@
 package com.northwestern.habits.datagathering.userinterface.fragments;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -20,6 +22,9 @@ import android.widget.EditText;
 
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.userinterface.UserActivity;
+
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -252,7 +257,20 @@ public class PasswordFragment extends Fragment {
     private View.OnClickListener finishClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            getActivity().onBackPressed();
+
+            ActivityManager mngr = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+
+            List<ActivityManager.AppTask> taskList = mngr.getAppTasks();
+
+            if (getActivity().isTaskRoot()) {
+                // This is the only activity shown, start new UserActivity and finish this one
+                Intent i = new Intent(getContext(), UserActivity.class);
+                startActivity(i);
+                getActivity().finish();
+            } else {
+                getActivity().onBackPressed();
+
+            }
         }
     };
 
