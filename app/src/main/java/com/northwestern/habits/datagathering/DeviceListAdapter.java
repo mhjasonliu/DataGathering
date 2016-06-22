@@ -124,19 +124,7 @@ public class DeviceListAdapter extends ExpandableListAdapter {
 
                 // Set the checked values and the onclicked listener
                 GridLayout gridLayout = (GridLayout) rootView.findViewById(R.id.band_sensor_grid);
-                int childCount = gridLayout.getChildCount();
-                CheckBox box;
-                SharedPreferences preferences = context.getSharedPreferences(Preferences.NAME,
-                        Context.MODE_PRIVATE);
-                for (int i = 0; i < childCount; i++) {
-                    box = (CheckBox) gridLayout.getChildAt(i);
-                    box.setChecked(preferences.getBoolean(
-                            Preferences.getSensorKey(device.getMAC(), box.getText().toString()
-                            ), false));
-                    box.setTag(device);
-                    box.setOnClickListener(sensorBoxListener);
-                }
-
+                setSensorsInGrid(gridLayout, device);
                 return rootView;
 
             case PHONE:
@@ -168,10 +156,28 @@ public class DeviceListAdapter extends ExpandableListAdapter {
                 rootView.findViewById(R.id.rotationBox).setEnabled(
                         manager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null);
 
+                GridLayout g = (GridLayout) rootView.findViewById(R.id.phone_sensor_grid);
+                setSensorsInGrid(g, device);
+
                 return rootView;
             case OTHER:
             default:
                 return super.getChildView(groupPosition, childPosition, isLastChild, null, parent);
+        }
+    }
+
+    private void setSensorsInGrid(GridLayout gridLayout, DeviceListItem device) {
+        int childCount = gridLayout.getChildCount();
+        CheckBox box;
+        SharedPreferences preferences = context.getSharedPreferences(Preferences.NAME,
+                Context.MODE_PRIVATE);
+        for (int i = 0; i < childCount; i++) {
+            box = (CheckBox) gridLayout.getChildAt(i);
+            box.setChecked(preferences.getBoolean(
+                    Preferences.getSensorKey(device.getMAC(), box.getText().toString()
+                    ), false));
+            box.setTag(device);
+            box.setOnClickListener(sensorBoxListener);
         }
     }
 
