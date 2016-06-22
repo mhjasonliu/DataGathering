@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.GridLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -177,21 +178,19 @@ public class DeviceListAdapter extends ExpandableListAdapter {
                     Preferences.getSensorKey(device.getMAC(), box.getText().toString()
                     ), false));
             box.setTag(device);
-            box.setOnClickListener(sensorBoxListener);
+            box.setOnCheckedChangeListener(sensorBoxListener);
         }
     }
 
-    private View.OnClickListener sensorBoxListener = new View.OnClickListener() {
+    private CompoundButton.OnCheckedChangeListener sensorBoxListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
-        public void onClick(View v) {
-            if (v instanceof CheckBox) {
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
                 SharedPreferences.Editor e = prefs.edit();
-                e.putBoolean(Preferences.getSensorKey(((DeviceListItem) v.getTag()).getMAC(),
-                                ((CheckBox) v).getText().toString()),
-                        ((CheckBox) v).isChecked());
+                e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
+                                buttonView.getText().toString()),
+                        isChecked);
                 e.apply();
-            }
         }
     };
 
