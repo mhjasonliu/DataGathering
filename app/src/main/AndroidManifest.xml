@@ -98,7 +98,8 @@
         <activity
             android:name=".userinterface.SplashActivity"
             android:label="@string/title_activity_splash"
-            android:theme="@style/SplashTheme">
+            android:theme="@style/SplashTheme"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

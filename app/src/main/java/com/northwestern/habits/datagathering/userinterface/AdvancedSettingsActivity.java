@@ -49,6 +49,7 @@ public class AdvancedSettingsActivity extends Activity
         DevicesFragment.OnDevicesFragmentInterractionListener {
 
     private static final String TAG = "AdvancedSettings";
+    private List<DeviceListItem> devices;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -112,25 +113,11 @@ public class AdvancedSettingsActivity extends Activity
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
     }
 
-    public void retreateScroll() { mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);}
+    public void retreatScroll() { mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);}
 
     @Override
     public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems) {
-        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
-        Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-
-        // Register devices if necessary
-        LinkedList<String> toBeRegistered = new LinkedList<>();
-        for (DeviceListItem item :
-                deviceItems) {
-            if (!macs.contains(item.getMAC())) {
-                toBeRegistered.add(item.getMAC());
-            }
-        }
-
-        if (toBeRegistered.size() > 0) {
-            new DeviceRegistrationTask().execute(toBeRegistered);
-        }
+        devices = deviceItems;
     }
 
 
@@ -271,6 +258,25 @@ public class AdvancedSettingsActivity extends Activity
                     ll.getChildAt(i).setBackground(notSelected);
                 }
             }
+
+            if (position == 1) {
+                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+                Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+
+                // Register devices if necessary
+                LinkedList<String> toBeRegistered = new LinkedList<>();
+                for (DeviceListItem item :
+                        devices) {
+                    if (!macs.contains(item.getMAC())) {
+                        toBeRegistered.add(item.getMAC());
+                    }
+                }
+
+                if (toBeRegistered.size() > 0) {
+                    new DeviceRegistrationTask().execute(toBeRegistered);
+                }
+
+            }
         }
 
         @Override
@@ -393,7 +399,7 @@ public class AdvancedSettingsActivity extends Activity
                 builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        AdvancedSettingsActivity.this.retreateScroll();
+                        AdvancedSettingsActivity.this.retreatScroll();
                     }
                 });
             } else {
