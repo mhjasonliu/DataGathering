@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.util.Log;
@@ -9,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.GridLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -90,7 +93,8 @@ public class DeviceListAdapter extends ExpandableListAdapter {
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
 
-        DeviceListItem.DeviceType type = devices.get(groupPosition).getType();
+        DeviceListItem device = devices.get(groupPosition);
+        DeviceListItem.DeviceType type = device.getType();
 
         LayoutInflater infalInflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -117,6 +121,22 @@ public class DeviceListAdapter extends ExpandableListAdapter {
                 // Apply the frequencyAdapter to the spinner
                 frequencySpinner.setAdapter(frequencyAdapter);
                 frequencySpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+
+                // Set the checked values and the onclicked listener
+                GridLayout gridLayout = (GridLayout) rootView.findViewById(R.id.band_sensor_grid);
+                int childCount = gridLayout.getChildCount();
+                CheckBox box;
+                SharedPreferences preferences = context.getSharedPreferences(Preferences.NAME,
+                        Context.MODE_PRIVATE);
+                for (int i = 0; i < childCount; i++) {
+                    box = (CheckBox) gridLayout.getChildAt(i);
+                    box.setChecked(preferences.getBoolean(
+                            Preferences.getSensorKey(device.getMAC(), box.getText().toString()
+                            ), false));
+                    box.setTag(device);
+                    box.setOnClickListener(sensorBoxListener);
+                }
+
                 return rootView;
 
             case PHONE:
@@ -155,33 +175,18 @@ public class DeviceListAdapter extends ExpandableListAdapter {
         }
     }
 
-    //    public View getView(int position, View convertView, ViewGroup parent) {
-//        ViewHolder holder = null;
-//        DeviceListItem item = (DeviceListItem)getChild()getItem(position);
-//        View viewToUse = null;
-//        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-//
-//
-//        if (convertView == null) {
-//            if(useList){
-//                viewToUse = inflater.inflate(R.layout.device_list_item, null);
-//            } else {
-//                viewToUse = inflater.inflate(R.layout.device_list_item, null);
-//            }
-//
-//            holder = new ViewHolder();
-//            holder.nameText = (TextView)viewToUse.findViewById(R.id.title_text);
-//            holder.macText = (TextView)viewToUse.findViewById(R.id.mac_address);
-//            viewToUse.setTag(holder);
-//        } else {
-//            viewToUse = convertView;
-//            holder = (ViewHolder) viewToUse.getTag();
-//        }
-//
-//        holder.nameText.setText(item.getName());
-//        Log.v(TAG, "Name is " + item.getName());
-//        holder.macText.setText(item.getMAC());
-//        return viewToUse;
-//    }
+    private View.OnClickListener sensorBoxListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v instanceof CheckBox) {
+                SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor e = prefs.edit();
+                e.putBoolean(Preferences.getSensorKey(((DeviceListItem) v.getTag()).getMAC(),
+                                ((CheckBox) v).getText().toString()),
+                        ((CheckBox) v).isChecked());
+                e.apply();
+            }
+        }
+    };
 
 }

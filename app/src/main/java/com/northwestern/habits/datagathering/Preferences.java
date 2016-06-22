@@ -19,5 +19,7 @@ public class Preferences {
         return mac + "_ID";
     }
 
+    public static String getSensorKey(String mac, String sensor) {
+        return  mac + "_" + sensor; }
 
 }
