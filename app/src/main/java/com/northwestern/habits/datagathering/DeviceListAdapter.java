@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.GridLayout;
@@ -23,32 +25,33 @@ import java.util.List;
 /**
  * Created by William on 6/20/2016
  */
-public class DeviceListAdapter extends ExpandableListAdapter {
+public class DeviceListAdapter extends BaseExpandableListAdapter {
 
     private Context context;
-    private boolean useList = true;
+    private List<DeviceListItem> _listDataHeader;
+    private HashMap<DeviceListItem, List<String>> _listDataChild;
     private static final String TAG = "DeviceListAdapter";
-    private List<DeviceListItem> devices;
 
-    public DeviceListAdapter(Context context, List<String> headerData, HashMap<String,
+    public DeviceListAdapter(Context context, List<DeviceListItem> headerData, HashMap<DeviceListItem,
             List<String>> childData) {
-        super(context, headerData, childData);
         this.context = context;
+        this._listDataHeader = headerData;
+        this._listDataChild = childData;
     }
 
-    public static HashMap<String, List<String>> createChildren(List<DeviceListItem> items) {
-        HashMap<String, List<String>> children = new HashMap<>();
+    public static HashMap<DeviceListItem, List<String>> createChildren(List<DeviceListItem> items) {
+        HashMap<DeviceListItem, List<String>> children = new HashMap<>();
         for (DeviceListItem device :
                 items) {
             switch (device.getType()) {
                 case BAND:
-                    children.put(device.getName(), Arrays.asList("BAND"));
+                    children.put(device, Arrays.asList("BAND"));
                     break;
                 case PHONE:
-                    children.put(device.getName(), Arrays.asList("PHONE"));
+                    children.put(device, Arrays.asList("PHONE"));
                     break;
                 case OTHER:
-                    children.put(device.getName(), Arrays.asList("OTHER", "OTHER",
+                    children.put(device, Arrays.asList("OTHER", "OTHER",
                             "OTHER", "OTHER"));
                     break;
                 default:
@@ -58,16 +61,23 @@ public class DeviceListAdapter extends ExpandableListAdapter {
         return children;
     }
 
-    public void setDevices(List<DeviceListItem> items) {
-        devices = items;
-    }
+    public void unselectAllsensors() {
+        int groupCount = getGroupCount();
+        View childView;
+        GridLayout sensorGrid;
+        for (int i = 0; i < groupCount; i++) {
+            DeviceListItem.DeviceType type = _listDataHeader.get(i).getType();
+            if (type != null && type != DeviceListItem.DeviceType.OTHER) {
+                childView = getChildView(i, 0, false, null, null);
 
-    private class ViewHolder {
-        public TextView nameText;
-        public TextView macText;
-
-        private ViewHolder() {
+                sensorGrid = (GridLayout) childView.findViewById(R.id.sensor_grid);
+                int childViews = sensorGrid.getChildCount();
+                for (int j = 0; j < childViews; j++) {
+                    ((CheckBox) sensorGrid.getChildAt(j)).setChecked(false);
+                }
+            }
         }
+        notifyDataSetChanged();
     }
 
     private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
@@ -92,9 +102,62 @@ public class DeviceListAdapter extends ExpandableListAdapter {
     };
 
     @Override
+    public int getGroupCount() {
+        return _listDataHeader.size();
+    }
+
+    @Override
+    public int getChildrenCount(int groupPosition) {
+        return _listDataChild.get(_listDataHeader.get(groupPosition)).size();
+    }
+
+    @Override
+    public Object getGroup(int groupPosition) {
+        return _listDataHeader.get(groupPosition);
+    }
+
+    @Override
+    public Object getChild(int groupPosition, int childPosition) {
+        return _listDataChild.get(_listDataHeader.get(groupPosition)).get(childPosition);
+    }
+
+    @Override
+    public long getGroupId(int groupPosition) {
+        return 0;
+    }
+
+    @Override
+    public long getChildId(int groupPosition, int childPosition) {
+        return 0;
+    }
+
+    @Override
+    public boolean hasStableIds() {
+        return false;
+    }
+
+    @Override
+    public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+        // Todo possibly fix this?
+        String headerTitle = ((DeviceListItem) getGroup(groupPosition)).getName();
+        if (convertView == null) {
+            LayoutInflater infalInflater = (LayoutInflater) this.context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = infalInflater.inflate(R.layout.list_group, null);
+        }
+
+        TextView lblListHeader = (TextView) convertView
+                .findViewById(R.id.lblListHeader);
+        lblListHeader.setTypeface(null, Typeface.BOLD);
+        lblListHeader.setText(headerTitle);
+
+        return convertView;
+    }
+
+    @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
 
-        DeviceListItem device = devices.get(groupPosition);
+        DeviceListItem device = _listDataHeader.get(groupPosition);
         DeviceListItem.DeviceType type = device.getType();
 
         LayoutInflater infalInflater = (LayoutInflater) context
@@ -124,8 +187,7 @@ public class DeviceListAdapter extends ExpandableListAdapter {
                 frequencySpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
 
                 // Set the checked values and the onclicked listener
-                GridLayout gridLayout = (GridLayout) rootView.findViewById(R.id.band_sensor_grid);
-                setSensorsInGrid(gridLayout, device);
+                setSensorsInGrid(rootView, device);
                 return rootView;
 
             case PHONE:
@@ -156,18 +218,33 @@ public class DeviceListAdapter extends ExpandableListAdapter {
                         manager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY) != null);
                 rootView.findViewById(R.id.rotationBox).setEnabled(
                         manager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null);
-
-                GridLayout g = (GridLayout) rootView.findViewById(R.id.phone_sensor_grid);
-                setSensorsInGrid(g, device);
+                setSensorsInGrid(rootView, device);
 
                 return rootView;
             case OTHER:
             default:
-                return super.getChildView(groupPosition, childPosition, isLastChild, null, parent);
+                // TODO make this code not be from the old ExpandableListAdapter class
+                final String childText = (String) getChild(groupPosition, childPosition);
+
+                if (convertView == null) {
+                    convertView = infalInflater.inflate(R.layout.list_item, null);
+                }
+
+                TextView txtListChild = (TextView) convertView
+                        .findViewById(R.id.lblListItem);
+
+                txtListChild.setText(childText);
+                return convertView;
         }
     }
 
-    private void setSensorsInGrid(GridLayout gridLayout, DeviceListItem device) {
+    @Override
+    public boolean isChildSelectable(int groupPosition, int childPosition) {
+        return false;
+    }
+
+    private void setSensorsInGrid(View v, DeviceListItem device) {
+        GridLayout gridLayout = (GridLayout) v.findViewById(R.id.sensor_grid);
         int childCount = gridLayout.getChildCount();
         CheckBox box;
         SharedPreferences preferences = context.getSharedPreferences(Preferences.NAME,

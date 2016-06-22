@@ -7,11 +7,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
@@ -32,7 +29,7 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {@link OnDevicesFragmentInterractionListener}
  * interface.
  */
-public class DevicesFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class DevicesFragment extends Fragment {
 
     private static final String TAG = "DevicesFragment";
 
@@ -92,34 +89,30 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
             devices.add(new DeviceListItem(band));
         }
 
-        List<String> deviceNames = new LinkedList<>();
-        for (DeviceListItem item :
-                devices) {
-            deviceNames.add(item.getName());
-        }
-
         // Create an adapter with a list of devices
-        HashMap<String, List<String>> children = DeviceListAdapter.createChildren(devices);
-        mAdapter = new DeviceListAdapter(getContext(), deviceNames, children);
-
-        mAdapter.setDevices(devices);
+        HashMap<DeviceListItem, List<String>> children = DeviceListAdapter.createChildren(devices);
+        mAdapter = new DeviceListAdapter(getContext(), devices, children);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_devices, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_devices, container, false);
 
         // Set the adapter
-        mListView = (ExpandableListView) view.findViewById(android.R.id.list);
+        mListView = (ExpandableListView) rootView.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
 
-        // Set OnItemClickListener so we can be notified on item clicks
-        mListView.setOnItemClickListener(this);
+        rootView.findViewById(R.id.unselect_sensors_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAdapter.unselectAllsensors();
+            }
+        });
 
         mListener.onDevicesFragmentInterraction(devices);
 
-        return view;
+        return rootView;
     }
 
     @Override
@@ -137,13 +130,6 @@ public class DevicesFragment extends Fragment implements AbsListView.OnItemClick
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        DeviceListItem item = devices.get(position);
-        Toast.makeText(getActivity(), item.getName() + " Clicked!"
-                , Toast.LENGTH_SHORT).show();
     }
 
     /**
