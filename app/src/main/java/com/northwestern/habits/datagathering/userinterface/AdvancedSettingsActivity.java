@@ -311,7 +311,7 @@ public class AdvancedSettingsActivity extends Activity
 
             progressDialog = new ProgressDialog(AdvancedSettingsActivity.this);
 
-//set the icon, title and progress style..
+            //set the icon, title and progress style..
 
             progressDialog.setIcon(android.R.drawable.ic_popup_sync);
 
@@ -414,9 +414,11 @@ public class AdvancedSettingsActivity extends Activity
                 });
                 // Add added devices to the list of mac addresses
                 SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
-                Set<String> devices = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+                Set<String> devices = new HashSet<>(prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>()));
                 devices.addAll(responses.keySet());
-                prefs.edit().putStringSet(Preferences.REGISTERED_DEVICES, devices).apply();
+                SharedPreferences.Editor e = prefs.edit();
+                e.putStringSet(Preferences.REGISTERED_DEVICES, devices);
+                e.apply();
             }
             builder.create().show();
         }

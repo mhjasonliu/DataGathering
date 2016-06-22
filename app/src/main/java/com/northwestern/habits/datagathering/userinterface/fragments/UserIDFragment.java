@@ -92,7 +92,7 @@ public class UserIDFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_user_id, container, false);
         rButton = (Button) rootView.findViewById(R.id.request_id_button);
         final Button requestButton = rButton;
-        Button continueButton = (Button) rootView.findViewById(R.id.continue_button);
+        Button skipButton = (Button) rootView.findViewById(R.id.continue_button);
 
         final List<View> visibleList = new ArrayList<>();
         visibleList.add(rootView.findViewById(R.id.request_id_progress));
@@ -100,7 +100,7 @@ public class UserIDFragment extends Fragment {
 
         final List<View> enableList = new ArrayList<>();
         enableList.add(requestButton);
-        enableList.add(continueButton);
+        enableList.add(skipButton);
 
         requestButton.setOnClickListener(
                 new View.OnClickListener() {
@@ -125,7 +125,7 @@ public class UserIDFragment extends Fragment {
                 }
         );
 
-        continueButton.setOnClickListener(
+        skipButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -139,7 +139,7 @@ public class UserIDFragment extends Fragment {
                 Preferences.NAME, Context.MODE_PRIVATE);
         boolean notContainsID = !prefs.contains(Preferences.USER_ID);
         if (notContainsID) {
-            continueButton.setEnabled(false);
+            skipButton.setEnabled(false);
             scrollLockRequest(true);
         }
 
