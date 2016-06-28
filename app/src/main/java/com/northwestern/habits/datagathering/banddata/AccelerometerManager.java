@@ -1,8 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.Resources;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
@@ -15,11 +13,13 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAccelerometerEvent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.SampleRate;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.DataStorageContract;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.EventListener;
 
 /**
@@ -206,14 +206,14 @@ public class AccelerometerManager extends DataManager {
         private String location;
         @Override
         public String toString() {
-            StringBuilder builter = new StringBuilder();
-            builter.append("Band info: ");
-            builter.append(info.getName());
-            builter.append("\nUser name: ");
-            builter.append(uName);
-            builter.append("\nLocation: ");
-            builter.append(location);
-            return builter.toString();
+            StringBuilder builder = new StringBuilder();
+            builder.append("Band info: ");
+            builder.append(info.getName());
+            builder.append("\nUser name: ");
+            builder.append(uName);
+            builder.append("\nLocation: ");
+            builder.append(location);
+            return builder.toString();
         }
 
         public BandAccelerometerEventListenerCustom(BandInfo mInfo, String name) {
@@ -226,141 +226,52 @@ public class AccelerometerManager extends DataManager {
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
             if (event != null) {
-
-                int studyId, devId, sensId;
-                try {
-                    studyId = getStudyId(uName, database);
-                } catch (Resources.NotFoundException e) {
-
-                    // study not found, use lowest available
-                    studyId = getNewStudy(database);
-
-
-                    // Write the study into database, save the id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.StudyTable.COLUMN_NAME_STUDY_ID, uName);
-                    values.put(DataStorageContract.StudyTable._ID, studyId);
-                    database.insert(
-                            DataStorageContract.StudyTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                try {
-                    devId = getDevId(location, info.getMacAddress(), studyId, database);
-                } catch (Resources.NotFoundException e) {
-                    devId = getNewDev(database);
-
-                    // Write new Device into database, save the id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.DeviceTable._ID, devId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_STUDY_ID, studyId);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_TYPE, T_BAND2);
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_MAC, info.getMacAddress());
-                    values.put(DataStorageContract.DeviceTable.COLUMN_NAME_LOCATION, location);
-
-                    database.insert(
-                            DataStorageContract.DeviceTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                try {
-                    sensId = getSensorId(STREAM_TYPE, devId, database);
-                } catch (Resources.NotFoundException e) {
-                    sensId = getNewSensor(database);
-
-                    // Write new sensor into database, save id
-                    ContentValues values = new ContentValues();
-                    values.put(DataStorageContract.SensorTable._ID, sensId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_DEVICE_ID, devId);
-                    values.put(DataStorageContract.SensorTable.COLUMN_NAME_TYPE, STREAM_TYPE);
-
-                    database.insert(
-                            DataStorageContract.SensorTable.TABLE_NAME,
-                            null,
-                            values
-                    );
-                }
-
-                // Add new entry to the Accelerometer table
-                Log.v(TAG, "Event Received");
-//                Log.v(TAG, "Study name is: " + uName);
-//                Log.v(TAG, "Study Id is: " + Integer.toString(studyId));
-//                Log.v(TAG, "Device ID is: " + Integer.toString(devId));
-//                Log.v(TAG, "Sensor ID is: " + Integer.toString(sensId));
-//                Log.v(TAG, "X: " + Double.toString(event.getAccelerationX()) +
-//                        "Y: " + Double.toString(event.getAccelerationY()) +
-//                        "Z: " + Double.toString(event.getAccelerationZ()));
-//                Log.v(TAG, getDateTime(event));
-                Log.v(TAG, "A");
-
-                ContentValues values = new ContentValues();
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_DATETIME, getDateTime(event));
-                lastDataSample = System.currentTimeMillis();
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_SENSOR_ID, sensId);
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_X, event.getAccelerationX());
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Y, event.getAccelerationY());
-                values.put(DataStorageContract.AccelerometerTable.COLUMN_NAME_Z, event.getAccelerationZ());
-
-
-                database.insert(DataStorageContract.AccelerometerTable.TABLE_NAME, null, values);
-
                 // Insert into csv file
-                File folder = new File(BandDataService.PATH);
-                Calendar cal = Calendar.getInstance();
-                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
-                String formattedDate = df.format(cal.getTime());
-                final String filename = folder.toString() + "/" + "Accel" +
-                        formattedDate.toString() + uName + ".csv";
 
-                // FIXME: 6/28/2016 failing to write to csv
-//                File file = new File(filename);
-//
-//                // If file does not exists, then create it
-//                boolean fpExists = true;
-//                if (!file.exists()) {
-//                    try {
-//                        boolean fb = file.createNewFile();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    fpExists = false;
-//                }
-//
-//                // Post data to the csv
-//                FileWriter fw;
-//                try {
-//                    fw = new FileWriter(filename, true);
-//                    if (!fpExists) {
-//                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//                        intent.setData(Uri.fromFile(file));
-//                        context.sendBroadcast(intent);
-//                        fw.append("StudyName,StudyId,DeviceId,SensorId,Time,Accx,Accy,Accz\n");
-//                    }
-//                    fw.append(uName);
-//                    fw.append(',');
-//                    fw.append(Integer.toString(studyId));
-//                    fw.append(',');
-//                    fw.append(Integer.toString(devId));
-//                    fw.append(',');
-//                    fw.append(Integer.toString(sensId));
-//                    fw.append(',');
-//                    fw.append(getDateTime(event));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getAccelerationX()));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getAccelerationY()));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getAccelerationZ()));
-//                    fw.append('\n');
-//                    fw.close();
-//                } catch (Exception e) {
-//                    Log.e(TAG, "Failed to write to csv");
-//                    e.printStackTrace();
-//                }
+                // Get hour and date string from the event timestamp
+                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
+                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
+
+                // Form the directory path and file name
+                String dirPath = DataGatheringApplication.getFilePath(context, hour);
+                String fileName = DataGatheringApplication.getDataFileName(
+                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
+                        info.getMacAddress());
+                String filePath = dirPath + "/" + fileName;
+
+                // Create the directory if it does not exist
+                File directory = new File(dirPath);
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+
+                // Write to csv
+                File csv = new File(dirPath, fileName);
+                OutputStream fOut = null;
+
+                try {
+                    FileWriter fw;
+                    if (!csv.exists()) {
+                        csv.createNewFile();
+                        fw = new FileWriter(csv, true);
+                        fw.append("Time,Accx,Accy,Accz\n");
+                    } else {
+                        fw = new FileWriter(csv, true);
+                    }
+
+                    fw.append(getDateTime(event));
+                    fw.append(',');
+                    fw.append(Float.toString(event.getAccelerationX()));
+                    fw.append(',');
+                    fw.append(Float.toString(event.getAccelerationY()));
+                    fw.append(',');
+                    fw.append(Float.toString(event.getAccelerationZ()));
+                    fw.append('\n');
+                    fw.close();
+                    Log.v(TAG, "Wrote to " + csv.getPath());
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
 
         }
