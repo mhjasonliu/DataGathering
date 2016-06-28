@@ -88,14 +88,21 @@
         <activity
             android:name=".userinterface.SplashActivity"
             android:label="@string/title_activity_splash"
-            android:theme="@style/SplashTheme"
-            android:noHistory="true">
+            android:noHistory="true"
+            android:theme="@style/SplashTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".DataManagementService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":service_data_management">
+        </service>
     </application>
 
 </manifest>
