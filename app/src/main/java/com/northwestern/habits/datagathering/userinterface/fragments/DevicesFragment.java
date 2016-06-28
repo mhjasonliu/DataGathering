@@ -108,12 +108,6 @@ public class DevicesFragment extends Fragment {
                 mAdapter.unselectAllsensors();
             }
         });
-        rootView.findViewById(R.id.skip_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
 
         rootView.findViewById(R.id.skip_button).setOnClickListener(new View.OnClickListener() {
             @Override
