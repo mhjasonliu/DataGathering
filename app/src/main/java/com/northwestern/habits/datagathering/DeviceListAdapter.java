@@ -277,7 +277,50 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 case BAND:
                     Intent bandDataIntent = new Intent(context, BandDataService.class);
 
-                    bandDataIntent.putExtra(BandDataService.ACCEL_REQ_EXTRA, true);
+                    String text = buttonView.getText().toString();
+                    switch (text) {
+                        case "Accelerometer":
+                            bandDataIntent.putExtra(BandDataService.ACCEL_REQ_EXTRA, true);
+                            break;
+                        case "Altimeter":
+                            bandDataIntent.putExtra(BandDataService.ALT_REQ_EXTRA, true);
+                            break;
+                        case "Ambient Light":
+                            bandDataIntent.putExtra(BandDataService.AMBIENT_REQ_EXTRA, true);
+                            break;
+                        case "Barometer":
+                            bandDataIntent.putExtra(BandDataService.BAROMETER_REQ_EXTRA, true);
+                            break;
+                        case "Calories":
+                            bandDataIntent.putExtra(BandDataService.CALORIES_REQ_EXTRA, true);
+                            break;
+                        case "Contact":
+                            bandDataIntent.putExtra(BandDataService.CONTACT_REQ_EXTRA, true);
+                            break;
+                        case "Distance":
+                            bandDataIntent.putExtra(BandDataService.DISTANCE_REQ_EXTRA, true);
+                            break;
+                        case "GSR":
+                            bandDataIntent.putExtra(BandDataService.GSR_REQ_EXTRA, true);
+                            break;
+                        case "Gyroscope":
+                            bandDataIntent.putExtra(BandDataService.GYRO_REQ_EXTRA, true);
+                            break;
+                        case "Heart Rate":
+                            bandDataIntent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
+                            break;
+                        case "Pedometer":
+                            bandDataIntent.putExtra(BandDataService.PEDOMETER_REQ_EXTRA, true);
+                            break;
+                        case "Skin Temp.":
+                            bandDataIntent.putExtra(BandDataService.SKIN_TEMP_REQ_EXTRA, true);
+                            break;
+                        case "UV":
+                            bandDataIntent.putExtra(BandDataService.UV_REQ_EXTRA, true);
+                            break;
+                        default:
+                            Log.e(TAG, "Button text not recognized");
+                    }
                     bandDataIntent.putExtra(BandDataService.STUDY_ID_EXTRA,
                             prefs.getString(Preferences.USER_ID, ""));
                     bandDataIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
