@@ -13,6 +13,8 @@ import com.couchbase.lite.Manager;
 import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * Created by William on 5/11/2016.
@@ -28,8 +30,8 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         return ourInstance;
     }
 
-    public Manager getManager() {
-        return manager;
+    public Database getDatabase() {
+        return db;
     }
 
     @Override
@@ -73,6 +75,29 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     }
 
     /* ********************************* MANAGE THE DATABASE ********************************* */
+    public static String getFilePath(Context context, int hour) {
+        return context.getFilesDir().getPath()
+                + "/hour_" + Integer.toString(hour) + "_data";
+    }
+
+    public static String getDataFileName(String dataType, int hour, String date, String devType, String mac) {
+        return dataType + "_" + Integer.toString(hour) + "_" + date +
+                "_" + devType + "_" + mac.replace(":", ".") + ".csv";
+    }
+
+    public static int getHourFromTimestamp(long timestamp) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(timestamp);
+        return c.get(Calendar.HOUR_OF_DAY);
+    }
+
+    public static String getDateFromTimestamp(long timestamp) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(timestamp);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        return format.format(c.getTime());
+    }
+
     private void createDatabase(Context context) {
         try {
             this.manager = new Manager(new AndroidContext(context), Manager.DEFAULT_OPTIONS);
