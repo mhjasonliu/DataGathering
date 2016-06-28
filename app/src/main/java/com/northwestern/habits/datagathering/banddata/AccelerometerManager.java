@@ -233,7 +233,7 @@ public class AccelerometerManager extends DataManager {
                 String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
 
                 // Form the directory path and file name
-                String dirPath = DataGatheringApplication.getFilePath(context, hour);
+                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
                 String fileName = DataGatheringApplication.getDataFileName(
                         DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
                         info.getMacAddress());

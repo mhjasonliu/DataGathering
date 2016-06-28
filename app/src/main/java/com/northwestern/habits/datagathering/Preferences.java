@@ -10,6 +10,7 @@ public class Preferences {
     // Preference fields
     public static final String USER_ID = "userID";
     public static final String PASSWORD = "password";
+    public static final String CURRENT_DOCUMENT = "documentID";
 
     /** List of mac addresses intended to be used as entries in shared preferences */
     public static final String REGISTERED_DEVICES = "registered_devices";

@@ -4,17 +4,23 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Document;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by William on 5/11/2016.
@@ -38,10 +44,36 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     public void onCreate() {
         super.onCreate();
         ourInstance = this;
-        Thread.setDefaultUncaughtExceptionHandler(this);
+//        Thread.setDefaultUncaughtExceptionHandler(this);
 
         createDatabase(getApplicationContext());
-    }
+        // If we do not currently have a document, create one and save the id
+        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
+        if (id.equals("")) {
+            // Create the document
+            currentDocument = db.createDocument();
+            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId()).commit();
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("Initialized", true);
+            try {
+                currentDocument.putProperties(properties);
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+        } else {
+            currentDocument = db.getDocument(id);
+        }
+
+        // Start timertask that moves the folders
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.HOUR_OF_DAY, 1);
+        c.add(Calendar.MINUTE, 30);
+        Timer t = new Timer();
+        t.scheduleAtFixedRate(new FileManagerTimer(this.getApplicationContext()),
+                c.getTime(), TimeUnit.HOURS.toMillis(1) - 1000); // Slightly less than one hour to
+                // avoid missing an hour time
+        }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -75,10 +107,15 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     }
 
     /* ********************************* MANAGE THE DATABASE ********************************* */
-    public static String getFilePath(Context context, int hour) {
+    public static String getDataFilePath(Context context, int hour) {
         return context.getFilesDir().getPath()
                 + "/hour_" + Integer.toString(hour) + "_data";
     }
+
+    public static String getAttachmentDirectory(Context context) {
+        return context.getFilesDir().getPath() + "/attachments";
+    }
+
 
     public static String getDataFileName(String dataType, int hour, String date, String devType, String mac) {
         return dataType + "_" + Integer.toString(hour) + "_" + date +
@@ -109,6 +146,9 @@ public class DataGatheringApplication extends Application implements Thread.Unca
             e1.printStackTrace();
         }
     }
+
+    private Document currentDocument;
+    public Document getCurrentDocument() { return currentDocument; }
 
 
     /* ********************************* MANAGE THE SERVICE ********************************** */
