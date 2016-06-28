@@ -19,7 +19,6 @@ import com.northwestern.habits.datagathering.DataStorageContract;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.EventListener;
 
 /**
@@ -237,7 +236,6 @@ public class AccelerometerManager extends DataManager {
                 String fileName = DataGatheringApplication.getDataFileName(
                         DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
                         info.getMacAddress());
-                String filePath = dirPath + "/" + fileName;
 
                 // Create the directory if it does not exist
                 File directory = new File(dirPath);
@@ -247,14 +245,12 @@ public class AccelerometerManager extends DataManager {
 
                 // Write to csv
                 File csv = new File(dirPath, fileName);
-                OutputStream fOut = null;
-
                 try {
                     FileWriter fw;
                     if (!csv.exists()) {
                         csv.createNewFile();
                         fw = new FileWriter(csv, true);
-                        fw.append("Time,Accx,Accy,Accz\n");
+                        fw.append("Time,x,y,z\n");
                     } else {
                         fw = new FileWriter(csv, true);
                     }
