@@ -17,7 +17,7 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     public void onCreate() {
         super.onCreate();
         ourInstance = this;
-        Thread.setDefaultUncaughtExceptionHandler(this);
+//        Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
     @Override

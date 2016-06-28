@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -17,6 +18,8 @@ import android.widget.CompoundButton;
 import android.widget.GridLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -262,12 +265,41 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private CompoundButton.OnCheckedChangeListener sensorBoxListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            // FIXME: 6/28/2016 hack to connect to the old band streaming service
                 SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
                 SharedPreferences.Editor e = prefs.edit();
                 e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
                                 buttonView.getText().toString()),
                         isChecked);
                 e.apply();
+            DeviceListItem device = (DeviceListItem) buttonView.getTag();
+            switch (device.getType()) {
+                case BAND:
+                    Intent bandDataIntent = new Intent(context, BandDataService.class);
+
+                    bandDataIntent.putExtra(BandDataService.ACCEL_REQ_EXTRA, true);
+                    bandDataIntent.putExtra(BandDataService.STUDY_ID_EXTRA,
+                            prefs.getString(Preferences.USER_ID, ""));
+                    bandDataIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
+                    bandDataIntent.putExtra(BandDataService.STOP_STREAM_EXTRA, !isChecked);
+                    bandDataIntent.putExtra(BandDataService.INDEX_EXTRA, 0);
+                    bandDataIntent.putExtra(BandDataService.FREQUENCY_EXTRA, "8Hz");
+                    bandDataIntent.putExtra(BandDataService.LOCATION_EXTRA, "");
+
+                    context.startService(bandDataIntent);
+                    break;
+                case PHONE:
+                    break;
+                case OTHER:
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+
+            }
+
+
+
+
         }
     };
 

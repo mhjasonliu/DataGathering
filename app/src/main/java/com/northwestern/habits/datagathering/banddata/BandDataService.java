@@ -47,7 +47,7 @@ public class BandDataService extends Service {
 
     private static final String TAG = "Band Service";
 
-    public static String PATH;// = Environment.getExternalStorageDirectory().getAbsolutePath() + "/BandData";
+    public static String PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
 
     // General stuff (maintained by main)
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
