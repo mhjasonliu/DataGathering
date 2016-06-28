@@ -225,8 +225,6 @@ public class AccelerometerManager extends DataManager {
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
             if (event != null) {
-                // Insert into csv file
-
                 // Get hour and date string from the event timestamp
                 int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
                 String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
