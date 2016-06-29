@@ -332,6 +332,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     context.startService(bandDataIntent);
                     break;
                 case PHONE:
+                    // TODO implement phone sensor streaming
                     break;
                 case OTHER:
                     break;
