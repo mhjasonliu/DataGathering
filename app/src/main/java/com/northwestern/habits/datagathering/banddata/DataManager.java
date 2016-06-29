@@ -33,7 +33,7 @@ public abstract class DataManager implements EventListener {
     public DataManager(String sName, String tag, SQLiteOpenHelper helper, Context context) {
         studyName = sName;
         TAG = tag;
-        database = helper.getWritableDatabase();
+//        database = helper.getWritableDatabase();
         this.context = context;
         toastingFailure = false;
         if (mHandler == null)

@@ -23,27 +23,28 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.EventListener;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by William on 12/31/2015
  */
 public class AccelerometerManager extends DataManager {
-    private SampleRate frequency;
+    private Map<BandInfo, SampleRate> frequencies = new HashMap<>();
 
-    protected void setFrequency(String f) {
+    protected void setFrequency(String f, BandInfo bandinfo) {
         switch (f) {
             case "8Hz":
-                frequency = SampleRate.MS128;
+                frequencies.put(bandinfo,SampleRate.MS128);
                 break;
             case "31Hz":
-                frequency = SampleRate.MS32;
+                frequencies.put(bandinfo,SampleRate.MS32);
                 break;
             case "62Hz":
-                frequency = SampleRate.MS16;
+                frequencies.put(bandinfo,SampleRate.MS16);
                 break;
             default:
-                frequency = SampleRate.MS128;
+                frequencies.put(bandinfo,SampleRate.MS128);
         }
     }
 
@@ -89,9 +90,15 @@ public class AccelerometerManager extends DataManager {
                                 BandAccelerometerEventListenerCustom aListener =
                                         new BandAccelerometerEventListenerCustom(info, studyName);
 
+                                // Get the sample rate
+                                SampleRate rate = frequencies.get(info);
+                                if (rate == null) {
+                                    rate = SampleRate.MS128;
+                                }
+
                                 // Register the listener
                                 client.getSensorManager().registerAccelerometerEventListener(
-                                        aListener, frequency);
+                                        aListener, rate);
 
                                 // Save the listener and client
                                 listeners.put(info, aListener);
