@@ -6,7 +6,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
@@ -14,6 +17,7 @@ import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DataStorageContract;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -263,7 +267,6 @@ public class BandDataService extends Service {
                 if (accManager == null)
                     accManager = new AccelerometerManager(studyName, dbHelper, this);
 
-                accManager.setFrequency(frequencies.get(band));
                 accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
@@ -312,7 +315,6 @@ public class BandDataService extends Service {
                 if (gyroManager == null)
                     gyroManager = new GyroscopeManager(studyName, dbHelper, this);
 
-                gyroManager.setFrequency(frequencies.get(band));
                 gyroManager.subscribe(band);
                 break;
             case HEART_RATE_REQ_EXTRA:
@@ -344,14 +346,6 @@ public class BandDataService extends Service {
         }
     }
 
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.e(TAG, "Process was bound when it shouldn't be.");
-        return null;
-    }
-
-
     public class StopAllStreams extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
@@ -364,4 +358,102 @@ public class BandDataService extends Service {
             return null;
         }
     }
+
+
+    /* ******************************** IPC STUFF **************************************** */
+    /*
+    Return our Messenger interface for sending messages to
+    the service by the clients.
+    */
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mMessenger.getBinder();
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return false;
+    }
+
+    private Messenger mMessenger = new Messenger(new IncomingHandler(this));
+    public static final int MSG_STREAM = 1;
+    public static final int MSG_FREQUENCY = 2;
+
+    public static final String MAC_EXTRA = "mac";
+    public static final String REQUEST_EXTRA = "request";
+    // Incoming messages Handler
+    private static class IncomingHandler extends Handler {
+
+        private final WeakReference<BandDataService> mService;
+
+        IncomingHandler(BandDataService s) {
+            mService = new WeakReference<>(s);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            BandDataService service = mService.get();
+            Bundle bundle = msg.getData();
+            String mac = bundle.getString(MAC_EXTRA);
+            BandInfo bandInfo = service.infoFromMac(mac);
+            String request = bundle.getString(REQUEST_EXTRA);
+            switch (msg.what) {
+                case MSG_STREAM:
+                    boolean stopStream = bundle.getBoolean(STOP_STREAM_EXTRA);
+
+                    if (mac != (null) && request != null) {
+                        if (stopStream) {
+                            service.genericUnsubscribeFactory(request, bandInfo);
+                        } else {
+                            service.genericSubscriptionFactory(request, bandInfo);
+                        }
+                    }
+                    break;
+                case MSG_FREQUENCY:
+                    String frequency = bundle.getString(FREQUENCY_EXTRA);
+                    switch (request) {
+                        case ACCEL_REQ_EXTRA:
+                            service.setAccelFrequency(frequency, bandInfo);
+                            break;
+                        case GYRO_REQ_EXTRA:
+                            service.setGyroFrequency(frequency, bandInfo);
+                            break;
+                        default:
+                            Log.e(TAG, "Frequency request sent for an unsupported type");
+                    }
+
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+
+        }
+    }
+
+    private void setAccelFrequency(String f, BandInfo bandInfo) {
+        accManager.setFrequency(f, bandInfo);
+    }
+
+    private void setGyroFrequency(String f, BandInfo bandInfo) {
+        gyroManager.setFrequency(f, bandInfo);
+    }
+
+    private BandInfo infoFromMac(String mac) {
+        BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
+        for (BandInfo b :
+                bands) {
+            Log.v(TAG, b.getMacAddress());
+        }
+        Log.e(TAG, mac);
+        Log.v(TAG, bands.toString());
+        for (BandInfo b :
+                bands) {
+            if (b.getMacAddress().equals(mac)) {
+                return b;
+            }
+        }
+        Log.e(TAG, "Failed to find the MAC address");
+        return null;
+    }
+
 }

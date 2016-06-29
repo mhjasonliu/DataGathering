@@ -1,11 +1,18 @@
 package com.northwestern.habits.datagathering;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,6 +47,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         this.context = context;
         this._listDataHeader = headerData;
         this._listDataChild = childData;
+
+        Intent intent = new Intent(context, BandDataService.class);
+        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     public static HashMap<DeviceListItem, List<String>> createChildren(List<DeviceListItem> items) {
@@ -154,6 +164,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         lblListHeader.setTypeface(null, Typeface.BOLD);
         lblListHeader.setText(headerTitle);
 
+
+
         return convertView;
     }
 
@@ -261,13 +273,51 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             box.setOnCheckedChangeListener(sensorBoxListener);
         }
     }
+    boolean isBound = false;
+    Messenger mMessenger;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            isBound = true;
+
+            // Create the Messenger object
+            mMessenger = new Messenger(service);
+
+            // Create a Message
+            // Note the usage of MSG_SAY_HELLO as the what value
+//            Message msg = Message.obtain(null, MessengerService.MSG_SAY_HELLO, 0, 0);
+
+            // Create a bundle with the data
+            Bundle bundle = new Bundle();
+            bundle.putString("hello", "world");
+
+            // Set the bundle data to the Message
+//            msg.setData(bundle);
+
+            // Send the Message to the Service (in another process)
+//            try {
+//                mMessenger.send(msg);
+//            } catch (RemoteException e) {
+//                e.printStackTrace();
+//            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // unbind or process might have crashes
+            mMessenger = null;
+            isBound = false;
+        }
+    };
+
 
     private CompoundButton.OnCheckedChangeListener sensorBoxListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             // FIXME: 6/28/2016 hack to connect to the old band streaming service
                 SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
-                SharedPreferences.Editor e = prefs.edit();
+            SharedPreferences.Editor e = prefs.edit();
                 e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
                                 buttonView.getText().toString()),
                         isChecked);
@@ -275,62 +325,100 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             DeviceListItem device = (DeviceListItem) buttonView.getTag();
             switch (device.getType()) {
                 case BAND:
+                    Message bandMessage = Message.obtain(null, BandDataService.MSG_STREAM, 0, 0);
+                    Bundle requestBundle = new Bundle();
                     Intent bandDataIntent = new Intent(context, BandDataService.class);
 
                     String text = buttonView.getText().toString();
                     switch (text) {
                         case "Accelerometer":
+                            // TODO: 6/29/2016 Request a frequency
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.ACCEL_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.ACCEL_REQ_EXTRA, true);
                             break;
                         case "Altimeter":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.ALT_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.ALT_REQ_EXTRA, true);
                             break;
                         case "Ambient Light":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.AMBIENT_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.AMBIENT_REQ_EXTRA, true);
                             break;
                         case "Barometer":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.BAROMETER_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.BAROMETER_REQ_EXTRA, true);
                             break;
                         case "Calories":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.CALORIES_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.CALORIES_REQ_EXTRA, true);
                             break;
                         case "Contact":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.CONTACT_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.CONTACT_REQ_EXTRA, true);
                             break;
                         case "Distance":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.DISTANCE_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.DISTANCE_REQ_EXTRA, true);
                             break;
                         case "GSR":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.GSR_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.GSR_REQ_EXTRA, true);
                             break;
                         case "Gyroscope":
+                            // TODO: 6/29/2016 Request a frequency
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.GYRO_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.GYRO_REQ_EXTRA, true);
                             break;
                         case "Heart Rate":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.HEART_RATE_REQ_EXTRA);
                             // TODO: 6/29/2016 Request permission
                             bandDataIntent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
                             break;
                         case "Pedometer":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.PEDOMETER_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.PEDOMETER_REQ_EXTRA, true);
                             break;
                         case "Skin Temp.":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.SKIN_TEMP_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.SKIN_TEMP_REQ_EXTRA, true);
                             break;
                         case "UV":
+                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+                                    BandDataService.UV_REQ_EXTRA);
                             bandDataIntent.putExtra(BandDataService.UV_REQ_EXTRA, true);
                             break;
                         default:
                             Log.e(TAG, "Button text not recognized");
                     }
-                    bandDataIntent.putExtra(BandDataService.STUDY_ID_EXTRA,
-                            prefs.getString(Preferences.USER_ID, ""));
-                    bandDataIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
-                    bandDataIntent.putExtra(BandDataService.STOP_STREAM_EXTRA, !isChecked);
-                    bandDataIntent.putExtra(BandDataService.INDEX_EXTRA, 0);
-                    bandDataIntent.putExtra(BandDataService.FREQUENCY_EXTRA, "8Hz");
-                    bandDataIntent.putExtra(BandDataService.LOCATION_EXTRA, "");
+                    requestBundle.putBoolean(BandDataService.STOP_STREAM_EXTRA, !isChecked);
+//                    bandDataIntent.putExtra(BandDataService.STUDY_ID_EXTRA,
+//                            prefs.getString(Preferences.USER_ID, ""));
+//                    bandDataIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
+//                    bandDataIntent.putExtra(BandDataService.STOP_STREAM_EXTRA, !isChecked);
+//                    bandDataIntent.putExtra(BandDataService.INDEX_EXTRA, 0);
+//                    bandDataIntent.putExtra(BandDataService.FREQUENCY_EXTRA, "8Hz");
+//                    bandDataIntent.putExtra(BandDataService.LOCATION_EXTRA, "");
 
-                    context.startService(bandDataIntent);
+//                    context.startService(bandDataIntent);
+                    requestBundle.putString(BandDataService.MAC_EXTRA, device.getMAC());
+                    bandMessage.setData(requestBundle);
+                    try {
+                        mMessenger.send(bandMessage);
+                    } catch (RemoteException e1) {
+                        e1.printStackTrace();
+                    }
                     break;
                 case PHONE:
                     // TODO implement phone sensor streaming
