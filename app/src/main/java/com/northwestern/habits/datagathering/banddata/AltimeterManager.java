@@ -4,6 +4,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -12,11 +15,12 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAltimeterEvent;
 import com.microsoft.band.sensors.BandAltimeterEventListener;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
-import com.northwestern.habits.datagathering.DataStorageContract;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Map;
 
 /**
  * Created by William on 12/31/2015
@@ -159,6 +163,7 @@ public class AltimeterManager extends DataManager {
     }
 
 
+
     private class CustomBandAltimeterEventListener extends CustomListener
             implements BandAltimeterEventListener {
 
@@ -171,65 +176,125 @@ public class AltimeterManager extends DataManager {
 
         private String uName;
         private String location;
+        private final int BUFFER_SIZE = 100;
+        private JSONArray dataBuffer = new JSONArray();
 
         @Override
         public void onBandAltimeterChanged(final BandAltimeterEvent event) {
             if (event != null) {
-                // Get hour and date string from the event timestamp
-                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
 
-                // Form the directory path and file name
-                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-                String fileName = DataGatheringApplication.getDataFileName(
-                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
-                        info.getMacAddress());
-
-                // Create the directory if it does not exist
-                File directory = new File(dirPath);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-
-                // Write to csv
-                File csv = new File(dirPath, fileName);
+//                    fw.append(getDateTime(event));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getTotalGain()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getTotalLoss()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getSteppingGain()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getSteppingLoss()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getStepsAscended()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getStepsDescended()));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getRate()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getFlightsAscended()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getFlightsDescended()));
+//                    fw.append('\n');
+                JSONObject datapoint = new JSONObject();
                 try {
-                    FileWriter fw;
-                    if (!csv.exists()) {
-                        csv.createNewFile();
-                        fw = new FileWriter(csv, true);
-                        fw.append("Time,TotalGain,TotalLoss," +
-                                "SteppingGain,SteppingLoss,StepsAscended,StepsDescended," +
-                                        "Rate,FlightsAscended,FlightsDescended");
-                    } else {
-                        fw = new FileWriter(csv, true);
-                    }
+                    datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Total_Gain", event.getTotalGain());
+                    datapoint.put("Total_Loss", event.getTotalLoss());
+                    datapoint.put("Stepping_Gain", event.getSteppingGain());
+                    datapoint.put("Stepping_Loss", event.getSteppingLoss());
+                    datapoint.put("Steps_Ascended", event.getStepsAscended());
+                    datapoint.put("Steps_Descended", event.getStepsDescended());
+                    datapoint.put("Rate", event.getRate());
+                    datapoint.put("Flights_Ascended", event.getFlightsAscended());
+                    datapoint.put("Flights_Descended", event.getFlightsDescended());
 
-                    fw.append(getDateTime(event));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getTotalGain()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getTotalLoss()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getSteppingGain()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getSteppingLoss()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getStepsAscended()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getStepsDescended()));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getRate()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getFlightsAscended()));
-                    fw.append(',');
-                    fw.append(Long.toString(event.getFlightsDescended()));
-                    fw.append('\n');
-                    fw.close();
-                    Log.v(TAG, "Wrote to " + csv.getPath());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    dataBuffer.put(datapoint);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
+
+                if (dataBuffer.length() >= BUFFER_SIZE) {
+                    try {
+                        DataGatheringApplication.getInstance().getCurrentDocument().update(new Document.DocumentUpdater() {
+                            @Override
+                            public boolean update(UnsavedRevision newRevision) {
+                                Map<String, Object> properties = newRevision.getUserProperties();
+                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE + "_"
+                                        + getDateTime(event), dataBuffer.toString());
+                                newRevision.setUserProperties(properties);
+                                return true;
+                            }
+                        });
+                        dataBuffer = new JSONArray();
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+//                // Get hour and date string from the event timestamp
+//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
+//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
+//
+//                // Form the directory path and file name
+//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
+//                String fileName = DataGatheringApplication.getDataFileName(
+//                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
+//                        info.getMacAddress());
+//
+//                // Create the directory if it does not exist
+//                File directory = new File(dirPath);
+//                if (!directory.exists()) {
+//                    directory.mkdirs();
+//                }
+//
+//                // Write to csv
+//                File csv = new File(dirPath, fileName);
+//                try {
+//                    FileWriter fw;
+//                    if (!csv.exists()) {
+//                        csv.createNewFile();
+//                        fw = new FileWriter(csv, true);
+//                        fw.append("Time,TotalGain,TotalLoss," +
+//                                "SteppingGain,SteppingLoss,StepsAscended,StepsDescended," +
+//                                        "Rate,FlightsAscended,FlightsDescended");
+//                    } else {
+//                        fw = new FileWriter(csv, true);
+//                    }
+//
+//                    fw.append(getDateTime(event));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getTotalGain()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getTotalLoss()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getSteppingGain()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getSteppingLoss()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getStepsAscended()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getStepsDescended()));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getRate()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getFlightsAscended()));
+//                    fw.append(',');
+//                    fw.append(Long.toString(event.getFlightsDescended()));
+//                    fw.append('\n');
+//                    fw.close();
+//                    Log.v(TAG, "Wrote to " + csv.getPath());
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
             }
         }
 

@@ -4,6 +4,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -12,11 +15,12 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandContactEvent;
 import com.microsoft.band.sensors.BandContactEventListener;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
-import com.northwestern.habits.datagathering.DataStorageContract;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Map;
 
 /**
  * Created by William on 12/31/2015
@@ -161,6 +165,8 @@ public class ContactManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
+        private final int BUFFER_SIZE = 100;
+        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandContactEventListener(BandInfo bandInfo, String name) {
             super();
@@ -171,45 +177,72 @@ public class ContactManager extends DataManager {
 
         @Override
         public void onBandContactChanged(final BandContactEvent event) {
-
             if (event != null) {
-                // Get hour and date string from the event timestamp
-                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
-
-                // Form the directory path and file name
-                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-                String fileName = DataGatheringApplication.getDataFileName(
-                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
-                        info.getMacAddress());
-
-                // Create the directory if it does not exist
-                File directory = new File(dirPath);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-
-                // Write to csv
-                File csv = new File(dirPath, fileName);
+                JSONObject datapoint = new JSONObject();
                 try {
-                    FileWriter fw;
-                    if (!csv.exists()) {
-                        csv.createNewFile();
-                        fw = new FileWriter(csv, true);
-                        fw.append("Time,Contact_State\n");
-                    } else {
-                        fw = new FileWriter(csv, true);
-                    }
+                    datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Contact_State", event.getContactState());
 
-                    fw.append(getDateTime(event));
-                    fw.append(',');
-                    fw.append(event.getContactState().toString());
-                    fw.append('\n');
-                    fw.close();
-                    Log.v(TAG, "Wrote to " + csv.getPath());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    dataBuffer.put(datapoint);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
+
+                if (dataBuffer.length() >= BUFFER_SIZE) {
+                    try {
+                        DataGatheringApplication.getInstance().getCurrentDocument().update(new Document.DocumentUpdater() {
+                            @Override
+                            public boolean update(UnsavedRevision newRevision) {
+                                Map<String, Object> properties = newRevision.getUserProperties();
+                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
+                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                newRevision.setUserProperties(properties);
+                                return true;
+                            }
+                        });
+                        dataBuffer = new JSONArray();
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                }
+//                // Get hour and date string from the event timestamp
+//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
+//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
+//
+//                // Form the directory path and file name
+//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
+//                String fileName = DataGatheringApplication.getDataFileName(
+//                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
+//                        info.getMacAddress());
+//
+//                // Create the directory if it does not exist
+//                File directory = new File(dirPath);
+//                if (!directory.exists()) {
+//                    directory.mkdirs();
+//                }
+//
+//                // Write to csv
+//                File csv = new File(dirPath, fileName);
+//                try {
+//                    FileWriter fw;
+//                    if (!csv.exists()) {
+//                        csv.createNewFile();
+//                        fw = new FileWriter(csv, true);
+//                        fw.append("Time,Contact_State\n");
+//                    } else {
+//                        fw = new FileWriter(csv, true);
+//                    }
+//
+//                    fw.append(getDateTime(event));
+//                    fw.append(',');
+//                    fw.append(event.getContactState().toString());
+//                    fw.append('\n');
+//                    fw.close();
+//                    Log.v(TAG, "Wrote to " + csv.getPath());
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
             }
         }
     }

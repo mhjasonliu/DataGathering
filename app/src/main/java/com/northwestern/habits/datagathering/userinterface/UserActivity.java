@@ -51,7 +51,7 @@ public class UserActivity extends AppCompatActivity {
                         }
                         Database database = DataGatheringApplication.getInstance().getDatabase();
                         push = database.createPushReplication(url);
-                        push.setContinuous(false);
+                        push.setContinuous(true);
 //                    Authenticator auth = new BasicAuthenticator(username, password);
 //                    push.setAuthenticator(auth);
 
@@ -60,9 +60,9 @@ public class UserActivity extends AppCompatActivity {
                             public void changed(Replication.ChangeEvent event) {
                                 // will be called back when the push replication status changes
                                 String message = "Completed " + event.getCompletedChangeCount()
-                                        + " out of " + event.getCompletedChangeCount();
+                                        + " out of " + event.getCompletedChangeCount() + push.getStatus().toString();
                                 Log.v("Replication", message);
-                                Snackbar.make(view, message, Snackbar.LENGTH_SHORT);
+                                Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
 
                                 // Check for an error
                                 Throwable error = event.getError();

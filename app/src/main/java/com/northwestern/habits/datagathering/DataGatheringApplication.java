@@ -19,8 +19,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by William on 5/11/2016.
@@ -66,12 +64,12 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         }
 
         // Start timertask that moves the folders
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.HOUR_OF_DAY, 1);
-        c.add(Calendar.MINUTE, 30);
-        Timer t = new Timer();
-        t.scheduleAtFixedRate(new FileManagerTimer(this.getApplicationContext()),
-                c.getTime(), TimeUnit.HOURS.toMillis(1) - 1000); // Slightly less than one hour to
+//        Calendar c = Calendar.getInstance();
+//        c.add(Calendar.HOUR_OF_DAY, 1);
+//        c.add(Calendar.MINUTE, 30);
+//        Timer t = new Timer();
+//        t.scheduleAtFixedRate(new FileManagerTimer(this.getApplicationContext()),
+//                c.getTime(), TimeUnit.HOURS.toMillis(1) - 1000); // Slightly less than one hour to
                 // avoid missing an hour time
         }
 

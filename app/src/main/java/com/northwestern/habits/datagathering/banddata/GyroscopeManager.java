@@ -5,6 +5,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -14,11 +17,12 @@ import com.microsoft.band.sensors.BandGyroscopeEvent;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
-import com.northwestern.habits.datagathering.DataStorageContract;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Map;
 
 /**
  * Created by William on 12/31/2015
@@ -196,6 +200,8 @@ public class GyroscopeManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
+        private final int BUFFER_SIZE = 100;
+        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
             super();
@@ -207,50 +213,84 @@ public class GyroscopeManager extends DataManager {
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
-                // Insert into csv file
-
-                // Get hour and date string from the event timestamp
-                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
-
-                // Form the directory path and file name
-                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-                String fileName = DataGatheringApplication.getDataFileName(
-                        DataStorageContract.GyroTable.TABLE_NAME, hour, date, T_BAND2,
-                        info.getMacAddress());
-
-                // Create the directory if it does not exist
-                File directory = new File(dirPath);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-
-                // Write to csv
-                File csv = new File(dirPath, fileName);
-
+                JSONObject datapoint = new JSONObject();
                 try {
-                    FileWriter fw;
-                    if (!csv.exists()) {
-                        csv.createNewFile();
-                        fw = new FileWriter(csv, true);
-                        fw.append("Time,x,y,z\n");
-                    } else {
-                        fw = new FileWriter(csv, true);
-                    }
+                    datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Angular_Accel_x", event.getAccelerationX());
+                    datapoint.put("Angular_Accel_y", event.getAccelerationY());
+                    datapoint.put("Angular_Accel_z", event.getAccelerationZ());
+                    datapoint.put("Angular_Velocity_x", event.getAngularVelocityX());
+                    datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
+                    datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
 
-                    fw.append(getDateTime(event));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getAccelerationX()));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getAccelerationY()));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getAccelerationZ()));
-                    fw.append('\n');
-                    fw.close();
-                    Log.v(TAG, "Wrote to " + csv.getPath());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    dataBuffer.put(datapoint);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
+
+                if (dataBuffer.length() >= BUFFER_SIZE) {
+                    try {
+                        DataGatheringApplication.getInstance().getCurrentDocument().update(new Document.DocumentUpdater() {
+                            @Override
+                            public boolean update(UnsavedRevision newRevision) {
+                                Map<String, Object> properties = newRevision.getUserProperties();
+                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
+                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                newRevision.setUserProperties(properties);
+                                return true;
+                            }
+                        });
+                        dataBuffer = new JSONArray();
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+//                // Insert into csv file
+//
+//                // Get hour and date string from the event timestamp
+//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
+//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
+//
+//                // Form the directory path and file name
+//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
+//                String fileName = DataGatheringApplication.getDataFileName(
+//                        DataStorageContract.GyroTable.TABLE_NAME, hour, date, T_BAND2,
+//                        info.getMacAddress());
+//
+//                // Create the directory if it does not exist
+//                File directory = new File(dirPath);
+//                if (!directory.exists()) {
+//                    directory.mkdirs();
+//                }
+//
+//                // Write to csv
+//                File csv = new File(dirPath, fileName);
+//
+//                try {
+//                    FileWriter fw;
+//                    if (!csv.exists()) {
+//                        csv.createNewFile();
+//                        fw = new FileWriter(csv, true);
+//                        fw.append("Time,x,y,z\n");
+//                    } else {
+//                        fw = new FileWriter(csv, true);
+//                    }
+//
+//                    fw.append(getDateTime(event));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getAccelerationX()));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getAccelerationY()));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getAccelerationZ()));
+//                    fw.append('\n');
+//                    fw.close();
+//                    Log.v(TAG, "Wrote to " + csv.getPath());
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
             }
 
         }

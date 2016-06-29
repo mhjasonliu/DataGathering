@@ -307,6 +307,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                             bandDataIntent.putExtra(BandDataService.GYRO_REQ_EXTRA, true);
                             break;
                         case "Heart Rate":
+                            // TODO: 6/29/2016 Request permission
                             bandDataIntent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
                             break;
                         case "Pedometer":

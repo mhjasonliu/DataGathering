@@ -5,6 +5,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -14,12 +17,13 @@ import com.microsoft.band.sensors.BandAccelerometerEvent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
-import com.northwestern.habits.datagathering.DataStorageContract;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.EventListener;
+import java.util.Map;
 
 /**
  * Created by William on 12/31/2015
@@ -74,31 +78,25 @@ public class AccelerometerManager extends DataManager {
                 public void run() {
                     try {
                         if (!clients.containsKey(info)) {
-                            Log.d(TAG, "1");
                             // No registered clients streaming accelerometer data
 //                        Log.v(TAG, "Getting client");
                             BandClient client = connectBandClient(info, null);
-                            Log.d(TAG, "1.5");
                             if (client != null &&
                                     client.getConnectionState() == ConnectionState.CONNECTED) {
-                                Log.d(TAG, "2");
 
 //                            Log.v(TAG, "Creating listener");
                                 // Create the listener
                                 BandAccelerometerEventListenerCustom aListener =
                                         new BandAccelerometerEventListenerCustom(info, studyName);
 
-                                Log.d(TAG, "3");
                                 // Register the listener
                                 client.getSensorManager().registerAccelerometerEventListener(
                                         aListener, frequency);
 
-                                Log.d(TAG, "4");
                                 // Save the listener and client
                                 listeners.put(info, aListener);
                                 clients.put(info, client);
 
-                                Log.d(TAG, "5");
                                 // Toast saying connection successful
                                 toastStreaming(STREAM_TYPE);
                                 if (timeoutThread.getState() != State.NEW) {
@@ -155,11 +153,13 @@ public class AccelerometerManager extends DataManager {
         }
     }
 
-    private class UnsubscribeThread extends Thread{
+    private class UnsubscribeThread extends Thread {
         private Runnable r;
 
         @Override
-        public void run () {r.run();}
+        public void run() {
+            r.run();
+        }
 
         public UnsubscribeThread(final BandInfo info) {
             super();
@@ -203,6 +203,9 @@ public class AccelerometerManager extends DataManager {
 
         private String uName;
         private String location;
+        private final int BUFFER_SIZE = 100;
+        private JSONArray dataBuffer = new JSONArray();
+
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
@@ -222,50 +225,81 @@ public class AccelerometerManager extends DataManager {
             location = BandDataService.locations.get(info);
         }
 
+
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
             if (event != null) {
-                // Get hour and date string from the event timestamp
-                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
-
-                // Form the directory path and file name
-                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-                String fileName = DataGatheringApplication.getDataFileName(
-                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
-                        info.getMacAddress());
-
-                // Create the directory if it does not exist
-                File directory = new File(dirPath);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-
-                // Write to csv
-                File csv = new File(dirPath, fileName);
+                JSONObject datapoint = new JSONObject();
                 try {
-                    FileWriter fw;
-                    if (!csv.exists()) {
-                        csv.createNewFile();
-                        fw = new FileWriter(csv, true);
-                        fw.append("Time,x,y,z\n");
-                    } else {
-                        fw = new FileWriter(csv, true);
-                    }
+                    datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("x", event.getAccelerationX());
+                    datapoint.put("y", event.getAccelerationY());
+                    datapoint.put("z", event.getAccelerationZ());
 
-                    fw.append(getDateTime(event));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getAccelerationX()));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getAccelerationY()));
-                    fw.append(',');
-                    fw.append(Float.toString(event.getAccelerationZ()));
-                    fw.append('\n');
-                    fw.close();
-                    Log.v(TAG, "Wrote to " + csv.getPath());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    dataBuffer.put(datapoint);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
+
+                if (dataBuffer.length() >= BUFFER_SIZE) {
+                    try {
+                        DataGatheringApplication.getInstance().getCurrentDocument().update(new Document.DocumentUpdater() {
+                            @Override
+                            public boolean update(UnsavedRevision newRevision) {
+                                Map<String, Object> properties = newRevision.getUserProperties();
+                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
+                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                newRevision.setUserProperties(properties);
+                                return true;
+                            }
+                        });
+                        dataBuffer = new JSONArray();
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+//                // Get hour and date string from the event timestamp
+//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
+//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
+//
+//                // Form the directory path and file name
+//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
+//                String fileName = DataGatheringApplication.getDataFileName(
+//                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
+//                        info.getMacAddress());
+//
+//                // Create the directory if it does not exist
+//                File directory = new File(dirPath);
+//                if (!directory.exists()) {
+//                    directory.mkdirs();
+//                }
+//
+//                // Write to csv
+//                File csv = new File(dirPath, fileName);
+//                try {
+//                    FileWriter fw;
+//                    if (!csv.exists()) {
+//                        csv.createNewFile();
+//                        fw = new FileWriter(csv, true);
+//                        fw.append("Time,x,y,z\n");
+//                    } else {
+//                        fw = new FileWriter(csv, true);
+//                    }
+//
+//                    fw.append(getDateTime(event));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getAccelerationX()));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getAccelerationY()));
+//                    fw.append(',');
+//                    fw.append(Float.toString(event.getAccelerationZ()));
+//                    fw.append('\n');
+//                    fw.close();
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
             }
 
         }
