@@ -62,8 +62,6 @@ public abstract class DataManager implements EventListener {
     protected abstract void unSubscribe(BandInfo info);
 
 
-
-
     /*
      * Below are methods from the old implementation of BandDataService. This implementation
      * allows for a less cluttered BandDataService and eliminates need for static calls.

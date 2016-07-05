@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -43,7 +44,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -133,7 +133,19 @@ public class AdvancedSettingsActivity extends Activity
     public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems) {
         devices = deviceItems;
         BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
+        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        final SharedPreferences.Editor e = prefs.edit();
+        Set<String> previouslyRegistered = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+        String myAddress = BluetoothAdapter.getDefaultAdapter().getAddress();
+
+        final Set<String> currentlyRegistered = new HashSet<>(previouslyRegistered);
+        currentlyRegistered.add(Preferences.getDeviceKey(myAddress));
+        previouslyRegistered.remove(Preferences.getDeviceKey(myAddress));
+
         for (BandInfo band : bands) {
+            currentlyRegistered.add(Preferences.getDeviceKey(band.getMacAddress()));
+            previouslyRegistered.remove(Preferences.getDeviceKey(band.getMacAddress()));
+
             // Request heart rate for that device
             com.microsoft.band.sensors.BandSensorManager manager =
                     BandClientManager.getInstance().create(this, band).getSensorManager();
@@ -144,6 +156,31 @@ public class AdvancedSettingsActivity extends Activity
                 // Get permission
                 manager.requestHeartRateConsent(this, this);
             }
+        }
+
+        e.putStringSet(Preferences.REGISTERED_DEVICES, currentlyRegistered);
+        e.apply();
+
+        for (final String oldMac: previouslyRegistered) {
+            AlertDialog.Builder b =
+            new AlertDialog.Builder(this).setTitle("WARNING").setMessage("A device with the MAc " +
+                    "address " + oldMac + " was previously paired to this phoen, but it is no longer." +
+                    " Please either re-pair the device or forget the device");
+            b.setNegativeButton("Forget", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    currentlyRegistered.remove(oldMac);
+                    e.putStringSet(Preferences.REGISTERED_DEVICES, currentlyRegistered);
+                    e.apply();
+                }
+            });
+
+            b.setPositiveButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {}
+            });
+
+            b.create().show();
         }
     }
 
@@ -291,24 +328,25 @@ public class AdvancedSettingsActivity extends Activity
                 }
             }
 
-            if (position == 1) {
-                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
-                Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-
-                // Register devices if necessary
-                LinkedList<String> toBeRegistered = new LinkedList<>();
-                for (DeviceListItem item :
-                        devices) {
-                    if (!macs.contains(item.getMAC())) {
-                        toBeRegistered.add(item.getMAC());
-                    }
-                }
-
-                if (toBeRegistered.size() > 0) {
-                    new DeviceRegistrationTask().execute(toBeRegistered);
-                }
-
-            }
+            // Registering devices with the backend
+//            if (position == 1) {
+//                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+//                Set<String> macs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+//
+//                // Register devices if necessary
+//                LinkedList<String> toBeRegistered = new LinkedList<>();
+//                for (DeviceListItem item :
+//                        devices) {
+//                    if (!macs.contains(item.getMAC())) {
+//                        toBeRegistered.add(item.getMAC());
+//                    }
+//                }
+//
+//                if (toBeRegistered.size() > 0) {
+////                    new DeviceRegistrationTask().execute(toBeRegistered);
+//                }
+//
+//            }
         }
 
         @Override
@@ -401,7 +439,7 @@ public class AdvancedSettingsActivity extends Activity
                     String mResponse;
                     mResponse = response.toString();
                     Log.v(TAG, mResponse);
-                    e.putString(Preferences.getDeviceKeyFromMac(mac), mResponse);
+                    e.putString(Preferences.getDeviceKey(mac), mResponse);
                     ids.put(mac, mResponse);
                 }
             } catch (Exception ex) {
