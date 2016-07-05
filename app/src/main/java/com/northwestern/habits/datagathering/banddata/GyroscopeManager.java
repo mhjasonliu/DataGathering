@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ import com.microsoft.band.sensors.BandGyroscopeEvent;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
+import com.northwestern.habits.datagathering.Preferences;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +49,11 @@ public class GyroscopeManager extends DataManager {
             default:
                 frequencies.put(bandinfo, SampleRate.MS128);
         }
+
+        // Record frequency change
+        SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor e = prefs.edit();
+        e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.GYRO), f).apply();
     }
 
     public GyroscopeManager(String sName, SQLiteOpenHelper db, Context context) {

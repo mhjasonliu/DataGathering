@@ -25,6 +25,10 @@ public class Preferences {
     public static String getSensorKey(String mac, String sensor) {
         return  mac + "_" + sensor; }
 
+    public static String getFrequencyKey(String mac, String sensor) {
+        return mac + "_" + sensor + "_frequency";
+    }
+
 
     public static String sampleRateToString(SampleRate rate) {
         switch (rate) {
