@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -95,13 +94,18 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             Log.v(TAG, "Item selected");
+            Message bandMessage = new Message();
+            bandMessage.what = BandDataService.MSG_STREAM;
+            Bundle extras = new Bundle();
             switch (parent.getId()) {
                 case R.id.locationSpinner:
                     //TODO
+                    extras.putString(BandDataService.LOCATION_EXTRA, ((TextView) view).getText().toString());
                     break;
                 case R.id.frequencySpinner:
                     Log.v(TAG, "Frequency change to " + parent.getItemAtPosition(position));
                     //TODO
+                    extras.putString(BandDataService.FREQUENCY_EXTRA, ((TextView) view).getText().toString());
                     break;
             }
         }
@@ -290,7 +294,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 case BAND:
                     Message bandMessage = Message.obtain(null, BandDataService.MSG_STREAM, 0, 0);
                     Bundle requestBundle = new Bundle();
-                    Intent bandDataIntent = new Intent(context, BandDataService.class);
 
                     String text = buttonView.getText().toString();
                     switch (text) {

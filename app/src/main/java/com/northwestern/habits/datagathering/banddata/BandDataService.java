@@ -15,7 +15,6 @@ import android.util.Log;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -83,92 +82,9 @@ public class BandDataService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(TAG, "Started the service.");
+
         isStarted = true;
-
-//        Log.v(TAG, "Retrieving database");
-//        if (dbHelper == null)
-//            dbHelper = DataStorageContract.BluetoothDbHelper.getInstance(this);
-
-        // Get the band info, client, and data required
-//        Bundle extras = intent.getExtras();
-//        if (extras != null){
-//            if (!extras.getBoolean(CONTINUE_STUDY_EXTRA)) {
-//                // End study requested
-//                Log.v(TAG, "Ending study");
-//                // Unregister all clients
-//                new StopAllStreams().execute();
-//
-//            } else {
-//                // Continue the study
-//                int index = extras.getInt(INDEX_EXTRA);
-//                BandInfo band = pairedBands[index];
-//                modes.put(ACCEL_REQ_EXTRA, extras.getBoolean(ACCEL_REQ_EXTRA));
-//                modes.put(ALT_REQ_EXTRA, extras.getBoolean(ALT_REQ_EXTRA));
-//                modes.put(AMBIENT_REQ_EXTRA, extras.getBoolean(AMBIENT_REQ_EXTRA));
-//                modes.put(BAROMETER_REQ_EXTRA, extras.getBoolean(BAROMETER_REQ_EXTRA));
-//                modes.put(CALORIES_REQ_EXTRA, extras.getBoolean(CALORIES_REQ_EXTRA));
-//                modes.put(CONTACT_REQ_EXTRA, extras.getBoolean(CONTACT_REQ_EXTRA));
-//                modes.put(DISTANCE_REQ_EXTRA, extras.getBoolean(DISTANCE_REQ_EXTRA));
-//                modes.put(GSR_REQ_EXTRA, extras.getBoolean(GSR_REQ_EXTRA));
-//                modes.put(GYRO_REQ_EXTRA, extras.getBoolean(GYRO_REQ_EXTRA));
-//                modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
-//                modes.put(PEDOMETER_REQ_EXTRA, extras.getBoolean(PEDOMETER_REQ_EXTRA));
-//                modes.put(SKIN_TEMP_REQ_EXTRA, extras.getBoolean(SKIN_TEMP_REQ_EXTRA));
-//                modes.put(UV_REQ_EXTRA, extras.getBoolean(UV_REQ_EXTRA));
-//
-//                locations.put(band, extras.getString(LOCATION_EXTRA));
-//                frequencies.put(band, extras.getString(FREQUENCY_EXTRA));
-//
-//                // Set the study and device
-//                studyName = extras.getString(STUDY_ID_EXTRA);
-//                Log.v(TAG, "Study name is: " + studyName);
-//
-//                if (extras.getBoolean(STOP_STREAM_EXTRA)){
-//                    Log.v(TAG, "Stop stream requested.");
-//
-//                    // Unsubscribe from specified tasks
-//                    for (String type : modes.keySet()) {
-//                        if (modes.get(type)) {
-//                            genericUnsubscribeFactory(type, band);
-//                            try {
-//                                Thread.sleep(100);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }
-//
-//
-//                } else {
-//                    // Stop stream not requested: start requested streams if not already streaming
-//
-//                    for ( String key : modes.keySet() ) {
-//                        if (modes.get(key)) {
-//                            //Log.v(TAG, "For mode " + key + " value is " + modes.get(key));
-//                            genericSubscriptionFactory(key, band);
-//                            try {
-//                                Thread.sleep(100);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
-        // Create file for the csv's
-        PATH = Environment.getExternalStorageDirectory() + "/Band";
-
-        File folder = new File(BandDataService.PATH);
-
-        boolean var;
-        if (!folder.exists()) {
-            var = folder.mkdir();
-            Log.v(TAG, BandDataService.PATH + " exists: " + Boolean.toString(var));
-        }
-        return Service.START_NOT_STICKY;
+        return Service.START_STICKY;
     }
 
 
@@ -389,7 +305,7 @@ public class BandDataService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        return false;
+        return super.onUnbind(intent);
     }
 
     private Messenger mMessenger = new Messenger(new IncomingHandler(this));

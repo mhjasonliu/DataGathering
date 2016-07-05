@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.northwestern.habits.datagathering.Preferences;
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 public class SplashActivity extends Activity {
 
@@ -16,12 +17,16 @@ public class SplashActivity extends Activity {
         // If there is a password set, open to UserActivity, else AdvancedSettings
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
 
-        Intent i;
+
+
+        Intent i = new Intent(this, BandDataService.class);
+        startService(i);
         if (prefs.getString(Preferences.PASSWORD, "").equals("")) {
             i = new Intent(this, AdvancedSettingsActivity.class);
         } else {
             i = new Intent (this, UserActivity.class);
         }
+
         startActivity(i);
     }
 
