@@ -24,6 +24,10 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.microsoft.band.BandClientManager;
+import com.microsoft.band.BandInfo;
+import com.microsoft.band.UserConsent;
+import com.microsoft.band.sensors.HeartRateConsentListener;
 import com.northwestern.habits.datagathering.DeviceListItem;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
@@ -46,7 +50,8 @@ import java.util.Set;
 public class AdvancedSettingsActivity extends Activity
         implements UserIDFragment.OnUserIdFragmentInterractionHandler,
         PasswordFragment.OnPasswordFragmentInterractionListener,
-        DevicesFragment.OnDevicesFragmentInterractionListener {
+        DevicesFragment.OnDevicesFragmentInterractionListener,
+        HeartRateConsentListener {
 
     private static final String TAG = "AdvancedSettings";
     private List<DeviceListItem> devices;
@@ -81,6 +86,13 @@ public class AdvancedSettingsActivity extends Activity
         mViewPager.addOnPageChangeListener(pageChangeListener);
     }
 
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -113,11 +125,31 @@ public class AdvancedSettingsActivity extends Activity
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
     }
 
-    public void retreatScroll() { mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);}
+    public void retreatScroll() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+    }
 
     @Override
     public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems) {
         devices = deviceItems;
+        BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
+        for (BandInfo band : bands) {
+            // Request heart rate for that device
+            com.microsoft.band.sensors.BandSensorManager manager =
+                    BandClientManager.getInstance().create(this, band).getSensorManager();
+
+            if (manager.getCurrentHeartRateConsent() != UserConsent.GRANTED) {
+                // Request heart rate consent
+                Log.v(TAG, "Requesting heart rate consent");
+                // Get permission
+                manager.requestHeartRateConsent(this, this);
+            }
+        }
+    }
+
+    @Override
+    public void userAccepted(boolean b) {
+        // Do something maybe?
     }
 
 
@@ -294,6 +326,7 @@ public class AdvancedSettingsActivity extends Activity
     private class DeviceRegistrationTask extends AsyncTask<List<String>, Void, HashMap<String, String>> {
 
         ProgressDialog progressDialog;
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -409,7 +442,8 @@ public class AdvancedSettingsActivity extends Activity
                         responses.keySet() + ") (" + responses.values() + ")");
                 builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {}
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
                 });
                 // Add added devices to the list of mac addresses
                 SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);

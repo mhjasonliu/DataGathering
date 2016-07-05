@@ -3,7 +3,13 @@ package com.northwestern.habits.datagathering.userinterface.fragments;
 import android.app.Activity;
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Messenger;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +21,7 @@ import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DeviceListAdapter;
 import com.northwestern.habits.datagathering.DeviceListItem;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -88,10 +95,48 @@ public class DevicesFragment extends Fragment {
             devices.add(new DeviceListItem(band));
         }
 
+        // Bind to the device service
+        Intent intent = new Intent(this.getActivity(), BandDataService.class);
+        this.getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        isBound = true;
+
         // Create an adapter with a list of devices
         HashMap<DeviceListItem, List<String>> children = DeviceListAdapter.createChildren(devices);
         mAdapter = new DeviceListAdapter(getContext(), devices, children);
     }
+
+    private boolean isBound = false;
+    private Messenger mMessenger;
+    public Messenger getmMessenger() {
+        if (isBound) {
+            return mMessenger;
+        } else {
+            return null;
+        }
+    }
+
+    public ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            isBound = true;
+
+            // Create the Messenger object
+            mMessenger = new Messenger(service);
+            // Create a bundle with the data
+            Bundle bundle = new Bundle();
+            bundle.putString("hello", "world");
+
+            mAdapter.setMessenger(mMessenger);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // unbind or process might have crashes
+            mMessenger = null;
+            isBound = false;
+        }
+    };
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -117,7 +162,6 @@ public class DevicesFragment extends Fragment {
         });
 
         mListener.onRequestDeviceRegistration(devices);
-
         return rootView;
     }
 
@@ -136,6 +180,13 @@ public class DevicesFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Release service binding
+        this.getActivity().unbindService(serviceConnection);
     }
 
     /**

@@ -1,15 +1,12 @@
 package com.northwestern.habits.datagathering;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -47,9 +44,10 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         this.context = context;
         this._listDataHeader = headerData;
         this._listDataChild = childData;
+    }
 
-        Intent intent = new Intent(context, BandDataService.class);
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    public void setMessenger(Messenger m) {
+        messenger = m;
     }
 
     public static HashMap<DeviceListItem, List<String>> createChildren(List<DeviceListItem> items) {
@@ -79,13 +77,13 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         View childView;
         GridLayout sensorGrid;
         for (int i = 0; i < groupCount; i++) {
-            DeviceListItem.DeviceType type = _listDataHeader.get(i).getType();
-            if (type != null && type != DeviceListItem.DeviceType.OTHER) {
-                childView = getChildView(i, 0, false, null, null);
+                    DeviceListItem.DeviceType type = _listDataHeader.get(i).getType();
+                    if (type != null && type != DeviceListItem.DeviceType.OTHER) {
+                        childView = getChildView(i, 0, false, null, null);
 
-                sensorGrid = (GridLayout) childView.findViewById(R.id.sensor_grid);
-                int childViews = sensorGrid.getChildCount();
-                for (int j = 0; j < childViews; j++) {
+                        sensorGrid = (GridLayout) childView.findViewById(R.id.sensor_grid);
+                        int childViews = sensorGrid.getChildCount();
+                        for (int j = 0; j < childViews; j++) {
                     ((CheckBox) sensorGrid.getChildAt(j)).setChecked(false);
                 }
             }
@@ -152,7 +150,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         // Todo possibly fix this?
-        String headerTitle = ((DeviceListItem) getGroup(groupPosition)).getName();
+                    String headerTitle = ((DeviceListItem) getGroup(groupPosition)).getName();
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -273,43 +271,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             box.setOnCheckedChangeListener(sensorBoxListener);
         }
     }
-    boolean isBound = false;
-    Messenger mMessenger;
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            isBound = true;
-
-            // Create the Messenger object
-            mMessenger = new Messenger(service);
-
-            // Create a Message
-            // Note the usage of MSG_SAY_HELLO as the what value
-//            Message msg = Message.obtain(null, MessengerService.MSG_SAY_HELLO, 0, 0);
-
-            // Create a bundle with the data
-            Bundle bundle = new Bundle();
-            bundle.putString("hello", "world");
-
-            // Set the bundle data to the Message
-//            msg.setData(bundle);
-
-            // Send the Message to the Service (in another process)
-//            try {
-//                mMessenger.send(msg);
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            // unbind or process might have crashes
-            mMessenger = null;
-            isBound = false;
-        }
-    };
+    private Messenger messenger;
 
 
     private CompoundButton.OnCheckedChangeListener sensorBoxListener = new CompoundButton.OnCheckedChangeListener() {
@@ -415,7 +378,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     requestBundle.putString(BandDataService.MAC_EXTRA, device.getMAC());
                     bandMessage.setData(requestBundle);
                     try {
-                        mMessenger.send(bandMessage);
+                        messenger.send(bandMessage);
                     } catch (RemoteException e1) {
                         e1.printStackTrace();
                     }
