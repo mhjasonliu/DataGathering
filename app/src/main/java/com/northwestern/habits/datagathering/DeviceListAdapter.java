@@ -76,19 +76,46 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         View childView;
         GridLayout sensorGrid;
         for (int i = 0; i < groupCount; i++) {
-                    DeviceListItem.DeviceType type = _listDataHeader.get(i).getType();
-                    if (type != null && type != DeviceListItem.DeviceType.OTHER) {
-                        childView = getChildView(i, 0, false, null, null);
+            DeviceListItem.DeviceType type = _listDataHeader.get(i).getType();
+            if (type != null && type != DeviceListItem.DeviceType.OTHER) {
+                childView = getChildView(i, 0, false, null, null);
 
-                        sensorGrid = (GridLayout) childView.findViewById(R.id.sensor_grid);
-                        int childViews = sensorGrid.getChildCount();
-                        for (int j = 0; j < childViews; j++) {
+                sensorGrid = (GridLayout) childView.findViewById(R.id.sensor_grid);
+                int childViews = sensorGrid.getChildCount();
+                for (int j = 0; j < childViews; j++) {
                     ((CheckBox) sensorGrid.getChildAt(j)).setChecked(false);
                 }
             }
         }
         notifyDataSetChanged();
     }
+
+    private AdapterView.OnItemSelectedListener accSpinnerListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            // Get the device associated
+            DeviceListItem device = (DeviceListItem) parent.getTag();
+
+            // Send a request to change the frequency
+            Message m = new Message();
+            m.what = BandDataService.MSG_FREQUENCY;
+            Bundle b = new Bundle();
+            b.putString(BandDataService.REQUEST_EXTRA, BandDataService.ACCEL_REQ_EXTRA);
+            b.putString(BandDataService.FREQUENCY_EXTRA, ((TextView) view).getText().toString());
+            b.putString(BandDataService.MAC_EXTRA, device.getMAC());
+            m.setData(b);
+            try {
+                messenger.send(m);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            // do nothing
+        }
+    };
 
     private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
         @Override
@@ -154,7 +181,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         // Todo possibly fix this?
-                    String headerTitle = ((DeviceListItem) getGroup(groupPosition)).getName();
+        String headerTitle = ((DeviceListItem) getGroup(groupPosition)).getName();
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -165,7 +192,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 .findViewById(R.id.lblListHeader);
         lblListHeader.setTypeface(null, Typeface.BOLD);
         lblListHeader.setText(headerTitle);
-
 
 
         return convertView;
@@ -183,6 +209,10 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         switch (type) {
             case BAND:
                 rootView = infalInflater.inflate(R.layout.item_band_sensors, null);
+
+                // Set the checked values and the onclicked listener
+                setSensorsInGrid(rootView, device);
+
                 // Prepare the location spinner
                 Spinner locationSpinner = (Spinner) rootView.findViewById(R.id.locationSpinner);
                 ArrayAdapter<CharSequence> locationAdapter = ArrayAdapter.createFromResource(context,
@@ -194,17 +224,21 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 locationSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
 
                 // Prepare the frequency spinner
-                Spinner frequencySpinner = (Spinner) rootView.findViewById(R.id.frequencySpinner);
+                Spinner frequencySpinner = (Spinner) rootView.findViewById(R.id.acc_frequency_spinner);
                 ArrayAdapter<CharSequence> frequencyAdapter = ArrayAdapter.createFromResource(context,
                         R.array.frequency_array, android.R.layout.simple_spinner_item);
                 // Specify the layout to use when the list of choices appears
                 frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 // Apply the frequencyAdapter to the spinner
                 frequencySpinner.setAdapter(frequencyAdapter);
+                frequencySpinner.setOnItemSelectedListener(accSpinnerListener);
+
+                // Repeat for gyro
+                frequencySpinner = (Spinner) rootView.findViewById(R.id.gyro_frequency_spinner);
+                // Apply the frequencyAdapter to the spinner
+                frequencySpinner.setAdapter(frequencyAdapter);
                 frequencySpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
 
-                // Set the checked values and the onclicked listener
-                setSensorsInGrid(rootView, device);
                 return rootView;
 
             case PHONE:
@@ -263,16 +297,19 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private void setSensorsInGrid(View v, DeviceListItem device) {
         GridLayout gridLayout = (GridLayout) v.findViewById(R.id.sensor_grid);
         int childCount = gridLayout.getChildCount();
-        CheckBox box;
+        View box;
         SharedPreferences preferences = context.getSharedPreferences(Preferences.NAME,
                 Context.MODE_PRIVATE);
         for (int i = 0; i < childCount; i++) {
-            box = (CheckBox) gridLayout.getChildAt(i);
-            box.setChecked(preferences.getBoolean(
-                    Preferences.getSensorKey(device.getMAC(), box.getText().toString()
-                    ), false));
+            box = gridLayout.getChildAt(i);
+            if (box instanceof CheckBox) {
+                ((CheckBox) box).setChecked(preferences.getBoolean(
+                        Preferences.getSensorKey(device.getMAC(),
+                                ((CheckBox) box).getText().toString()
+                        ), false));
+                ((CheckBox) box).setOnCheckedChangeListener(sensorBoxListener);
+            }
             box.setTag(device);
-            box.setOnCheckedChangeListener(sensorBoxListener);
         }
     }
 
@@ -283,12 +320,12 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             // FIXME: 6/28/2016 hack to connect to the old band streaming service
-                SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+            SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor e = prefs.edit();
-                e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
-                                buttonView.getText().toString()),
-                        isChecked);
-                e.apply();
+            e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
+                            buttonView.getText().toString()),
+                    isChecked);
+            e.apply();
             DeviceListItem device = (DeviceListItem) buttonView.getTag();
             switch (device.getType()) {
                 case BAND:
@@ -372,8 +409,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     throw new UnsupportedOperationException();
 
             }
-
-
 
 
         }

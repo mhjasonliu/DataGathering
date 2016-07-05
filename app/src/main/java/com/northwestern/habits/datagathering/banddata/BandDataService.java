@@ -56,7 +56,6 @@ public class BandDataService extends Service {
 
     private HashMap<BandInfo, List<String>> bandStreams = new HashMap<>();
     protected static HashMap<BandInfo, String> locations = new HashMap<>();
-    protected static HashMap<BandInfo, String> frequencies = new HashMap<>();
 
     protected String studyName;
 
@@ -64,19 +63,19 @@ public class BandDataService extends Service {
 
 
     // Data managers
-    AccelerometerManager accManager;
-    AltimeterManager altManager;
-    AmbientManager ambManager;
-    BarometerManager barometerManager;
-    CaloriesManager calManager;
-    ContactManager conManager;
-    DistanceManager distManager;
-    GsrManager gsrManager;
-    GyroscopeManager gyroManager;
-    HeartRateManager heartManager;
-    PedometerManager pedoManager;
-    SkinTempManager skinTempManager;
-    UvManager uvManager;
+    AccelerometerManager accManager = new AccelerometerManager("", null, this);
+    AltimeterManager altManager = new AltimeterManager("", null, this);
+    AmbientManager ambManager = new AmbientManager("", null, this);
+    BarometerManager barometerManager = new BarometerManager("", null, this);
+    CaloriesManager calManager = new CaloriesManager("", null, this);
+    ContactManager conManager = new ContactManager("", null, this);
+    DistanceManager distManager = new DistanceManager("", null, this);
+    GsrManager gsrManager = new GsrManager("", null, this);
+    GyroscopeManager gyroManager = new GyroscopeManager("", null, this);
+    HeartRateManager heartManager = new HeartRateManager("", null, this);
+    PedometerManager pedoManager = new PedometerManager("", null, this);
+    SkinTempManager skinTempManager = new SkinTempManager("", null, this);
+    UvManager uvManager = new UvManager("", null, this);
 
     boolean isStarted = false;
 
@@ -345,15 +344,19 @@ public class BandDataService extends Service {
                     break;
                 case MSG_FREQUENCY:
                     String frequency = bundle.getString(FREQUENCY_EXTRA);
-                    switch (request) {
-                        case ACCEL_REQ_EXTRA:
-                            service.setAccelFrequency(frequency, bandInfo);
-                            break;
-                        case GYRO_REQ_EXTRA:
-                            service.setGyroFrequency(frequency, bandInfo);
-                            break;
-                        default:
-                            Log.e(TAG, "Frequency request sent for an unsupported type");
+                    if (request != null) {
+                        switch (request) {
+                            case ACCEL_REQ_EXTRA:
+                                service.setAccelFrequency(frequency, bandInfo);
+                                break;
+                            case GYRO_REQ_EXTRA:
+                                service.setGyroFrequency(frequency, bandInfo);
+                                break;
+                            default:
+                                Log.e(TAG, "Frequency request sent for an unsupported type");
+                        }
+                    } else {
+                        Log.w(TAG, "Request in frequency message was null.");
                     }
 
                     break;
@@ -365,7 +368,15 @@ public class BandDataService extends Service {
     }
 
     private void setAccelFrequency(String f, BandInfo bandInfo) {
+        // Change the manager's stored frequency
         accManager.setFrequency(f, bandInfo);
+
+        // Unsubscribe and resubscribe if necessary
+        if (bandStreams.containsKey(bandInfo) && bandStreams.get(bandInfo).contains(ACCEL_REQ_EXTRA)) {
+            accManager.unSubscribe(bandInfo);
+            accManager.subscribe(bandInfo);
+        }
+
     }
 
     private void setGyroFrequency(String f, BandInfo bandInfo) {

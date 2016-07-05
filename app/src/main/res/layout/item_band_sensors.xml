@@ -16,6 +16,15 @@
             android:layout_row="0"
             android:layout_column="0" />
 
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/acc_frequency_spinner"
+            android:spinnerMode="dialog"
+            android:layout_gravity="end"
+            android:layout_row="0"
+            android:layout_column="1" />
+
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -24,7 +33,17 @@
             android:checked="false"
             android:enabled="true"
             android:layout_row="0"
-            android:layout_column="1" />
+            android:layout_column="2" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ambient Light"
+            android:id="@+id/ambientBox"
+            android:checked="false"
+            android:enabled="true"
+            android:layout_row="1"
+            android:layout_column="0" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -34,23 +53,13 @@
             android:checked="false"
             android:enabled="true"
             android:layout_row="1"
-            android:layout_column="0" />
+            android:layout_column="1" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Calories"
             android:id="@+id/caloriesBox"
-            android:layout_row="1"
-            android:layout_column="1"
-            android:checked="false"
-            android:enabled="true"/>
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Contact"
-            android:id="@+id/contactBox"
             android:layout_row="1"
             android:layout_column="2"
             android:checked="false"
@@ -59,10 +68,20 @@
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Contact"
+            android:id="@+id/contactBox"
+            android:layout_row="2"
+            android:layout_column="0"
+            android:checked="false"
+            android:enabled="true"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Distance"
             android:id="@+id/distanceBox"
-            android:layout_row="3"
-            android:layout_column="0"
+            android:layout_row="2"
+            android:layout_column="1"
             android:checked="false"
             android:enabled="true"/>
 
@@ -73,8 +92,8 @@
             android:id="@+id/gsrBox"
             android:checked="false"
             android:enabled="true"
-            android:layout_row="3"
-            android:layout_column="1" />
+            android:layout_row="2"
+            android:layout_column="2" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -83,8 +102,17 @@
             android:id="@+id/gyroBox"
             android:checked="false"
             android:layout_row="3"
-            android:layout_column="2"
+            android:layout_column="0"
             android:enabled="true" />
+
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/gyro_frequency_spinner"
+            android:spinnerMode="dialog"
+            android:layout_gravity="end"
+            android:layout_row="3"
+            android:layout_column="1" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -93,8 +121,8 @@
             android:id="@+id/heartRateBox"
             android:checked="false"
             android:enabled="true"
-            android:layout_row="4"
-            android:layout_column="0" />
+            android:layout_row="3"
+            android:layout_column="2" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -102,7 +130,7 @@
             android:text="Pedometer"
             android:id="@+id/pedometerBox"
             android:layout_row="4"
-            android:layout_column="1"
+            android:layout_column="0"
             android:checked="false"
             android:enabled="true"/>
 
@@ -112,7 +140,7 @@
             android:text="Skin Temp."
             android:id="@+id/skinTempBox"
             android:layout_row="4"
-            android:layout_column="2"
+            android:layout_column="1"
             android:checked="false"
             android:enabled="true"/>
 
@@ -121,20 +149,10 @@
             android:layout_height="wrap_content"
             android:text="UV"
             android:id="@+id/uvBox"
-            android:layout_row="6"
-            android:layout_column="0"
+            android:layout_row="4"
+            android:layout_column="2"
             android:checked="false"
             android:enabled="true"/>
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ambient Light"
-            android:id="@+id/ambientBox"
-            android:checked="false"
-            android:enabled="true"
-            android:layout_row="0"
-            android:layout_column="2" />
     </GridLayout>
 
     <LinearLayout
@@ -174,12 +192,6 @@
             android:id="@+id/locationSpinner"
             android:spinnerMode="dialog"
             android:layout_gravity="left"/>
-        <Spinner
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/frequencySpinner"
-            android:spinnerMode="dialog"
-            android:layout_gravity="end"/>
 
     </FrameLayout>
 </LinearLayout>
