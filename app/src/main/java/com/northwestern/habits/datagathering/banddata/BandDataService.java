@@ -374,6 +374,11 @@ public class BandDataService extends Service {
         // Unsubscribe and resubscribe if necessary
         if (bandStreams.containsKey(bandInfo) && bandStreams.get(bandInfo).contains(ACCEL_REQ_EXTRA)) {
             accManager.unSubscribe(bandInfo);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             accManager.subscribe(bandInfo);
         }
 
@@ -386,6 +391,11 @@ public class BandDataService extends Service {
         // Unsubscribe and resubscribe if necessary
         if (bandStreams.containsKey(bandInfo) && bandStreams.get(bandInfo).contains(GYRO_REQ_EXTRA)) {
             gyroManager.unSubscribe(bandInfo);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             gyroManager.subscribe(bandInfo);
         }
     }

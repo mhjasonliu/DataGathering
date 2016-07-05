@@ -26,7 +26,9 @@ import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by William on 6/20/2016
@@ -117,6 +119,11 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
 
         // Get the device associated
         DeviceListItem device = (DeviceListItem) parent.getTag();
+        String mac = device.getMAC();
+
+        // Save frequency specification
+        SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+//        Preferences.get
 
         // Send a request to change the frequency
         Message m = new Message();
@@ -335,12 +342,14 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private CompoundButton.OnCheckedChangeListener sensorBoxListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            // FIXME: 6/28/2016 hack to connect to the old band streaming service
             SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor e = prefs.edit();
             e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
-                            buttonView.getText().toString()),
-                    isChecked);
+                    buttonView.getText().toString()), isChecked);
+            String mac = ((DeviceListItem) buttonView.getTag()).getMAC();
+            String devKey = Preferences.getDeviceKey(mac);
+            Set<String> sensors = prefs.getStringSet(devKey, new HashSet<String>());
+
             e.apply();
             DeviceListItem device = (DeviceListItem) buttonView.getTag();
             switch (device.getType()) {
@@ -351,62 +360,128 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     String text = buttonView.getText().toString();
                     switch (text) {
                         case "Accelerometer":
-                            // TODO: 6/29/2016 Request a frequency
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.ACCEL_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.ACCEL);
+                            } else {
+                                sensors.remove(Preferences.ACCEL);
+                            }
                             break;
                         case "Altimeter":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.ALT_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.ALT);
+                            } else {
+                                sensors.remove(Preferences.ALT);
+                            }
                             break;
                         case "Ambient Light":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.AMBIENT_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.AMBIENT);
+                            } else {
+                                sensors.remove(Preferences.AMBIENT);
+                            }
                             break;
                         case "Barometer":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.BAROMETER_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.BAROMETER);
+                            } else {
+                                sensors.remove(Preferences.BAROMETER);
+                            }
                             break;
                         case "Calories":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.CALORIES_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.CALORIES);
+                            } else {
+                                sensors.remove(Preferences.CALORIES);
+                            }
                             break;
                         case "Contact":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.CONTACT_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.CONTACT);
+                            } else {
+                                sensors.remove(Preferences.CONTACT);
+                            }
                             break;
                         case "Distance":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.DISTANCE_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.DISTANCE);
+                            } else {
+                                sensors.remove(Preferences.DISTANCE);
+                            }
                             break;
                         case "GSR":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.GSR_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.GSR);
+                            } else {
+                                sensors.remove(Preferences.GSR);
+                            }
                             break;
                         case "Gyroscope":
-                            // TODO: 6/29/2016 Request a frequency
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.GYRO_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.GYRO);
+                            } else {
+                                sensors.remove(Preferences.GYRO);
+                            }
                             break;
                         case "Heart Rate":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.HEART_RATE_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.HEART);
+                            } else {
+                                sensors.remove(Preferences.HEART);
+                            }
                             break;
                         case "Pedometer":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.PEDOMETER_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.PEDOMETER);
+                            } else {
+                                sensors.remove(Preferences.PEDOMETER);
+                            }
                             break;
                         case "Skin Temp.":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.SKIN_TEMP_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.SKIN_TEMP);
+                            } else {
+                                sensors.remove(Preferences.SKIN_TEMP);
+                            }
                             break;
                         case "UV":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.UV_REQ_EXTRA);
+                            if (isChecked) {
+                                sensors.add(Preferences.UV);
+                            } else {
+                                sensors.remove(Preferences.UV);
+                            }
                             break;
                         default:
                             Log.e(TAG, "Button text not recognized");
                     }
+                    e.putStringSet(devKey, sensors);
+                    e.apply();
+
                     requestBundle.putBoolean(BandDataService.STOP_STREAM_EXTRA, !isChecked);
                     requestBundle.putString(BandDataService.MAC_EXTRA, device.getMAC());
                     bandMessage.setData(requestBundle);
