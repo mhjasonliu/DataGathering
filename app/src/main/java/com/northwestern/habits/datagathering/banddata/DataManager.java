@@ -306,28 +306,18 @@ public abstract class DataManager implements EventListener {
     protected BandClient connectBandClient(BandInfo band, BandClient client)
             throws InterruptedException, BandException {
         if (client == null) {
-            Log.d(TAG, "a");
             if (band == null) {
                 throw new NullPointerException();
             }
             client = BandClientManager.getInstance().create(context, band);
-            Log.d(TAG, "b");
         } else if (ConnectionState.CONNECTED == client.getConnectionState()) {
-
-            Log.d(TAG, "c");
             return client;
         }
 
-        Log.d(TAG, "asdf");
-
         try {
             if (ConnectionState.CONNECTED == client.connect().await(15, TimeUnit.SECONDS)) {
-
-                Log.d(TAG, "d");
                 return client;
             } else {
-
-                Log.d(TAG, "e");
                 return null;
             }
         } catch (TimeoutException e) {
@@ -402,7 +392,6 @@ public abstract class DataManager implements EventListener {
         @Override
         public void run() {
             while (!shouldTerminate) {
-//                Log.e(TAG, "checking timeout");
                 // Iterate through stored event handlers
                 long timeout;
                 long interval;
