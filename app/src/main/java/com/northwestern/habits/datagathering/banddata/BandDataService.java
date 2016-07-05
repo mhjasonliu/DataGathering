@@ -14,7 +14,6 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
-import com.northwestern.habits.datagathering.DataStorageContract;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -46,7 +45,6 @@ public class BandDataService extends Service {
 
     public static final String CONTINUE_STUDY_EXTRA = "continue study";
     public static final String STOP_STREAM_EXTRA = "stop stream";
-
 
 
     private static final String TAG = "Band Service";
@@ -81,81 +79,84 @@ public class BandDataService extends Service {
     SkinTempManager skinTempManager;
     UvManager uvManager;
 
+    boolean isStarted = false;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Started the service.");
+        isStarted = true;
 
-        Log.v(TAG, "Retrieving database");
-        if (dbHelper == null)
-            dbHelper = DataStorageContract.BluetoothDbHelper.getInstance(this);
+//        Log.v(TAG, "Retrieving database");
+//        if (dbHelper == null)
+//            dbHelper = DataStorageContract.BluetoothDbHelper.getInstance(this);
 
         // Get the band info, client, and data required
-        Bundle extras = intent.getExtras();
-        if (extras != null){
-            if (!extras.getBoolean(CONTINUE_STUDY_EXTRA)) {
-                // End study requested
-                Log.v(TAG, "Ending study");
-                // Unregister all clients
-                new StopAllStreams().execute();
-
-            } else {
-                // Continue the study
-                int index = extras.getInt(INDEX_EXTRA);
-                BandInfo band = pairedBands[index];
-                modes.put(ACCEL_REQ_EXTRA, extras.getBoolean(ACCEL_REQ_EXTRA));
-                modes.put(ALT_REQ_EXTRA, extras.getBoolean(ALT_REQ_EXTRA));
-                modes.put(AMBIENT_REQ_EXTRA, extras.getBoolean(AMBIENT_REQ_EXTRA));
-                modes.put(BAROMETER_REQ_EXTRA, extras.getBoolean(BAROMETER_REQ_EXTRA));
-                modes.put(CALORIES_REQ_EXTRA, extras.getBoolean(CALORIES_REQ_EXTRA));
-                modes.put(CONTACT_REQ_EXTRA, extras.getBoolean(CONTACT_REQ_EXTRA));
-                modes.put(DISTANCE_REQ_EXTRA, extras.getBoolean(DISTANCE_REQ_EXTRA));
-                modes.put(GSR_REQ_EXTRA, extras.getBoolean(GSR_REQ_EXTRA));
-                modes.put(GYRO_REQ_EXTRA, extras.getBoolean(GYRO_REQ_EXTRA));
-                modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
-                modes.put(PEDOMETER_REQ_EXTRA, extras.getBoolean(PEDOMETER_REQ_EXTRA));
-                modes.put(SKIN_TEMP_REQ_EXTRA, extras.getBoolean(SKIN_TEMP_REQ_EXTRA));
-                modes.put(UV_REQ_EXTRA, extras.getBoolean(UV_REQ_EXTRA));
-
-                locations.put(band, extras.getString(LOCATION_EXTRA));
-                frequencies.put(band, extras.getString(FREQUENCY_EXTRA));
-
-                // Set the study and device
-                studyName = extras.getString(STUDY_ID_EXTRA);
-                Log.v(TAG, "Study name is: " + studyName);
-
-                if (extras.getBoolean(STOP_STREAM_EXTRA)){
-                    Log.v(TAG, "Stop stream requested.");
-
-                    // Unsubscribe from specified tasks
-                    for (String type : modes.keySet()) {
-                        if (modes.get(type)) {
-                            genericUnsubscribeFactory(type, band);
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-
-
-                } else {
-                    // Stop stream not requested: start requested streams if not already streaming
-
-                    for ( String key : modes.keySet() ) {
-                        if (modes.get(key)) {
-                            //Log.v(TAG, "For mode " + key + " value is " + modes.get(key));
-                            genericSubscriptionFactory(key, band);
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        Bundle extras = intent.getExtras();
+//        if (extras != null){
+//            if (!extras.getBoolean(CONTINUE_STUDY_EXTRA)) {
+//                // End study requested
+//                Log.v(TAG, "Ending study");
+//                // Unregister all clients
+//                new StopAllStreams().execute();
+//
+//            } else {
+//                // Continue the study
+//                int index = extras.getInt(INDEX_EXTRA);
+//                BandInfo band = pairedBands[index];
+//                modes.put(ACCEL_REQ_EXTRA, extras.getBoolean(ACCEL_REQ_EXTRA));
+//                modes.put(ALT_REQ_EXTRA, extras.getBoolean(ALT_REQ_EXTRA));
+//                modes.put(AMBIENT_REQ_EXTRA, extras.getBoolean(AMBIENT_REQ_EXTRA));
+//                modes.put(BAROMETER_REQ_EXTRA, extras.getBoolean(BAROMETER_REQ_EXTRA));
+//                modes.put(CALORIES_REQ_EXTRA, extras.getBoolean(CALORIES_REQ_EXTRA));
+//                modes.put(CONTACT_REQ_EXTRA, extras.getBoolean(CONTACT_REQ_EXTRA));
+//                modes.put(DISTANCE_REQ_EXTRA, extras.getBoolean(DISTANCE_REQ_EXTRA));
+//                modes.put(GSR_REQ_EXTRA, extras.getBoolean(GSR_REQ_EXTRA));
+//                modes.put(GYRO_REQ_EXTRA, extras.getBoolean(GYRO_REQ_EXTRA));
+//                modes.put(HEART_RATE_REQ_EXTRA, extras.getBoolean(HEART_RATE_REQ_EXTRA));
+//                modes.put(PEDOMETER_REQ_EXTRA, extras.getBoolean(PEDOMETER_REQ_EXTRA));
+//                modes.put(SKIN_TEMP_REQ_EXTRA, extras.getBoolean(SKIN_TEMP_REQ_EXTRA));
+//                modes.put(UV_REQ_EXTRA, extras.getBoolean(UV_REQ_EXTRA));
+//
+//                locations.put(band, extras.getString(LOCATION_EXTRA));
+//                frequencies.put(band, extras.getString(FREQUENCY_EXTRA));
+//
+//                // Set the study and device
+//                studyName = extras.getString(STUDY_ID_EXTRA);
+//                Log.v(TAG, "Study name is: " + studyName);
+//
+//                if (extras.getBoolean(STOP_STREAM_EXTRA)){
+//                    Log.v(TAG, "Stop stream requested.");
+//
+//                    // Unsubscribe from specified tasks
+//                    for (String type : modes.keySet()) {
+//                        if (modes.get(type)) {
+//                            genericUnsubscribeFactory(type, band);
+//                            try {
+//                                Thread.sleep(100);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }
+//
+//
+//                } else {
+//                    // Stop stream not requested: start requested streams if not already streaming
+//
+//                    for ( String key : modes.keySet() ) {
+//                        if (modes.get(key)) {
+//                            //Log.v(TAG, "For mode " + key + " value is " + modes.get(key));
+//                            genericSubscriptionFactory(key, band);
+//                            try {
+//                                Thread.sleep(100);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         // Create file for the csv's
         PATH = Environment.getExternalStorageDirectory() + "/Band";
@@ -171,7 +172,7 @@ public class BandDataService extends Service {
     }
 
 
-    private  void genericUnsubscribeFactory(String request, BandInfo band) {
+    private void genericUnsubscribeFactory(String request, BandInfo band) {
         Log.v(TAG, "Stopping stream " + request);
         // Check for existance of stream
         if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
@@ -240,8 +241,20 @@ public class BandDataService extends Service {
                 default:
                     Log.e(TAG, "Unknown subscription requested " + request);
             }
+        } else {
+            if (!bandStreams.containsKey(band)) {
+                Log.e(TAG, "Error: unsubscribe request for a band that isnt stored");
+                Log.v(TAG, "Band: " + band.toString());
+                for (BandInfo info :
+                        bandStreams.keySet()) {
+                    Log.v(TAG, "Key: " + info.toString());
+                }
+            } else {
+                if (!bandStreams.get(band).contains(request)) {
+                    Log.e(TAG, "Error: unsubscribe request for unregistered request");
+                }
+            }
         }
-
     }
 
 
@@ -258,7 +271,6 @@ public class BandDataService extends Service {
         } else if (!bandStreams.get(band).contains(request)) {
             // Add sensor to the list in the stream map
             bandStreams.get(band).add(request);
-
         }
 
         // Request the appropriate stream
@@ -367,6 +379,11 @@ public class BandDataService extends Service {
     */
     @Override
     public IBinder onBind(Intent intent) {
+        if (!isStarted) {
+            Intent i = new Intent(this, BandDataService.class);
+//            startService(i);
+        }
+
         return mMessenger.getBinder();
     }
 
@@ -381,6 +398,7 @@ public class BandDataService extends Service {
 
     public static final String MAC_EXTRA = "mac";
     public static final String REQUEST_EXTRA = "request";
+
     // Incoming messages Handler
     private static class IncomingHandler extends Handler {
 
@@ -439,13 +457,8 @@ public class BandDataService extends Service {
     }
 
     private BandInfo infoFromMac(String mac) {
-        BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
-        for (BandInfo b :
-                bands) {
-            Log.v(TAG, b.getMacAddress());
-        }
-        Log.e(TAG, mac);
-        Log.v(TAG, bands.toString());
+        // New band, get new info
+        BandInfo[] bands = pairedBands;
         for (BandInfo b :
                 bands) {
             if (b.getMacAddress().equals(mac)) {

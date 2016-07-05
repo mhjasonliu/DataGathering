@@ -180,6 +180,7 @@ public class HeartRateManager extends DataManager {
 
         @Override
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
+            Log.v(TAG, "");
             if (event != null) {
                 JSONObject datapoint = new JSONObject();
                 try {

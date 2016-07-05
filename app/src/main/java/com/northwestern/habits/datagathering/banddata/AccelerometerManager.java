@@ -235,6 +235,7 @@ public class AccelerometerManager extends DataManager {
 
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
+            Log.v(TAG, "accel changed");
             if (event != null) {
                 JSONObject datapoint = new JSONObject();
                 try {

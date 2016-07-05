@@ -183,10 +183,16 @@ public class DevicesFragment extends Fragment {
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        // Release service binding
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        // Release service binding
         this.getActivity().unbindService(serviceConnection);
+        serviceConnection.onServiceDisconnected(this.getActivity().getComponentName());
     }
 
     /**
