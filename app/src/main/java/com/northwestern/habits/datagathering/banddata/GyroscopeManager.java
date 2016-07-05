@@ -56,7 +56,6 @@ public class GyroscopeManager extends DataManager {
 
     @Override
     protected void subscribe(BandInfo info) {
-        Log.e(TAG, "BandInfo for gyro subscription is " + info);
         new SubscriptionThread(info).start();
     }
 

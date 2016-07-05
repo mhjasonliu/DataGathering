@@ -93,22 +93,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private AdapterView.OnItemSelectedListener accSpinnerListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            // Get the device associated
-            DeviceListItem device = (DeviceListItem) parent.getTag();
-
-            // Send a request to change the frequency
-            Message m = new Message();
-            m.what = BandDataService.MSG_FREQUENCY;
-            Bundle b = new Bundle();
-            b.putString(BandDataService.REQUEST_EXTRA, BandDataService.ACCEL_REQ_EXTRA);
-            b.putString(BandDataService.FREQUENCY_EXTRA, ((TextView) view).getText().toString());
-            b.putString(BandDataService.MAC_EXTRA, device.getMAC());
-            m.setData(b);
-            try {
-                messenger.send(m);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            sendFrequencyMesasge(parent, view, BandDataService.ACCEL_REQ_EXTRA);
         }
 
         @Override
@@ -116,6 +101,37 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             // do nothing
         }
     };
+    private AdapterView.OnItemSelectedListener gyroSpinnerListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            // do nothing
+        }
+    };
+
+    private void sendFrequencyMesasge(AdapterView<?> parent, View view, String requestType) {
+
+        // Get the device associated
+        DeviceListItem device = (DeviceListItem) parent.getTag();
+
+        // Send a request to change the frequency
+        Message m = new Message();
+        m.what = BandDataService.MSG_FREQUENCY;
+        Bundle b = new Bundle();
+        b.putString(BandDataService.REQUEST_EXTRA, requestType);
+        b.putString(BandDataService.FREQUENCY_EXTRA, ((TextView) view).getText().toString());
+        b.putString(BandDataService.MAC_EXTRA, device.getMAC());
+        m.setData(b);
+        try {
+            messenger.send(m);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
 
     private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
         @Override
@@ -223,7 +239,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 locationSpinner.setAdapter(locationAdapter);
                 locationSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
 
-                // Prepare the frequency spinner
+                // Prepare the accelerometer frequency spinner
                 Spinner frequencySpinner = (Spinner) rootView.findViewById(R.id.acc_frequency_spinner);
                 ArrayAdapter<CharSequence> frequencyAdapter = ArrayAdapter.createFromResource(context,
                         R.array.frequency_array, android.R.layout.simple_spinner_item);
@@ -237,7 +253,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 frequencySpinner = (Spinner) rootView.findViewById(R.id.gyro_frequency_spinner);
                 // Apply the frequencyAdapter to the spinner
                 frequencySpinner.setAdapter(frequencyAdapter);
-                frequencySpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+                frequencySpinner.setOnItemSelectedListener(gyroSpinnerListener);
 
                 return rootView;
 

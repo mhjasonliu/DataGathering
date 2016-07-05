@@ -380,7 +380,14 @@ public class BandDataService extends Service {
     }
 
     private void setGyroFrequency(String f, BandInfo bandInfo) {
+        // Change the manager's stored frequency
         gyroManager.setFrequency(f, bandInfo);
+
+        // Unsubscribe and resubscribe if necessary
+        if (bandStreams.containsKey(bandInfo) && bandStreams.get(bandInfo).contains(GYRO_REQ_EXTRA)) {
+            gyroManager.unSubscribe(bandInfo);
+            gyroManager.subscribe(bandInfo);
+        }
     }
 
     private BandInfo infoFromMac(String mac) {
