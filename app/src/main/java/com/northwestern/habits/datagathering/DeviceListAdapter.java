@@ -298,83 +298,60 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                             // TODO: 6/29/2016 Request a frequency
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.ACCEL_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.ACCEL_REQ_EXTRA, true);
                             break;
                         case "Altimeter":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.ALT_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.ALT_REQ_EXTRA, true);
                             break;
                         case "Ambient Light":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.AMBIENT_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.AMBIENT_REQ_EXTRA, true);
                             break;
                         case "Barometer":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.BAROMETER_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.BAROMETER_REQ_EXTRA, true);
                             break;
                         case "Calories":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.CALORIES_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.CALORIES_REQ_EXTRA, true);
                             break;
                         case "Contact":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.CONTACT_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.CONTACT_REQ_EXTRA, true);
                             break;
                         case "Distance":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.DISTANCE_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.DISTANCE_REQ_EXTRA, true);
                             break;
                         case "GSR":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.GSR_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.GSR_REQ_EXTRA, true);
                             break;
                         case "Gyroscope":
                             // TODO: 6/29/2016 Request a frequency
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.GYRO_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.GYRO_REQ_EXTRA, true);
                             break;
                         case "Heart Rate":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.HEART_RATE_REQ_EXTRA);
-                            // TODO: 6/29/2016 Request permission
-                            bandDataIntent.putExtra(BandDataService.HEART_RATE_REQ_EXTRA, true);
                             break;
                         case "Pedometer":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.PEDOMETER_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.PEDOMETER_REQ_EXTRA, true);
                             break;
                         case "Skin Temp.":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.SKIN_TEMP_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.SKIN_TEMP_REQ_EXTRA, true);
                             break;
                         case "UV":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.UV_REQ_EXTRA);
-                            bandDataIntent.putExtra(BandDataService.UV_REQ_EXTRA, true);
                             break;
                         default:
                             Log.e(TAG, "Button text not recognized");
                     }
                     requestBundle.putBoolean(BandDataService.STOP_STREAM_EXTRA, !isChecked);
-//                    bandDataIntent.putExtra(BandDataService.STUDY_ID_EXTRA,
-//                            prefs.getString(Preferences.USER_ID, ""));
-//                    bandDataIntent.putExtra(BandDataService.CONTINUE_STUDY_EXTRA, true);
-//                    bandDataIntent.putExtra(BandDataService.STOP_STREAM_EXTRA, !isChecked);
-//                    bandDataIntent.putExtra(BandDataService.INDEX_EXTRA, 0);
-//                    bandDataIntent.putExtra(BandDataService.FREQUENCY_EXTRA, "8Hz");
-//                    bandDataIntent.putExtra(BandDataService.LOCATION_EXTRA, "");
-
-//                    context.startService(bandDataIntent);
                     requestBundle.putString(BandDataService.MAC_EXTRA, device.getMAC());
                     bandMessage.setData(requestBundle);
                     try {
