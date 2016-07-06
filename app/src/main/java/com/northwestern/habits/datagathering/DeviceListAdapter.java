@@ -235,8 +235,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             case BAND:
                 rootView = infalInflater.inflate(R.layout.item_band_sensors, null);
 
-                // Set the checked values and the onclicked listener
-                setSensorsInGrid(rootView, device);
 
                 // Prepare the location spinner
                 Spinner locationSpinner = (Spinner) rootView.findViewById(R.id.locationSpinner);
@@ -263,6 +261,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 // Apply the frequencyAdapter to the spinner
                 frequencySpinner.setAdapter(frequencyAdapter);
                 frequencySpinner.setOnItemSelectedListener(gyroSpinnerListener);
+
+                // Set the checked values and the onclicked listener
+                setSensorsInGrid(rootView, device);
 
                 return rootView;
 
@@ -333,6 +334,31 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                                 ((CheckBox) box).getText().toString()
                         ), false));
                 ((CheckBox) box).setOnCheckedChangeListener(sensorBoxListener);
+            } else if (box instanceof Spinner) {
+                String type = "";
+                if (box.getId() == R.id.acc_frequency_spinner) {
+                    type = Preferences.ACCEL;
+                } else if (box.getId() == R.id.gyro_frequency_spinner) {
+                    type = Preferences.GYRO;
+                }
+                String frequency = preferences.getString(Preferences.getFrequencyKey(device.getMAC(),
+                        type), "8Hz");
+                int index;
+                switch (frequency) {
+                    case "8Hz":
+                        index = 0;
+                        break;
+                    case "31Hz":
+                        index = 1;
+                        break;
+                    case "62Hz":
+                        index = 2;
+                        break;
+                    default:
+                        index = 0;
+                }
+                Log.v(TAG, "Index for " + type + " is " + Integer.toString(index));
+                ((Spinner) box).setSelection(index);
             }
             box.setTag(device);
         }
