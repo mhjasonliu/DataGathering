@@ -155,43 +155,4 @@
             android:enabled="true"/>
     </GridLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="25dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Location:"
-            android:id="@+id/locationText"/>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="25dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Frequency:"
-            android:id="@+id/frequencyText"/>
-    </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
-        <Spinner
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/locationSpinner"
-            android:spinnerMode="dialog"
-            android:layout_gravity="left"/>
-
-    </FrameLayout>
 </LinearLayout>
