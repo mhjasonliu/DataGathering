@@ -235,17 +235,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             case BAND:
                 rootView = infalInflater.inflate(R.layout.item_band_sensors, null);
 
-
-                // Prepare the location spinner
-                Spinner locationSpinner = (Spinner) rootView.findViewById(R.id.locationSpinner);
-                ArrayAdapter<CharSequence> locationAdapter = ArrayAdapter.createFromResource(context,
-                        R.array.locations_array, android.R.layout.simple_spinner_item);
-                // Specify the layout to use when the list of choices appears
-                locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                // Apply the locationAdapter to the spinner
-                locationSpinner.setAdapter(locationAdapter);
-                locationSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
-
                 // Prepare the accelerometer frequency spinner
                 Spinner frequencySpinner = (Spinner) rootView.findViewById(R.id.acc_frequency_spinner);
                 ArrayAdapter<CharSequence> frequencyAdapter = ArrayAdapter.createFromResource(context,
