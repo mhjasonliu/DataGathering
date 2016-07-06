@@ -1,7 +1,9 @@
 package com.northwestern.habits.datagathering.banddata;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,11 +16,14 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
+import com.northwestern.habits.datagathering.Preferences;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class BandDataService extends Service {
 
@@ -61,6 +66,8 @@ public class BandDataService extends Service {
 
     private SQLiteOpenHelper dbHelper;
 
+    private int NOTIFICATION_ID = 255;
+
 
     // Data managers
     AccelerometerManager accManager = new AccelerometerManager("", null, this);
@@ -81,9 +88,88 @@ public class BandDataService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Notification.Builder b = new Notification.Builder(this);
+        b.setContentTitle("Data streaming");
+        b.setContentText("The habits lab is streaming data from your Microsoft Band");
+        b.setSmallIcon(android.R.drawable.arrow_up_float);
+
+        startForeground(NOTIFICATION_ID, b.build());
+
+        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+
+        // Check for registered bands
+        Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+
+        for (String mac :
+                bandMacs) {
+            // Look for streams for this device
+            Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(mac), new HashSet<String>());
+            BandInfo band = infoFromMac(mac);
+            for (String stream :
+                    streams) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                switch (stream) {
+                    case Preferences.ACCEL:
+                        // Check for a frequency entry
+                        String f = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
+                        accManager.setFrequency(f, band);
+                        genericSubscriptionFactory(ACCEL_REQ_EXTRA, band);
+                        break;
+                    case Preferences.ALT:
+                        genericSubscriptionFactory(ALT_REQ_EXTRA, band);
+                        break;
+                    case Preferences.AMBIENT:
+                        genericSubscriptionFactory(AMBIENT_REQ_EXTRA, band);
+                        break;
+                    case Preferences.BAROMETER:
+                        genericSubscriptionFactory(BAROMETER_REQ_EXTRA, band);
+                        break;
+                    case Preferences.CALORIES:
+                        genericSubscriptionFactory(CALORIES_REQ_EXTRA, band);
+                        break;
+                    case Preferences.CONTACT:
+                        genericSubscriptionFactory(CONTACT_REQ_EXTRA, band);
+                        break;
+                    case Preferences.DISTANCE:
+                        genericSubscriptionFactory(DISTANCE_REQ_EXTRA, band);
+                        break;
+                    case Preferences.GSR:
+                        genericSubscriptionFactory(GSR_REQ_EXTRA, band);
+                        break;
+                    case Preferences.GYRO:
+                        // Check for a frequency entry
+                        String fr = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
+                        accManager.setFrequency(fr, band);
+                        genericSubscriptionFactory(GYRO_REQ_EXTRA, band);
+                        break;
+                    case Preferences.HEART:
+                        genericSubscriptionFactory(HEART_RATE_REQ_EXTRA, band);
+                        break;
+                    case Preferences.PEDOMETER:
+                        genericSubscriptionFactory(PEDOMETER_REQ_EXTRA, band);
+                        break;
+                    case Preferences.SKIN_TEMP:
+                        genericSubscriptionFactory(SKIN_TEMP_REQ_EXTRA, band);
+                        break;
+                    case Preferences.UV:
+                        genericSubscriptionFactory(UV_REQ_EXTRA, band);
+                        break;
+                    default:
+                }
+            }
+        }
+
+
+
+
+
 
         isStarted = true;
-        return Service.START_STICKY;
+        return Service.START_REDELIVER_INTENT;
     }
 
 
@@ -294,11 +380,6 @@ public class BandDataService extends Service {
     */
     @Override
     public IBinder onBind(Intent intent) {
-        if (!isStarted) {
-            Intent i = new Intent(this, BandDataService.class);
-//            startService(i);
-        }
-
         return mMessenger.getBinder();
     }
 
