@@ -108,7 +108,7 @@ public class BandDataService extends Service {
             for (String stream :
                     streams) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(100 );
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
