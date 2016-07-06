@@ -227,6 +227,7 @@ public class GyroscopeManager extends DataManager {
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
+                this.lastDataSample = event.getTimestamp();
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
