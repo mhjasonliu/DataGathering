@@ -85,7 +85,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 sensorGrid = (GridLayout) childView.findViewById(R.id.sensor_grid);
                 int childViews = sensorGrid.getChildCount();
                 for (int j = 0; j < childViews; j++) {
-                    ((CheckBox) sensorGrid.getChildAt(j)).setChecked(false);
+                    View box = sensorGrid.getChildAt(j);
+                    if (box instanceof CheckBox)
+                        ((CheckBox) sensorGrid.getChildAt(j)).setChecked(false);
                 }
             }
         }
