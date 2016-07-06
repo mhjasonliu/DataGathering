@@ -85,6 +85,7 @@ public class BandDataService extends Service {
     UvManager uvManager = new UvManager("", null, this);
 
     boolean isStarted = false;
+    private boolean isReconnecting = false;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -100,67 +101,72 @@ public class BandDataService extends Service {
         // Check for registered bands
         Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
 
-        for (String mac :
-                bandMacs) {
-            // Look for streams for this device
-            Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(mac), new HashSet<String>());
-            BandInfo band = infoFromMac(mac);
-            for (String stream :
-                    streams) {
-                try {
-                    Thread.sleep(100 );
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                switch (stream) {
-                    case Preferences.ACCEL:
-                        // Check for a frequency entry
-                        String f = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
-                        accManager.setFrequency(f, band);
-                        genericSubscriptionFactory(ACCEL_REQ_EXTRA, band);
-                        break;
-                    case Preferences.ALT:
-                        genericSubscriptionFactory(ALT_REQ_EXTRA, band);
-                        break;
-                    case Preferences.AMBIENT:
-                        genericSubscriptionFactory(AMBIENT_REQ_EXTRA, band);
-                        break;
-                    case Preferences.BAROMETER:
-                        genericSubscriptionFactory(BAROMETER_REQ_EXTRA, band);
-                        break;
-                    case Preferences.CALORIES:
-                        genericSubscriptionFactory(CALORIES_REQ_EXTRA, band);
-                        break;
-                    case Preferences.CONTACT:
-                        genericSubscriptionFactory(CONTACT_REQ_EXTRA, band);
-                        break;
-                    case Preferences.DISTANCE:
-                        genericSubscriptionFactory(DISTANCE_REQ_EXTRA, band);
-                        break;
-                    case Preferences.GSR:
-                        genericSubscriptionFactory(GSR_REQ_EXTRA, band);
-                        break;
-                    case Preferences.GYRO:
-                        // Check for a frequency entry
-                        String fr = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
-                        accManager.setFrequency(fr, band);
-                        genericSubscriptionFactory(GYRO_REQ_EXTRA, band);
-                        break;
-                    case Preferences.HEART:
-                        genericSubscriptionFactory(HEART_RATE_REQ_EXTRA, band);
-                        break;
-                    case Preferences.PEDOMETER:
-                        genericSubscriptionFactory(PEDOMETER_REQ_EXTRA, band);
-                        break;
-                    case Preferences.SKIN_TEMP:
-                        genericSubscriptionFactory(SKIN_TEMP_REQ_EXTRA, band);
-                        break;
-                    case Preferences.UV:
-                        genericSubscriptionFactory(UV_REQ_EXTRA, band);
-                        break;
-                    default:
+        // Lock thread while reconnecting
+        if (!isReconnecting) {
+            isReconnecting = true;
+            for (String mac :
+                    bandMacs) {
+                // Look for streams for this device
+                Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(mac), new HashSet<String>());
+                BandInfo band = infoFromMac(mac);
+                for (String stream :
+                        streams) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    switch (stream) {
+                        case Preferences.ACCEL:
+                            // Check for a frequency entry
+                            String f = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
+                            accManager.setFrequency(f, band);
+                            genericSubscriptionFactory(ACCEL_REQ_EXTRA, band);
+                            break;
+                        case Preferences.ALT:
+                            genericSubscriptionFactory(ALT_REQ_EXTRA, band);
+                            break;
+                        case Preferences.AMBIENT:
+                            genericSubscriptionFactory(AMBIENT_REQ_EXTRA, band);
+                            break;
+                        case Preferences.BAROMETER:
+                            genericSubscriptionFactory(BAROMETER_REQ_EXTRA, band);
+                            break;
+                        case Preferences.CALORIES:
+                            genericSubscriptionFactory(CALORIES_REQ_EXTRA, band);
+                            break;
+                        case Preferences.CONTACT:
+                            genericSubscriptionFactory(CONTACT_REQ_EXTRA, band);
+                            break;
+                        case Preferences.DISTANCE:
+                            genericSubscriptionFactory(DISTANCE_REQ_EXTRA, band);
+                            break;
+                        case Preferences.GSR:
+                            genericSubscriptionFactory(GSR_REQ_EXTRA, band);
+                            break;
+                        case Preferences.GYRO:
+                            // Check for a frequency entry
+                            String fr = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
+                            accManager.setFrequency(fr, band);
+                            genericSubscriptionFactory(GYRO_REQ_EXTRA, band);
+                            break;
+                        case Preferences.HEART:
+                            genericSubscriptionFactory(HEART_RATE_REQ_EXTRA, band);
+                            break;
+                        case Preferences.PEDOMETER:
+                            genericSubscriptionFactory(PEDOMETER_REQ_EXTRA, band);
+                            break;
+                        case Preferences.SKIN_TEMP:
+                            genericSubscriptionFactory(SKIN_TEMP_REQ_EXTRA, band);
+                            break;
+                        case Preferences.UV:
+                            genericSubscriptionFactory(UV_REQ_EXTRA, band);
+                            break;
+                        default:
+                    }
                 }
             }
+            isReconnecting = false;
         }
 
 
@@ -483,13 +489,15 @@ public class BandDataService extends Service {
 
     private BandInfo infoFromMac(String mac) {
         // New band, get new info
-        BandInfo[] bands = pairedBands;
+        BandInfo[] bands = pairedBands;//BandClientManager.getInstance().getPairedBands();
         for (BandInfo b :
                 bands) {
             if (b.getMacAddress().equals(mac)) {
                 return b;
             }
         }
+
+        // Failed to find the bandInfo matching the MAC address, create one and store
         Log.e(TAG, "Failed to find the MAC address");
         return null;
     }
