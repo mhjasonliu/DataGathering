@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,7 +99,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private AdapterView.OnItemSelectedListener accSpinnerListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            sendFrequencyMesasge(parent, view, BandDataService.ACCEL_REQ_EXTRA);
+//            sendFrequencyMesasge(parent, view, BandDataService.ACCEL_REQ_EXTRA);
+            view.setEnabled(false);
         }
 
         @Override
@@ -108,6 +111,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private AdapterView.OnItemSelectedListener gyroSpinnerListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            ((Spinner) ((View) parent.getParent())
+                    .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
             sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
         }
 
@@ -123,10 +128,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         DeviceListItem device = (DeviceListItem) parent.getTag();
         String mac = device.getMAC();
 
-        // Save frequency specification
-        SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
-//        Preferences.get
-
         // Send a request to change the frequency
         Message m = new Message();
         m.what = BandDataService.MSG_FREQUENCY;
@@ -141,32 +142,6 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             e.printStackTrace();
         }
     }
-
-    private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            Log.v(TAG, "Item selected");
-            Message bandMessage = new Message();
-            bandMessage.what = BandDataService.MSG_STREAM;
-            Bundle extras = new Bundle();
-            switch (parent.getId()) {
-                case R.id.locationSpinner:
-                    //TODO
-                    extras.putString(BandDataService.LOCATION_EXTRA, ((TextView) view).getText().toString());
-                    break;
-                case R.id.frequencySpinner:
-                    Log.v(TAG, "Frequency change to " + parent.getItemAtPosition(position));
-                    //TODO
-                    extras.putString(BandDataService.FREQUENCY_EXTRA, ((TextView) view).getText().toString());
-                    break;
-            }
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> parent) {
-
-        }
-    };
 
     @Override
     public int getGroupCount() {
@@ -238,12 +213,13 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 // Prepare the accelerometer frequency spinner
                 Spinner frequencySpinner = (Spinner) rootView.findViewById(R.id.acc_frequency_spinner);
                 ArrayAdapter<CharSequence> frequencyAdapter = ArrayAdapter.createFromResource(context,
-                        R.array.frequency_array, android.R.layout.simple_spinner_item);
+                        R.array.frequency_array, R.layout.disabled_text_view);
                 // Specify the layout to use when the list of choices appears
-                frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                frequencyAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
                 // Apply the frequencyAdapter to the spinner
                 frequencySpinner.setAdapter(frequencyAdapter);
                 frequencySpinner.setOnItemSelectedListener(accSpinnerListener);
+
 
                 // Repeat for gyro
                 frequencySpinner = (Spinner) rootView.findViewById(R.id.gyro_frequency_spinner);
@@ -263,7 +239,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
 
                 SensorManager manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
                 rootView.findViewById(R.id.accelBox).setEnabled(
-                        manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null);
+                        manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null);
                 rootView.findViewById(R.id.tempBox).setEnabled(
                         manager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE) != null);
                 rootView.findViewById(R.id.gravBox).setEnabled(
@@ -325,9 +301,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 ((CheckBox) box).setOnCheckedChangeListener(sensorBoxListener);
             } else if (box instanceof Spinner) {
                 String type = "";
-                if (box.getId() == R.id.acc_frequency_spinner) {
-                    type = Preferences.ACCEL;
-                } else if (box.getId() == R.id.gyro_frequency_spinner) {
+//                if (box.getId() == R.id.acc_frequency_spinner) {
+//                    type = Preferences.ACCEL;
+                /*} else */if (box.getId() == R.id.gyro_frequency_spinner) {
                     type = Preferences.GYRO;
                 }
                 String frequency = preferences.getString(Preferences.getFrequencyKey(device.getMAC(),
@@ -377,12 +353,24 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     String text = buttonView.getText().toString();
                     switch (text) {
                         case "Accelerometer":
-                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
-                                    BandDataService.ACCEL_REQ_EXTRA);
+                            // Alert the user that accelerometer and gyro stream together
+                            new AlertDialog.Builder(context).setTitle("Accelerometer Streaming")
+                                    .setMessage("Streaming the accelerometer alone is currently " +
+                                            "not supported. To stream accelerometer, start " +
+                                            "streaming gyroscope and the accelerometer will start " +
+                                            "streaming at the same frequency as the gyroscope.")
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {}})
+                                    .create().show();
+                            buttonView.setChecked(!buttonView.isChecked());
+
+//                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
+//                                    BandDataService.ACCEL_REQ_EXTRA);
                             if (isChecked) {
-                                sensors.add(Preferences.ACCEL);
+//                                sensors.add(Preferences.ACCEL);
                             } else {
-                                sensors.remove(Preferences.ACCEL);
+//                                sensors.remove(Preferences.ACCEL);
                             }
                             break;
                         case "Altimeter":
@@ -451,6 +439,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                         case "Gyroscope":
                             requestBundle.putString(BandDataService.REQUEST_EXTRA,
                                     BandDataService.GYRO_REQ_EXTRA);
+                            ((CompoundButton) ((View) buttonView.getParent())
+                                    .findViewById(R.id.accelerometerBox)).setChecked(isChecked);
                             if (isChecked) {
                                 sensors.add(Preferences.GYRO);
                             } else {

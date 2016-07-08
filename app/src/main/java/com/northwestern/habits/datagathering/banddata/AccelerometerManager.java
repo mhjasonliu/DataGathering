@@ -14,8 +14,8 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
-import com.microsoft.band.sensors.BandAccelerometerEvent;
-import com.microsoft.band.sensors.BandAccelerometerEventListener;
+import com.microsoft.band.sensors.BandGyroscopeEvent;
+import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.Preferences;
@@ -105,7 +105,7 @@ public class AccelerometerManager extends DataManager {
                                 }
 
                                 // Register the listener
-                                client.getSensorManager().registerAccelerometerEventListener(
+                                client.getSensorManager().registerGyroscopeEventListener(
                                         aListener, rate);
 
                                 // Save the listener and client
@@ -190,8 +190,8 @@ public class AccelerometerManager extends DataManager {
                             // Unregister the client
                             try {
                                 Log.v(TAG, "Unsubscribing...");
-                                client.getSensorManager().unregisterAccelerometerEventListener(
-                                        (BandAccelerometerEventListener) listeners.get(info)
+                                client.getSensorManager().unregisterGyroscopeEventListener(
+                                        (BandGyroscopeEventListener) listeners.get(info)
                                 );
                                 mHandler.post(unsubscribedToastRunnable);
                                 Log.v(TAG, "Removing from lists");
@@ -215,7 +215,7 @@ public class AccelerometerManager extends DataManager {
     private TimeoutHandler timeoutThread = new TimeoutHandler();
 
     private class BandAccelerometerEventListenerCustom extends CustomListener
-            implements BandAccelerometerEventListener, EventListener {
+            implements BandGyroscopeEventListener, EventListener {
 
         private String uName;
         private String location;
@@ -243,7 +243,7 @@ public class AccelerometerManager extends DataManager {
 
 
         @Override
-        public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
+        public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
 //            Log.v(TAG, "accel changed");
             if (event != null) {
                 this.lastDataSample = event.getTimestamp();
