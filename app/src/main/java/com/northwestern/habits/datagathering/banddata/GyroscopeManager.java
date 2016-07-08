@@ -120,6 +120,8 @@ public class GyroscopeManager extends DataManager {
                                         "the band is in range.\n");
 
                                 toastFailure();
+
+                                reconnectBand();
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Gyro sensor from this device ignored");

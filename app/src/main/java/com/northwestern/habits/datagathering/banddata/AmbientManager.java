@@ -86,6 +86,7 @@ public class AmbientManager extends DataManager {
                                         "and the band is in range.\n");
 
                                 toastFailure();
+                                reconnectBand();
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream ambient sensor from this device ignored");

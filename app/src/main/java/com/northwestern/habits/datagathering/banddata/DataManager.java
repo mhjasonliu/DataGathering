@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -51,15 +52,33 @@ public abstract class DataManager implements EventListener {
     SQLiteDatabase database; // Should be reset in the constructor
     protected Context context;
     protected Handler mHandler;
-    protected long TIMEOUT_INTERVAL = 1000;
+    protected long TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
     protected int restartCount = 0;
     protected String STREAM_TYPE;
 
     protected static boolean toastingFailure;
 
+    protected static boolean disconnectDetected = false;
+
     protected abstract void subscribe(BandInfo info);
 
     protected abstract void unSubscribe(BandInfo info);
+
+    protected void reconnectBand() {
+        if (!disconnectDetected) {
+            disconnectDetected = true;
+            // Capture all of the redundant disconnect requests
+            try {
+                Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Send a start request to the service to attempt to reconnect to sensors
+            context.startService(new Intent(context, BandDataService.class));
+            disconnectDetected = false;
+        }
+    }
 
 
     /*
@@ -419,13 +438,15 @@ public abstract class DataManager implements EventListener {
                         }
                         // Subscribe again
                         subscribe(this_info);
-                        final int innerCount = restartCount++;
+                        final int innerCount = ++restartCount;
+                        final String restartText = "Restarting " +
+                                STREAM_TYPE + " for the " + Integer.toString(innerCount) +
+                                "th time";
+                        Log.v(TAG, restartText);
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context, "Successfully restarted " +
-                                        STREAM_TYPE + " for the " + Integer.toString(innerCount) +
-                                        "th time", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, restartText, Toast.LENGTH_SHORT).show();
                             }
                         });
                     }

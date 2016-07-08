@@ -89,6 +89,7 @@ public class BarometerManager extends DataManager {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
                                 toastFailure();
+                                reconnectBand();
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream barometer sensor from this device ignored");

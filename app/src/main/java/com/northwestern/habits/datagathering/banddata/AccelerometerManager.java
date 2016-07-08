@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -28,7 +27,6 @@ import org.json.JSONObject;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by William on 12/31/2015
@@ -125,8 +123,7 @@ public class AccelerometerManager extends DataManager {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
                                 toastFailure();
-                                Thread.sleep(TimeUnit.SECONDS.toMillis(15));//TimeUnit.MINUTES.toMillis(5));
-                                context.startService(new Intent(context, BandDataService.class));
+                                reconnectBand();
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream accelerometer from this device ignored");
@@ -247,7 +244,7 @@ public class AccelerometerManager extends DataManager {
 
         @Override
         public void onBandAccelerometerChanged(final BandAccelerometerEvent event) {
-            Log.v(TAG, "accel changed");
+//            Log.v(TAG, "accel changed");
             if (event != null) {
                 this.lastDataSample = event.getTimestamp();
                 JSONObject datapoint = new JSONObject();

@@ -90,6 +90,7 @@ public class PedometerManager extends DataManager {
                                         "the band is in range.\n");
 
                                 toastFailure();
+                                reconnectBand();
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Pedometer sensor from this device ignored");

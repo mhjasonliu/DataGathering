@@ -86,6 +86,7 @@ public class DistanceManager extends DataManager {
                                         "the band is in range.\n");
 
                                 toastFailure();
+                                reconnectBand();
                             }
                         } else {
                             Log.w(TAG, "Multiple attempts to stream Distance sensor from this device ignored");
