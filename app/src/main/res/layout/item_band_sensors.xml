@@ -16,7 +16,8 @@
             android:layout_row="0"
             android:layout_column="0"
             android:enabled="false"
-            android:clickable="true"/>
+            android:clickable="true"
+            android:textColor="@color/white"/>
 
         <Spinner
             android:layout_width="wrap_content"
