@@ -64,12 +64,16 @@ public class GyroscopeManager extends DataManager {
     @Override
     protected void subscribe(BandInfo info) {
         new SubscriptionThread(info).start();
+
     }
 
     @Override
     protected void unSubscribe(BandInfo info) {
         new UnsubscribeThread(info).start();
     }
+
+    protected void restartSubscription(BandInfo info) {new UnsubscribeThread(info).run();
+    new SubscriptionThread(info).run();}
 
     /* *********************************** THREADS *************************************** */
 
@@ -110,11 +114,16 @@ public class GyroscopeManager extends DataManager {
 
                                 // Toast saying connection successful
                                 toastStreaming(STREAM_TYPE);
-                                if (timeoutThread.getState() != State.NEW) {
+
+                                // Restart the timeout checker
+                                if (timeoutThread.getState() != State.NEW
+                                        && timeoutThread.getState() != State.RUNNABLE) {
                                     timeoutThread.makeThreadTerminate();
                                     timeoutThread = new TimeoutHandler();
+                                    timeoutThread.start();
+                                } else if (timeoutThread.getState() == State.NEW) {
+                                    timeoutThread.start();
                                 }
-                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
@@ -229,7 +238,8 @@ public class GyroscopeManager extends DataManager {
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
-                this.lastDataSample = event.getTimestamp();
+                Log.v(TAG, "gyro");
+                this.lastDataSample = System.currentTimeMillis() ;
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());

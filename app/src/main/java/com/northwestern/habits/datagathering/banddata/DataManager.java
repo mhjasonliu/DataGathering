@@ -52,7 +52,7 @@ public abstract class DataManager implements EventListener {
     SQLiteDatabase database; // Should be reset in the constructor
     protected Context context;
     protected Handler mHandler;
-    protected long TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
+    protected long TIMEOUT_INTERVAL = TimeUnit.MINUTES.toMillis(1);
     protected int restartCount = 0;
     protected String STREAM_TYPE;
 
@@ -346,20 +346,22 @@ public abstract class DataManager implements EventListener {
     /* ******************************** TOASTS ***************************** */
 
     protected void toastStreaming(final String type) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_SHORT).show();
-            }
-        });
-        cancelToast = null;
+//        mHandler.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//        cancelToast = null;
     }
 
     protected void toastFailure() {
-        mHandler.post(failure_toast_runnable);
+//        mHandler.post(failure_toast_runnable);
     }
 
-    protected void toastAlreadyStreaming() { mHandler.post(alreadyStreamingRunnable); }
+    protected void toastAlreadyStreaming() {
+//        mHandler.post(alreadyStreamingRunnable);
+    }
 
     private static Toast cancelToast = null;
 
@@ -388,7 +390,7 @@ public abstract class DataManager implements EventListener {
     protected Runnable unsubscribedToastRunnable = new Runnable() {
         @Override
         public void run() {
-            Toast.makeText(context, "Unsubscribed from " + STREAM_TYPE, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "Unsubscribed from " + STREAM_TYPE, Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -421,8 +423,9 @@ public abstract class DataManager implements EventListener {
                     if (timeout != 0
                             && interval > TIMEOUT_INTERVAL) {
                         // Timeout occurred, un-subscribe the current listener
-                        unSubscribe(this_info);
+//                        unSubscribe(this_info);
                         Log.d(TAG, STREAM_TYPE + " timeout detected");
+                        Log.e(TAG, "interval: " + interval);
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -432,12 +435,15 @@ public abstract class DataManager implements EventListener {
                         });
 
                         try {
-                            Thread.sleep(200);
+                            Thread.sleep(TIMEOUT_INTERVAL);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         // Subscribe again
-                        subscribe(this_info);
+//                        subscribe(this_info);
+                        if (DataManager.this instanceof GyroscopeManager) {
+                            ((GyroscopeManager) DataManager.this).restartSubscription(this_info);
+                        }
                         final int innerCount = ++restartCount;
                         final String restartText = "Restarting " +
                                 STREAM_TYPE + " for the " + Integer.toString(innerCount) +
