@@ -50,7 +50,7 @@ public class UserActivity extends AppCompatActivity {
                         }
 //                        Database database = CouchBaseData.getDatabaseInstance(UserActivity.this);
                         try {
-                            push = CouchBaseData.getReplicationInstance();
+                            push = CouchBaseData.getReplicationInstance(UserActivity.this);
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }

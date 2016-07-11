@@ -31,14 +31,14 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
         if (id.equals("")) {
             // Create the document
-            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, CouchBaseData.getCurrentDocument().getId()).apply();
+            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, CouchBaseData.getCurrentDocument(getApplicationContext()).getId()).apply();
         } else {
             try {
                 CouchBaseData.getManagerInstance(this.getApplicationContext());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            CouchBaseData.setCurrentDocument(id);
+            CouchBaseData.setCurrentDocument(getApplicationContext(), id);
         }
         }
 

@@ -223,16 +223,12 @@ public class GyroscopeManager extends DataManager {
             implements BandGyroscopeEventListener {
 
         private BandInfo info;
-        private String uName;
-        private String location;
         private final int BUFFER_SIZE = 100;
         private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
             super();
             info = mInfo;
-            uName = name;
-            location = BandDataService.locations.get(info);
         }
 
         @Override
@@ -258,7 +254,7 @@ public class GyroscopeManager extends DataManager {
 
                 if (dataBuffer.length() >= BUFFER_SIZE) {
                     try {
-                        CouchBaseData.getCurrentDocument().update(new Document.DocumentUpdater() {
+                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
@@ -273,53 +269,7 @@ public class GyroscopeManager extends DataManager {
                         e.printStackTrace();
                     }
                 }
-
-//                // Insert into csv file
-//
-//                // Get hour and date string from the event timestamp
-//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
-//
-//                // Form the directory path and file name
-//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-//                String fileName = DataGatheringApplication.getDataFileName(
-//                        DataStorageContract.GyroTable.TABLE_NAME, hour, date, T_BAND2,
-//                        info.getMacAddress());
-//
-//                // Create the directory if it does not exist
-//                File directory = new File(dirPath);
-//                if (!directory.exists()) {
-//                    directory.mkdirs();
-//                }
-//
-//                // Write to csv
-//                File csv = new File(dirPath, fileName);
-//
-//                try {
-//                    FileWriter fw;
-//                    if (!csv.exists()) {
-//                        csv.createNewFile();
-//                        fw = new FileWriter(csv, true);
-//                        fw.append("Time,x,y,z\n");
-//                    } else {
-//                        fw = new FileWriter(csv, true);
-//                    }
-//
-//                    fw.append(getDateTime(event));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getAccelerationX()));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getAccelerationY()));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getAccelerationZ()));
-//                    fw.append('\n');
-//                    fw.close();
-//                    Log.v(TAG, "Wrote to " + csv.getPath());
-//                } catch (IOException e1) {
-//                    e1.printStackTrace();
-//                }
             }
-
         }
     }
 }

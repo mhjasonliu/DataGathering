@@ -194,7 +194,7 @@ public class SkinTempManager extends DataManager {
 
                 if (dataBuffer.length() >= BUFFER_SIZE) {
                     try {
-                        CouchBaseData.getCurrentDocument().update(new Document.DocumentUpdater() {
+                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();

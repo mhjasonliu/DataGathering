@@ -28,26 +28,30 @@ public class CouchBaseData {
 
     public static final String DB_NAME = "data_gathering_db";
 
-    public static Database getDatabaseInstance() throws CouchbaseLiteException {
+    public static Database getDatabaseInstance(Context c) throws CouchbaseLiteException {
         if ((database == null)) {
-            database = manager.getDatabase(DB_NAME);
+            try {
+                database = getManagerInstance(c).getDatabase(DB_NAME);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             database.setMaxRevTreeDepth(1);
         }
         return database;
     }
 
-    public static void setCurrentDocument(String id) {
+    public static void setCurrentDocument(Context c, String id) {
         try {
-            currentDocument = getDatabaseInstance().getDocument(id);
+            currentDocument = getDatabaseInstance(c).getDocument(id);
         } catch (CouchbaseLiteException e) {
             e.printStackTrace();
         }
     }
 
-    public static Document getCurrentDocument() {
+    public static Document getCurrentDocument(Context c) {
         if (currentDocument == null) {
             try {
-                currentDocument = getDatabaseInstance().createDocument();
+                currentDocument = getDatabaseInstance(c).createDocument();
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }
@@ -70,11 +74,11 @@ public class CouchBaseData {
         return manager;
     }
 
-    public static Replication getReplicationInstance() throws MalformedURLException {
+    public static Replication getReplicationInstance(Context c) throws MalformedURLException {
         if (replication == null) {
             URL url = new URL(URL_STRING);
             try {
-                replication = new Replication(getDatabaseInstance(), url, Replication.Direction.PUSH);
+                replication = new Replication(getDatabaseInstance(c), url, Replication.Direction.PUSH);
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }
