@@ -111,9 +111,11 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private AdapterView.OnItemSelectedListener gyroSpinnerListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            ((Spinner) ((View) parent.getParent())
-                    .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
-            sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
+            if (listenForSelected) {
+                ((Spinner) ((View) parent.getParent())
+                        .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
+                sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
+            }
         }
 
         @Override
@@ -300,7 +302,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                         ), false));
                 ((CheckBox) box).setOnCheckedChangeListener(sensorBoxListener);
             } else if (box instanceof Spinner) {
-                String type = "";
+                String type = Preferences.GYRO;
 //                if (box.getId() == R.id.acc_frequency_spinner) {
 //                    type = Preferences.ACCEL;
                 /*} else */if (box.getId() == R.id.gyro_frequency_spinner) {
@@ -323,11 +325,14 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                         index = 0;
                 }
                 Log.v(TAG, "Index for " + type + " is " + Integer.toString(index));
+                listenForSelected = false;
                 ((Spinner) box).setSelection(index);
+                listenForSelected = true;
             }
             box.setTag(device);
         }
     }
+    private boolean listenForSelected;
 
     private Messenger messenger;
 

@@ -244,7 +244,7 @@ public class AccelerometerManager extends DataManager {
 
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
-//            Log.v(TAG, "accel changed");
+            Log.e(TAG, "accel changed");
             if (event != null) {
                 this.lastDataSample = event.getTimestamp();
                 JSONObject datapoint = new JSONObject();
