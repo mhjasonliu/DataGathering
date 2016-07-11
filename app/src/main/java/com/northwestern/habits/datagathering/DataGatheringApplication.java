@@ -51,7 +51,7 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         if (id.equals("")) {
             // Create the document
             currentDocument = db.createDocument();
-            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId()).commit();
+            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId()).apply();
             Map<String, Object> properties = new HashMap<>();
             properties.put("Initialized", true);
             try {

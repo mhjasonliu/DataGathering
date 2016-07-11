@@ -60,7 +60,8 @@ public class UserActivity extends AppCompatActivity {
                             public void changed(Replication.ChangeEvent event) {
                                 // will be called back when the push replication status changes
                                 String message = "Completed " + event.getCompletedChangeCount()
-                                        + " out of " + event.getCompletedChangeCount() + push.getStatus().toString();
+                                        + " out of " + event.getCompletedChangeCount() + " "
+                                        + push.getStatus().toString();
                                 Log.v("Replication", message);
                                 Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
 
@@ -71,6 +72,7 @@ public class UserActivity extends AppCompatActivity {
                                 }
                             }
                         });
+
                     }
 //                    Snackbar.make(view, "Status: " + push.getStatus(), Snackbar.LENGTH_SHORT).show();
                     if (push.getStatus() != Replication.ReplicationStatus.REPLICATION_ACTIVE) {
