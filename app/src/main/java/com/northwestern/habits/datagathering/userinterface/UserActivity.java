@@ -14,10 +14,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.couchbase.lite.Database;
 import com.couchbase.lite.replicator.Replication;
+import com.northwestern.habits.datagathering.CouchBaseData;
 import com.northwestern.habits.datagathering.CustomDrawerListener;
-import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.R;
 
 import java.net.MalformedURLException;
@@ -49,8 +48,12 @@ public class UserActivity extends AppCompatActivity {
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }
-                        Database database = DataGatheringApplication.getInstance().getDatabase();
-                        push = database.createPushReplication(url);
+//                        Database database = CouchBaseData.getDatabaseInstance(UserActivity.this);
+                        try {
+                            push = CouchBaseData.getReplicationInstance();
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
                         push.setContinuous(true);
 //                    Authenticator auth = new BasicAuthenticator(username, password);
 //                    push.setAuthenticator(auth);

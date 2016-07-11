@@ -51,7 +51,7 @@ public class FileManagerTimer extends TimerTask {
                 // Add attachment to the document
                 try {
                     InputStream stream = new FileInputStream(f);
-                    Document doc = appInstance.getDatabase().getDocument(id);
+                    Document doc = CouchBaseData.getCurrentDocument();
                     UnsavedRevision newRev = doc.createRevision();
                     newRev.setAttachment(f.getName(), "csv", stream);
                     newRev.save();

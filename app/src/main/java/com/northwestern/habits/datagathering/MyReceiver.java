@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.northwestern.habits.datagathering.banddata.BandDataService;
 
@@ -35,10 +36,16 @@ public class MyReceiver extends BroadcastReceiver {
                 case Intent.ACTION_POWER_CONNECTED:
                     Log.v(TAG, "Power connected action received.");
                     isCharging = true;
+
+                    if (isWifiConnected) {
+                        Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 case Intent.ACTION_POWER_DISCONNECTED:
                     Log.v(TAG, "Power connected action received.");
                     isCharging = false;
+
+                    Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
                     break;
 
                 case WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION:

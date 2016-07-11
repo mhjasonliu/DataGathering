@@ -17,7 +17,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandGyroscopeEvent;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
-import com.northwestern.habits.datagathering.DataGatheringApplication;
+import com.northwestern.habits.datagathering.CouchBaseData;
 import com.northwestern.habits.datagathering.Preferences;
 
 import org.json.JSONArray;
@@ -262,12 +262,12 @@ public class AccelerometerManager extends DataManager {
 
                 if (dataBuffer.length() >= BUFFER_SIZE) {
                     try {
-                        DataGatheringApplication.getInstance().getCurrentDocument().update(new Document.DocumentUpdater() {
+                        CouchBaseData.getCurrentDocument().update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
                                 properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                        + "_" + getDateTime(event), dataBuffer.toString());
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }

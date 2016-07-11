@@ -6,19 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.util.Log;
-
-import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Database;
-import com.couchbase.lite.Document;
-import com.couchbase.lite.Manager;
-import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by William on 5/11/2016.
@@ -26,17 +17,17 @@ import java.util.Map;
  */
 public class DataGatheringApplication extends Application implements Thread.UncaughtExceptionHandler {
     private static DataGatheringApplication ourInstance = new DataGatheringApplication();
-    private Manager manager;
-    private Database db;
+//    private Manager manager;
+//    private Database db;
     private static String TAG = "Application";
 
     public static DataGatheringApplication getInstance() {
         return ourInstance;
     }
 
-    public Database getDatabase() {
-        return db;
-    }
+//    public Database getDatabase() {
+//        return db;
+//    }
 
     @Override
     public void onCreate() {
@@ -44,23 +35,20 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         ourInstance = this;
 //        Thread.setDefaultUncaughtExceptionHandler(this);
 
-        createDatabase(getApplicationContext());
+//        createDatabase(getApplicationContext());
         // If we do not currently have a document, create one and save the id
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
         String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
         if (id.equals("")) {
             // Create the document
-            currentDocument = db.createDocument();
-            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId()).apply();
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("Initialized", true);
+            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, CouchBaseData.getCurrentDocument().getId()).apply();
+        } else {
             try {
-                currentDocument.putProperties(properties);
-            } catch (CouchbaseLiteException e) {
+                CouchBaseData.getManagerInstance(this.getApplicationContext());
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-            currentDocument = db.getDocument(id);
+            CouchBaseData.setCurrentDocument(id);
         }
 
         // Start timertask that moves the folders
@@ -133,20 +121,20 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         return format.format(c.getTime());
     }
 
-    private void createDatabase(Context context) {
-        try {
-            this.manager = new Manager(new AndroidContext(context), Manager.DEFAULT_OPTIONS);
-            this.db = manager.getDatabase("data_gathering_db");
-            db.setMaxRevTreeDepth(1);
-        } catch (IOException e) {
-            Log.e(TAG, "Cannot create database", e);
-        } catch (CouchbaseLiteException e1) {
-            e1.printStackTrace();
-        }
-    }
+//    private void createDatabase(Context context) {
+//        try {
+//            this.manager = new Manager(new AndroidContext(context), Manager.DEFAULT_OPTIONS);
+//            this.db = manager.getDatabase("data_gathering_db");
+//            db.setMaxRevTreeDepth(1);
+//        } catch (IOException e) {
+//            Log.e(TAG, "Cannot create database", e);
+//        } catch (CouchbaseLiteException e1) {
+//            e1.printStackTrace();
+//        }
+//    }
 
-    private Document currentDocument;
-    public Document getCurrentDocument() { return currentDocument; }
+//    private Document currentDocument;
+//    public Document getCurrentDocument() { return currentDocument; }
 
 
     /* ********************************* MANAGE THE SERVICE ********************************** */
