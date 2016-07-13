@@ -87,6 +87,8 @@ public class ContactManager extends DataManager {
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
+
+                                client.disconnect();
                                 toastFailure();
                                 reconnectBand();
                             }
@@ -149,6 +151,7 @@ public class ContactManager extends DataManager {
                             // Remove listener from list
                             listeners.remove(info);
                             // Remove client from list
+                            client.disconnect();
                             clients.remove(info);
                         } catch (BandIOException e) {
                             e.printStackTrace();

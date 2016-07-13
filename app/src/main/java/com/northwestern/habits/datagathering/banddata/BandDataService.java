@@ -147,6 +147,7 @@ public class BandDataService extends Service {
                         case Preferences.GYRO:
                             // Check for a frequency entry
                             String fr = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
+                            Log.v(TAG, "Frequency is " + fr);
                             accManager.setFrequency(fr, band);
                             genericSubscriptionFactory(GYRO_REQ_EXTRA, band);
                             break;
@@ -169,15 +170,28 @@ public class BandDataService extends Service {
             isReconnecting = false;
         }
 
-
-
-
-
-
         isStarted = true;
         return Service.START_REDELIVER_INTENT;
     }
 
+    @Override
+    public void onDestroy() {
+        for (BandInfo info :
+                bandStreams.keySet()) {
+            // For every band that is streaming now
+            for (String stream:
+                 bandStreams.get(info)) {
+                genericUnsubscribeFactory(stream, info);
+            }
+        }
+
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        super.onDestroy();
+    }
 
     private void genericUnsubscribeFactory(String request, BandInfo band) {
         Log.v(TAG, "Stopping stream " + request);

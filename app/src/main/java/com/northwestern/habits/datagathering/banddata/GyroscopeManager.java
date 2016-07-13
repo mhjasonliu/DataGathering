@@ -127,6 +127,8 @@ public class GyroscopeManager extends DataManager {
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
+                                // Close the client
+                                client.disconnect();
 
                                 toastFailure();
 
@@ -200,7 +202,8 @@ public class GyroscopeManager extends DataManager {
                             mHandler.post(unsubscribedToastRunnable);
                             // Remove listener from list
                             listeners.remove(info);
-                            // Remove client from list
+                            // Remove client from list and disconnect from the band
+                            clients.get(info).disconnect();
                             clients.remove(info);
                         } catch (BandIOException e) {
                             e.printStackTrace();

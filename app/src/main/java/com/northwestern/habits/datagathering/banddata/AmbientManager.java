@@ -86,6 +86,7 @@ public class AmbientManager extends DataManager {
                                         "and the band is in range.\n");
 
                                 toastFailure();
+                                client.disconnect();
                                 reconnectBand();
                             }
                         } else {
@@ -147,6 +148,7 @@ public class AmbientManager extends DataManager {
                             // Remove listener from list
                             listeners.remove(bandInfo);
                             // Remove client from list
+                            clients.get(bandInfo).disconnect();
                             clients.remove(bandInfo);
                         } catch (BandIOException e) {
                             e.printStackTrace();
