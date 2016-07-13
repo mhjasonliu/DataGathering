@@ -227,6 +227,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 // Apply the frequencyAdapter to the spinner
                 frequencySpinner.setAdapter(frequencyAdapter);
                 frequencySpinner.setOnItemSelectedListener(accSpinnerListener);
+                frequencySpinner.setEnabled(false);
 
 
                 // Repeat for gyro
@@ -237,6 +238,26 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
 
                 // Set the checked values and the onclicked listener
                 setSensorsInGrid(rootView, device);
+
+                // Gray out the accelerometer box and set the listener appropriately
+                CheckBox box = (CheckBox) rootView.findViewById(R.id.accelerometerBox);
+                box.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Alert the user that accelerometer and gyro stream together
+                        new AlertDialog.Builder(context).setTitle("Accelerometer Streaming")
+                                .setMessage("Streaming the accelerometer alone is currently " +
+                                        "not supported. To stream accelerometer, start " +
+                                        "streaming gyroscope and the accelerometer will start " +
+                                        "streaming at the same frequency as the gyroscope.")
+                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {}})
+                                .create().show();
+                        ((CheckBox) v).setChecked(!((CheckBox) v).isChecked()); // Keep it how it was
+                    }
+                });
+                box.setEnabled(true);
 
                 return rootView;
 
@@ -364,17 +385,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     String text = buttonView.getText().toString();
                     switch (text) {
                         case "Accelerometer":
-                            // Alert the user that accelerometer and gyro stream together
-                            new AlertDialog.Builder(context).setTitle("Accelerometer Streaming")
-                                    .setMessage("Streaming the accelerometer alone is currently " +
-                                            "not supported. To stream accelerometer, start " +
-                                            "streaming gyroscope and the accelerometer will start " +
-                                            "streaming at the same frequency as the gyroscope.")
-                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {}})
-                                    .create().show();
-                            buttonView.setChecked(!buttonView.isChecked());
+                            Log.e(TAG, "Accelerometer check changed when it shouldn't be!");
 
 //                            requestBundle.putString(BandDataService.REQUEST_EXTRA,
 //                                    BandDataService.ACCEL_REQ_EXTRA);
