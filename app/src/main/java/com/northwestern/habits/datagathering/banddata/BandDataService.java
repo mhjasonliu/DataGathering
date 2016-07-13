@@ -89,6 +89,7 @@ public class BandDataService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.v(TAG, "OnStartCommand called");
         Notification.Builder b = new Notification.Builder(this);
         b.setContentTitle("Data streaming");
         b.setContentText("The habits lab is streaming data from your Microsoft Band");
@@ -103,6 +104,7 @@ public class BandDataService extends Service {
 
         // Lock thread while reconnecting
         if (!isReconnecting) {
+            Log.v(TAG, "Reconnecting streams");
             isReconnecting = true;
             for (String mac :
                     bandMacs) {
@@ -148,7 +150,7 @@ public class BandDataService extends Service {
                             // Check for a frequency entry
                             String fr = prefs.getString(Preferences.getFrequencyKey(mac, stream), "");
                             Log.v(TAG, "Frequency is " + fr);
-                            accManager.setFrequency(fr, band);
+                            gyroManager.setFrequency(fr, band);
                             genericSubscriptionFactory(GYRO_REQ_EXTRA, band);
                             break;
                         case Preferences.HEART:
