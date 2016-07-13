@@ -382,12 +382,12 @@ public abstract class DataManager implements EventListener {
         if (!connectionFailedMap.containsKey(info.getMacAddress())) {
             Notification.Builder b = new Notification.Builder(context);
             b.setSmallIcon(android.R.drawable.alert_light_frame);
-            b.setContentTitle("Could not connect to ban " + info.getName());
-            b.setContentText("Could not connect to the band " + info.getName()
-                    + ". Please check that the band is on and in range. If it is, " +
+            b.setContentTitle("Could not connect to band " + info.getName());
+            b.setStyle(new Notification.BigTextStyle().bigText("Could not connect to the band '" + info.getName()
+                    + "'. Please check that the band is on and in range. If it is, " +
                     "please restart the band and wait a few minutes. If " +
                     "this alert does not go away, please restart both " +
-                    "the band and your phone. Sorry for the inconvenience.");
+                    "the band and your phone. Sorry for the inconvenience."));
             b.setOngoing(true);
             b.setVibrate(new long[]{0, 500});
             b.setUsesChronometer(true);
