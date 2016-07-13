@@ -189,6 +189,7 @@ public class CaloriesManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Calories", event.getCalories());
+                    datapoint.put("label", label);
                     try {
                         datapoint.put("Calories_Today", event.getCaloriesToday());
                     } catch (InvalidBandVersionException e) {

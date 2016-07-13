@@ -253,6 +253,7 @@ public class AccelerometerManager extends DataManager {
                     datapoint.put("x", event.getAccelerationX());
                     datapoint.put("y", event.getAccelerationY());
                     datapoint.put("z", event.getAccelerationZ());
+                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

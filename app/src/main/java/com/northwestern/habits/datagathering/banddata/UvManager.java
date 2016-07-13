@@ -192,6 +192,7 @@ public class UvManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Level", event.getUVIndexLevel());
+                    datapoint.put("label", label);
                     try {
                         datapoint.put("UV_Exposure_Today", event.getUVExposureToday());
                     } catch (InvalidBandVersionException e) {

@@ -199,6 +199,7 @@ public class PedometerManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Total_Steps", event.getTotalSteps());
+                    datapoint.put("label", label);
                     try {
                         datapoint.put("Steps_Today", event.getStepsToday());
                     } catch (InvalidBandVersionException e) {

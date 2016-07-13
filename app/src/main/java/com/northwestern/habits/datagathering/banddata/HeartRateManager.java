@@ -197,6 +197,7 @@ public class HeartRateManager extends DataManager {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("rate", event.getHeartRate());
                     datapoint.put("quality", event.getQuality());
+                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

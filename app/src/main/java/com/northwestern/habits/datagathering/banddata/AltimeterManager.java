@@ -227,6 +227,7 @@ public class AltimeterManager extends DataManager {
                     datapoint.put("Rate", event.getRate());
                     datapoint.put("Flights_Ascended", event.getFlightsAscended());
                     datapoint.put("Flights_Descended", event.getFlightsDescended());
+                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

@@ -194,6 +194,7 @@ public class SkinTempManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Skin_Temperature", event.getTemperature());
+                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

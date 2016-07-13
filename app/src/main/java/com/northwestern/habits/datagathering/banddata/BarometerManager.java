@@ -193,6 +193,7 @@ public class BarometerManager extends DataManager {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Pressure", event.getAirPressure());
                     datapoint.put("Temperature", event.getTemperature());
+                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {
