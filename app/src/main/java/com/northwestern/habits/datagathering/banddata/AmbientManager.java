@@ -86,7 +86,7 @@ public class AmbientManager extends DataManager {
                                         "and the band is in range.\n");
 
                                 toastFailure();
-                                client.disconnect();
+                                if (client != null) { client.disconnect(); }
                                 reconnectBand();
                             }
                         } else {

@@ -84,8 +84,8 @@ public class GsrManager extends DataManager {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
 
-                                client.disconnect();
                                 toastFailure();
+                                if (client != null) { client.disconnect(); }
                                 reconnectBand();
                             }
                         } else {
