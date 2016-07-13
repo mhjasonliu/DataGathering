@@ -76,16 +76,23 @@ public class AmbientManager extends DataManager {
 
                                 // Toast saying connection successful
                                 toastStreaming(STREAM_TYPE);
-                                if (timeoutThread.getState() != State.NEW) {
+                                // Dismiss notification if necessary
+                                notifySuccess(bandInfo);
+                                // Restart the timeout checker
+                                if (timeoutThread.getState() != State.NEW
+                                        && timeoutThread.getState() != State.RUNNABLE) {
                                     timeoutThread.makeThreadTerminate();
                                     timeoutThread = new TimeoutHandler();
+                                    timeoutThread.start();
+                                } else if (timeoutThread.getState() == State.NEW) {
+                                    timeoutThread.start();
                                 }
-                                timeoutThread.start();
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on " +
                                         "and the band is in range.\n");
 
-                                toastFailure();
+//                                toastFailure();
+                                notifyFailure(bandInfo);
                                 if (client != null) { client.disconnect(); }
                                 reconnectBand();
                             }
