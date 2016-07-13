@@ -72,8 +72,10 @@ public class GyroscopeManager extends DataManager {
         new UnsubscribeThread(info).start();
     }
 
-    protected void restartSubscription(BandInfo info) {new UnsubscribeThread(info).run();
-    new SubscriptionThread(info).run();}
+    protected void restartSubscription(BandInfo info) {
+        new UnsubscribeThread(info).run();
+        new SubscriptionThread(info).run();
+    }
 
     /* *********************************** THREADS *************************************** */
 
@@ -114,6 +116,8 @@ public class GyroscopeManager extends DataManager {
 
                                 // Toast saying connection successful
                                 toastStreaming(STREAM_TYPE);
+                                // Dismiss notification if necessary
+                                notifySuccess(info);
 
                                 // Restart the timeout checker
                                 if (timeoutThread.getState() != State.NEW
@@ -128,9 +132,12 @@ public class GyroscopeManager extends DataManager {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
                                         "the band is in range.\n");
                                 // Close the client
-                                if (client != null) { client.disconnect(); }
+                                if (client != null) {
+                                    client.disconnect();
+                                }
 
-                                toastFailure();
+//                                toastFailure();
+                                notifyFailure(info);
 
                                 reconnectBand();
                             }
@@ -238,7 +245,7 @@ public class GyroscopeManager extends DataManager {
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
                 Log.v(TAG, "gyro");
-                this.lastDataSample = System.currentTimeMillis() ;
+                this.lastDataSample = System.currentTimeMillis();
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
@@ -262,7 +269,7 @@ public class GyroscopeManager extends DataManager {
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
                                 properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                        + "_" + getDateTime(event), dataBuffer.toString());
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }

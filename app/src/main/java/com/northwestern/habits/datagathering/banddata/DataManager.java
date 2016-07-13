@@ -1,11 +1,15 @@
 package com.northwestern.habits.datagathering.banddata;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -22,6 +26,8 @@ import java.text.SimpleDateFormat;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -59,6 +65,8 @@ public abstract class DataManager implements EventListener {
     protected static boolean toastingFailure;
 
     protected static boolean disconnectDetected = false;
+    protected static boolean toastEnabled = true;
+    protected static Map<String, Integer> connectionFailedMap = new HashMap<>();
 
     protected abstract void subscribe(BandInfo info);
 
@@ -67,15 +75,19 @@ public abstract class DataManager implements EventListener {
     protected void reconnectBand() {
         if (!disconnectDetected) {
             disconnectDetected = true;
+            toastEnabled = false;
             // Capture all of the redundant disconnect requests
             try {
+                Log.v(TAG, "Reconnecting in 1 minute...");
                 Thread.sleep(TimeUnit.MINUTES.toMillis(1));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
             // Send a start request to the service to attempt to reconnect to sensors
+            Log.v(TAG, "Reconnecting...");
             context.startService(new Intent(context, BandDataService.class));
+            toastEnabled = true;
             disconnectDetected = false;
         }
     }
@@ -346,21 +358,58 @@ public abstract class DataManager implements EventListener {
     /* ******************************** TOASTS ***************************** */
 
     protected void toastStreaming(final String type) {
-//        mHandler.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//        cancelToast = null;
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (toastEnabled) {
+                    Toast.makeText(context, "Band is streaming " + type, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        cancelToast = null;
+    }
+
+    protected void notifySuccess(BandInfo info) {
+        if (connectionFailedMap.containsKey(info.getMacAddress())) {
+            int id = connectionFailedMap.get(info.getMacAddress());
+            ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(id);
+        }
+    }
+
+    protected void notifyFailure(BandInfo info) {
+        // Create a notification asking the user to make sure that the band is on
+        // And if it is to restart it and the phone
+        if (!connectionFailedMap.containsKey(info.getMacAddress())) {
+            Notification.Builder b = new Notification.Builder(context);
+            b.setSmallIcon(android.R.drawable.alert_light_frame);
+            b.setContentTitle("Could not connect to ban " + info.getName());
+            b.setContentText("Could not connect to the band " + info.getName()
+                    + ". Please check that the band is on and in range. If it is, " +
+                    "please restart the band and wait a few minutes. If " +
+                    "this alert does not go away, please restart both " +
+                    "the band and your phone. Sorry for the inconvenience.");
+            b.setOngoing(true);
+            b.setVibrate(new long[]{0, 500});
+            b.setUsesChronometer(true);
+            b.setPriority(Notification.PRIORITY_HIGH);
+            Uri alarmsound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            b.setSound(alarmsound);
+
+
+            Notification n = b.build();
+            int id = new Random().nextInt(1024);
+            ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(id, n);
+            connectionFailedMap.put(info.getMacAddress(), id);
+
+        }
     }
 
     protected void toastFailure() {
-//        mHandler.post(failure_toast_runnable);
+        mHandler.post(failure_toast_runnable);
     }
 
     protected void toastAlreadyStreaming() {
-//        mHandler.post(alreadyStreamingRunnable);
+        mHandler.post(alreadyStreamingRunnable);
     }
 
     private static Toast cancelToast = null;
@@ -368,29 +417,27 @@ public abstract class DataManager implements EventListener {
     private Runnable alreadyStreamingRunnable = new Runnable() {
         @Override
         public void run() {
-//            if (cancelToast == null) {
             cancelToast = Toast.makeText(context, "Band is already streaming " + STREAM_TYPE,
                     Toast.LENGTH_SHORT);
             cancelToast.show();
-//            }
         }
     };
 
     private Runnable failure_toast_runnable = new Runnable() {
         @Override
         public void run() {
-//            if (cancelToast == null) {
             cancelToast = Toast.makeText(context, "Could not connect to band. You may need to " +
-                    "restart the band and the app.", Toast.LENGTH_SHORT);
+                    "restart the band and the phone.", Toast.LENGTH_SHORT);
             cancelToast.show();
-//            }
         }
     };
 
     protected Runnable unsubscribedToastRunnable = new Runnable() {
         @Override
         public void run() {
-//            Toast.makeText(context, "Unsubscribed from " + STREAM_TYPE, Toast.LENGTH_SHORT).show();
+            if (toastEnabled) {
+                Toast.makeText(context, "Unsubscribed from " + STREAM_TYPE, Toast.LENGTH_SHORT).show();
+            }
         }
     };
 
