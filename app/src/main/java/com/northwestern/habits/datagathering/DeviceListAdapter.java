@@ -115,6 +115,12 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 ((Spinner) ((View) parent.getParent())
                         .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
                 sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
+                SharedPreferences p = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor e = p.edit();
+                DeviceListItem d = (DeviceListItem) parent.getTag();
+                Log.e(TAG, ((TextView) view).getText().toString());
+                e.putString(Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO), ((TextView) view).getText().toString());
+                e.apply();
             }
         }
 
@@ -322,9 +328,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                         index = 2;
                         break;
                     default:
+                        Log.e(TAG, "Default case: frequency = " + frequency);
                         index = 0;
                 }
-                Log.v(TAG, "Index for " + type + " is " + Integer.toString(index));
                 listenForSelected = false;
                 ((Spinner) box).setSelection(index);
                 listenForSelected = true;
