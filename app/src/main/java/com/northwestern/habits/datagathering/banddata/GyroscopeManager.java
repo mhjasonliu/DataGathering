@@ -257,6 +257,13 @@ public class GyroscopeManager extends DataManager {
                     datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
                     datapoint.put("label", label);
 
+                    Log.v(TAG, "Linear X: " + event.getAccelerationX());
+                    Log.v(TAG, "Linear Y: " + event.getAccelerationY());
+                    Log.v(TAG, "Linear Z: " + event.getAccelerationZ());
+                    Log.v(TAG, "Angular X: " + event.getAngularVelocityX());
+                    Log.v(TAG, "Angular Y: " + event.getAngularVelocityY());
+                    Log.v(TAG, "Angular Z: " + event.getAngularVelocityZ());
+
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {
                     e.printStackTrace();
