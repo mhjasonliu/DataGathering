@@ -297,7 +297,7 @@ public class GyroscopeManager extends DataManager {
                 // Insert into csv file
                 File folder = new File(BandDataService.PATH);
                 Calendar cal = Calendar.getInstance();
-                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy HH");
                 String formattedDate = df.format(cal.getTime());
                 final String filename = folder.toString() + "/" + "Gyroscope " + formattedDate
                         + uName + ".csv";

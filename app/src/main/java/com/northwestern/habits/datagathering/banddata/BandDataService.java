@@ -154,7 +154,7 @@ public class BandDataService extends Service {
         }
 
         // Create file for the csv's
-        PATH = Environment.getExternalStorageDirectory() + "/Band";
+        PATH = Environment.getExternalStorageDirectory() + "/Band/" + studyName;
 
         File folder = new File(BandDataService.PATH);
 
