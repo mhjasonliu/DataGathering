@@ -150,39 +150,35 @@ public class DataManagementService extends Service {
                         File file = new File(fileName);
 
                         // If file does not exists, then create it
-                        boolean fpExists = true;
                         if (!file.exists()) {
                             try {
                                 boolean fb = file.createNewFile();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            fpExists = false;
-                        }
 
-                        // Post data to the csv
-                        FileWriter fw;
-                        fw = new FileWriter(file.getPath(), true);
-                        if (!fpExists) {
+                            // Post data to the csv
+                            FileWriter fw;
+                            fw = new FileWriter(file.getPath(), true);
                             Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                             intent.setData(Uri.fromFile(file));
                             c.sendBroadcast(intent);
                             fw.append(header.toString());
-                        }
 
-                        // Loop through items in the JSONArray and append their fields
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject object = (JSONObject) array.get(i);
-                            for (String key :
-                                    jsonKeys) {
-                                fw.append(object.getString(key));
-                                if (key != jsonKeys.get(jsonKeys.size() - 1)) {
-                                    fw.append(",");
+                            // Loop through items in the JSONArray and append their fields
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject object = (JSONObject) array.get(i);
+                                for (String key :
+                                        jsonKeys) {
+                                    fw.append(object.getString(key));
+                                    if (key != jsonKeys.get(jsonKeys.size() - 1)) {
+                                        fw.append(",");
+                                    }
                                 }
+                                fw.append("\n");
                             }
-                            fw.append("\n");
+                            fw.close();
                         }
-                        fw.close();
 
 
                     } catch (JSONException e) {
