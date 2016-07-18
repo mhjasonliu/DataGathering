@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.SupplicantState;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.util.Log;
@@ -18,13 +20,20 @@ import com.northwestern.habits.datagathering.banddata.BandDataService;
  */
 public class MyReceiver extends BroadcastReceiver {
     private static final String TAG = "BroadcastReceiver";
-
-    boolean shouldReplicateDatabase() {
-        return isCharging && isWifiConnected;
+    private boolean isWifiConnected(Context c) {
+        SupplicantState supState;
+        WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        supState = wifiInfo.getSupplicantState();
+        return supState == SupplicantState.COMPLETED;
     }
 
-    boolean isCharging = false;
-    boolean isWifiConnected = false;
+    boolean isCharging(Context context) {
+        // Check for charging
+        Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
+    }
 
 
     @Override
@@ -35,31 +44,42 @@ public class MyReceiver extends BroadcastReceiver {
             switch (intent.getAction()) {
                 case Intent.ACTION_POWER_CONNECTED:
                     Log.v(TAG, "Power connected action received.");
-                    isCharging = true;
 
-                    if (isWifiConnected) {
+                    // Power connected, start backup if wifi connected
+                    if (isWifiConnected(context)) {
                         Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
+                        // TODO start database backup
                     }
                     break;
                 case Intent.ACTION_POWER_DISCONNECTED:
-                    Log.v(TAG, "Power connected action received.");
-                    isCharging = false;
+                    Log.v(TAG, "Power disconnected action received.");
 
-                    Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
+                    // Power disconnected. stop backup if it is running
+
+                    Toast.makeText(context, "Stopping databse backup", Toast.LENGTH_SHORT).show();
+                    // TODO stop database backup
                     break;
 
                 case WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION:
                     Log.v(TAG, "Wifi action received");
-                    isWifiConnected = intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
-                            false);
+                    if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
+                            false)) {
+                        // Wifi is connected, start backup if power connected
+                        if (isCharging(context)) {
+                            Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
+                            // TODO start database backup
+                        }
+
+                    } else {
+                        // Wifi disconnected, stop backup if it is running
+                        Toast.makeText(context, "Stopping databse backup", Toast.LENGTH_SHORT).show();
+                        // TODO stop database backup
+
+                    }
+
                     break;
                 case Intent.ACTION_BOOT_COMPLETED:
-                    // Check for charging
-                    Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                    if (i != null) {
-                        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                        isCharging = (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
-                    }
+                    // Start streaming sensors that were cut off when powered down
                     context.startService(new Intent(context, BandDataService.class));
                     break;
                 default:
