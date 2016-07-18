@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.userinterface;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -21,6 +22,7 @@ import android.view.View;
 import com.couchbase.lite.replicator.Replication;
 import com.northwestern.habits.datagathering.CouchBaseData;
 import com.northwestern.habits.datagathering.CustomDrawerListener;
+import com.northwestern.habits.datagathering.DataManagementService;
 import com.northwestern.habits.datagathering.R;
 
 import java.net.MalformedURLException;
@@ -93,7 +95,9 @@ public class UserActivity extends AppCompatActivity {
                     Snackbar.make(view, "Status: " + push.getStatus(), Snackbar.LENGTH_SHORT).show();
 
                     if (storagePermitted(UserActivity.this)) {
-                        CouchBaseData.exportToCsv("asdf", getApplicationContext());
+                        Intent i = new Intent(getApplicationContext(), DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_WRITE_CSVS);
+                        startService(i);
                     }
                 }
             });

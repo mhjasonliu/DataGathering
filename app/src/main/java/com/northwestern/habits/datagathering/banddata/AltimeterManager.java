@@ -20,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -249,6 +250,8 @@ public class AltimeterManager extends DataManager {
                         });
                         dataBuffer = new JSONArray();
                     } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }

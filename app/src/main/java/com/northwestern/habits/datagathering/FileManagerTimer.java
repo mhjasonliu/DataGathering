@@ -59,8 +59,9 @@ public class FileManagerTimer extends TimerTask {
                     e.printStackTrace();
                 } catch (CouchbaseLiteException e) {
                     e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
 
 
                 // Move the file to attachments

@@ -3,10 +3,8 @@ package com.northwestern.habits.datagathering;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -26,21 +24,7 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     public void onCreate() {
         super.onCreate();
         ourInstance = this;
-        // If we do not currently have a document, create one and save the id
-        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
-        String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
-        if (id.equals("")) {
-            // Create the document
-            prefs.edit().putString(Preferences.CURRENT_DOCUMENT, CouchBaseData.getCurrentDocument(getApplicationContext()).getId()).apply();
-        } else {
-            try {
-                CouchBaseData.getManagerInstance(this.getApplicationContext());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            CouchBaseData.setCurrentDocument(getApplicationContext(), id);
-        }
-        }
+    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
