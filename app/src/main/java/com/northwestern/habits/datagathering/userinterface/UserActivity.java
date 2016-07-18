@@ -54,7 +54,7 @@ public class UserActivity extends AppCompatActivity {
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }
-                        push.setContinuous(true);
+                        push.setContinuous(false);
 //                    Authenticator auth = new BasicAuthenticator(username, password);
 //                    push.setAuthenticator(auth);
 

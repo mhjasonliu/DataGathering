@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -13,6 +14,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,17 +53,30 @@ public class CouchBaseData {
 
     public static Document getCurrentDocument(Context c) {
         if (currentDocument == null) {
-            try {
-                currentDocument = getDatabaseInstance(c).createDocument();
-            } catch (CouchbaseLiteException e) {
-                e.printStackTrace();
-            }
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("Initialized", true);
-            try {
-                currentDocument.putProperties(properties);
-            } catch (CouchbaseLiteException e) {
-                e.printStackTrace();
+            SharedPreferences prefs = c.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+            String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
+            if (id == "") {
+                try {
+                    currentDocument = getDatabaseInstance(c).createDocument();
+                    SharedPreferences.Editor e = prefs.edit();
+                    e.putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId());
+                    e.apply();
+                } catch (CouchbaseLiteException e) {
+                    e.printStackTrace();
+                }
+                Map<String, Object> properties = new HashMap<>();
+                properties.put("Initialized", true);
+                try {
+                    currentDocument.putProperties(properties);
+                } catch (CouchbaseLiteException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    currentDocument = getDatabaseInstance(c).getDocument(id);
+                } catch (CouchbaseLiteException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return currentDocument;
@@ -78,7 +94,10 @@ public class CouchBaseData {
         if (replication == null) {
             URL url = new URL(URL_STRING);
             try {
-                replication = new Replication(getDatabaseInstance(c), url, Replication.Direction.PUSH);
+                replication = new Replication(getDatabaseInstance(c), url, Replication.Direction.PULL);
+                List<String> list = new LinkedList<>();
+                list.add("Test");//getCurrentDocument(c).getId());
+                replication.setDocIds(list);
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }

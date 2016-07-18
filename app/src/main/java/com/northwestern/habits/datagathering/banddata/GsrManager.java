@@ -206,6 +206,7 @@ public class GsrManager extends DataManager {
 
                 if (dataBuffer.length() >= BUFFER_SIZE) {
                     try {
+                        Log.v(TAG, "Writing gsr to db");
                         CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
