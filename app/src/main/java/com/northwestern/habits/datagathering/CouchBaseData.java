@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -10,10 +11,15 @@ import com.couchbase.lite.Manager;
 import com.couchbase.lite.android.AndroidContext;
 import com.couchbase.lite.replicator.Replication;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -103,5 +109,42 @@ public class CouchBaseData {
             }
         }
         return replication;
+    }
+
+
+    public static void exportToCsv(String fName, Context c) {
+        // Export all data to a csv
+
+        // Get the current document and create a new one
+        Document d = getCurrentDocument(c);
+//        c.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE).edit().remove(Preferences.CURRENT_DOCUMENT).apply();
+//        currentDocument = null;
+
+        Map<String, Object> properties = d.getUserProperties();
+        for (String property :
+                properties.keySet()) {
+            Object value = properties.get(property);
+//            Log.v("CBD", property + ": " + value);
+
+            if (value instanceof String) {
+                try {
+                    JSONArray array = new JSONArray((String) value);
+
+                    JSONObject o = (JSONObject) array.get(0);
+                    StringBuilder header = new StringBuilder();
+                    Iterator keys = o.keys();
+                    while (keys.hasNext()) {
+                        header.append(keys.next());
+                        header.append(",");
+                    }
+                    header.replace(header.length()-1, header.length(), "\n");
+                    Log.v("CBD", header.toString());
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

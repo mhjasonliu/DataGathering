@@ -87,6 +87,7 @@ public class UserActivity extends AppCompatActivity {
                         }
                     }
                     Snackbar.make(view, "Status: " + push.getStatus(), Snackbar.LENGTH_SHORT).show();
+                    CouchBaseData.exportToCsv("asdf", getApplicationContext());
                 }
             });
         }

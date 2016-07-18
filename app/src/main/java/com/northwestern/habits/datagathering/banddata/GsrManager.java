@@ -180,7 +180,7 @@ public class GsrManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
+        private final int BUFFER_SIZE = 50;
         private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandGsrEventListener (BandInfo bandInfo, String name) {
