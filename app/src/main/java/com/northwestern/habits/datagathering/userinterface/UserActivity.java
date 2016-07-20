@@ -45,62 +45,6 @@ public class UserActivity extends AppCompatActivity {
                     Intent i = new Intent(getApplicationContext(), DataManagementService.class);
                     i.setAction(DataManagementService.ACTION_BACKUP);
                     startService(i);
-
-
-
-//
-//                    if (push == null) {
-//                        URL url = null;
-//                        try {
-//                            url = new URL("http://107.170.25.202:4984/db/");
-//                        } catch (MalformedURLException e) {
-//                            e.printStackTrace();
-//                        }
-////                        Database database = CouchBaseData.getDatabaseInstance(UserActivity.this);
-//                        try {
-//                            push = CouchBaseData.getReplicationInstance(UserActivity.this);
-//                        } catch (MalformedURLException e) {
-//                            e.printStackTrace();
-//                        }
-//                        push.setContinuous(false);
-////                    Authenticator auth = new BasicAuthenticator(username, password);
-////                    push.setAuthenticator(auth);
-//
-//                        push.addChangeListener(new Replication.ChangeListener() {
-//                            @Override
-//                            public void changed(Replication.ChangeEvent event) {
-//                                // will be called back when the push replication status changes
-//                                String message = "Completed " + event.getCompletedChangeCount()
-//                                        + " out of " + event.getCompletedChangeCount() + " "
-//                                        + push.getStatus().toString();
-//                                Log.v("Replication", message);
-//                                Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
-//
-//                                // Check for an error
-//                                Throwable error = event.getError();
-//                                if (error != null) {
-//                                    error.printStackTrace();
-//                                }
-//                            }
-//                        });
-//
-//                    }
-////                    Snackbar.make(view, "Status: " + push.getStatus(), Snackbar.LENGTH_SHORT).show();
-//                    if (push.getStatus() != Replication.ReplicationStatus.REPLICATION_ACTIVE) {
-//                        push.start();
-//                        try {
-//                            Thread.sleep(100);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                    Snackbar.make(view, "Status: " + push.getStatus(), Snackbar.LENGTH_SHORT).show();
-//
-//                    if (storagePermitted(UserActivity.this)) {
-//                        Intent i = new Intent(getApplicationContext(), DataManagementService.class);
-//                        i.setAction(DataManagementService.ACTION_WRITE_CSVS);
-//                        startService(i);
-//                    }
                 }
             });
         }
