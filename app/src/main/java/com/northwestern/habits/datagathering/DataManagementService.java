@@ -10,15 +10,21 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
+import com.couchbase.lite.replicator.ReplicationState;
+import com.couchbase.lite.replicator.ReplicationStateTransition;
 
+import org.apache.http.client.HttpResponseException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,8 +32,11 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -90,8 +99,11 @@ public class DataManagementService extends Service {
     public static final String ACTION_WRITE_CSVS = "write csvs";
     public static final String ACTION_BACKUP = "BACKUP";
 
+    private Handler mHandler;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        mHandler = new Handler(Looper.getMainLooper());
 
         switch (intent.getAction()) {
             case ACTION_WRITE_CSVS:
@@ -108,14 +120,58 @@ public class DataManagementService extends Service {
                 // Do a push replication
                 try {
                     URL url = new URL(CouchBaseData.URL_STRING);
-                    Replication push = new Replication(
+                    final Replication push = new Replication(
                             CouchBaseData.getDatabase(getApplicationContext()),
                             url,
                             Replication.Direction.PUSH);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                    List<String> docs = new ArrayList<>();
+                    docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
+                    push.setDocIds(new ArrayList<String>());
+                    push.addChangeListener(new Replication.ChangeListener() {
+                        @Override
+                        public void changed(Replication.ChangeEvent event) {
+                            Log.v(TAG, event.toString());
+                            ReplicationStateTransition t = event.getTransition();
+                            if (t != null
+                                    && t.getSource() == ReplicationState.RUNNING
+                                    && t.getDestination() == ReplicationState.STOPPING) {
 
+                                Throwable error = push.getLastError();
+                                if (error != null && error instanceof HttpResponseException) {
+                                    Log.e(TAG, "Status code: " + Integer.toString(((HttpResponseException) error).getStatusCode()));
+                                    switch (((HttpResponseException) error).getStatusCode()) {
+                                        case 503:
+                                            Log.e(TAG, "Service unavailable, the server is probably down");
+                                            mHandler.post(
+                                                    new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            Toast.makeText(getBaseContext(),
+                                                                    "Remote database is offline",
+                                                                    Toast.LENGTH_LONG).show();
+                                                        }
+                                                    });
+                                            break;
+                                        default:
+                                            Log.e(TAG, "Unhandled status code received");
+                                    }
+                                } else {
+                                    // No error and transition from running to stopped -> success
+                                    mHandler.post(new Runnable() {
+                                                      @Override
+                                                      public void run() {
+                                                          Toast.makeText(getBaseContext(),
+                                                                  "Successfully backed up database",
+                                                                  Toast.LENGTH_SHORT).show();
+                                                      }});
+                                }
+                            }
+                        }
+                    });
 
-
-
+                    push.setContinuous(false);
+                    push.start();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (CouchbaseLiteException e) {
@@ -227,5 +283,23 @@ public class DataManagementService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void curlDbOnline() throws MalformedURLException {
+        String address = CouchBaseData.URL_STRING;
+        address = "http://107.170.25.202:4984/db/" + "_online";
+
+        URL url = new URL(address);
+
+        try {
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            OutputStream os = con.getOutputStream();
+            Log.v(TAG, "Aasdf status code: " + Integer.toString(con.getResponseCode()));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }
