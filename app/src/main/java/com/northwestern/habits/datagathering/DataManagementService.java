@@ -11,11 +11,13 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
+import com.couchbase.lite.replicator.Replication;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,6 +26,8 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +55,8 @@ public class DataManagementService extends Service {
     public static final String T_PEDOMETER = "Pedometer";
     public static final String T_SKIN_TEMP = "Skin_Temperature";
     public static final String T_UV = "UV";
+
+    private static final String TAG = "DataManagementService";
 
 
     public interface DataManagementFunctions {
@@ -82,17 +88,46 @@ public class DataManagementService extends Service {
 
 
     public static final String ACTION_WRITE_CSVS = "write csvs";
-    public static final String DOCUMENT_EXTRA = "DOCUMENT";
+    public static final String ACTION_BACKUP = "BACKUP";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (intent.getAction().equals(ACTION_WRITE_CSVS)) {
-            try {
-                exportToCsv("folder", getApplicationContext());
-            } catch (CouchbaseLiteException e) {
-                e.printStackTrace();
-            }
+        switch (intent.getAction()) {
+            case ACTION_WRITE_CSVS:
+                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                        .getString(Preferences.CURRENT_DOCUMENT, "folder");
+                try {
+                    exportToCsv(folderName, getApplicationContext());
+                } catch (CouchbaseLiteException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case ACTION_BACKUP:
+
+                // Do a push replication
+                try {
+                    URL url = new URL(CouchBaseData.URL_STRING);
+                    Replication push = new Replication(
+                            CouchBaseData.getDatabase(getApplicationContext()),
+                            url,
+                            Replication.Direction.PUSH);
+
+
+
+
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (CouchbaseLiteException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                break;
+            default:
+                Log.e(TAG, "Nonexistant action requested");
         }
 
         return START_NOT_STICKY;

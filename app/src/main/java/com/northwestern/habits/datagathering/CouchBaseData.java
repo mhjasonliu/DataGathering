@@ -26,7 +26,7 @@ import java.util.Map;
 public class CouchBaseData {
 
     private static Replication replication = null;
-    private static final String URL_STRING = "http://107.170.25.202:4984/db/";
+    public static final String URL_STRING = "http://107.170.25.202:4984/db/";
 
     public static final String DB_NAME = "data_gathering_db";
 
