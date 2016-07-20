@@ -25,6 +25,7 @@ import com.couchbase.lite.replicator.ReplicationState;
 import com.couchbase.lite.replicator.ReplicationStateTransition;
 
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -128,54 +129,75 @@ public class DataManagementService extends Service {
                                 CouchBaseData.getDatabase(getApplicationContext()),
                                 url,
                                 Replication.Direction.PUSH);
+
+                        push.addChangeListener(new Replication.ChangeListener() {
+                            @Override
+                            public void changed(Replication.ChangeEvent event) {
+                                Log.v(TAG, event.toString());
+                                ReplicationStateTransition t = event.getTransition();
+                                if (t != null
+                                        && t.getSource() == ReplicationState.RUNNING
+                                        && t.getDestination() == ReplicationState.STOPPING) {
+
+                                    Throwable error = push.getLastError();
+                                    if (error != null && error instanceof HttpResponseException) {
+                                        switch (((HttpResponseException) error).getStatusCode()) {
+                                            case 503:
+                                                Log.e(TAG, "Service unavailable, the server is probably down");
+                                                error.printStackTrace();
+                                                mHandler.post(
+                                                        new Runnable() {
+                                                            @Override
+                                                public void run() {
+                                                Toast.makeText(getBaseContext(),
+                                                        "Remote database is offline",
+                                                        Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                                        break;
+                                        case 404:
+                                            mHandler.post(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Toast.makeText(getBaseContext(),
+                                                            "Could not find the server",
+                                                            Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                            break;
+                                        default:
+                                                Log.e(TAG, "Unhandled status code received: " +
+                                                        ((HttpResponseException) error).getStatusCode());
+                                        }
+                                    } else if (error != null && error instanceof HttpHostConnectException) {
+                                        mHandler.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(getBaseContext(), "Could not connect to " +
+                                                                "remote database, please connect to the internet.",
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    } else {
+                                        // No error and transition from running to stopped -> success
+                                        mHandler.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(getBaseContext(),
+                                                        "Successfully backed up database",
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        });
                     }
 
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     List<String> docs = new ArrayList<>();
                     docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
                     push.setDocIds(new ArrayList<String>());
-                    push.addChangeListener(new Replication.ChangeListener() {
-                        @Override
-                        public void changed(Replication.ChangeEvent event) {
-                            Log.v(TAG, event.toString());
-                            ReplicationStateTransition t = event.getTransition();
-                            if (t != null
-                                    && t.getSource() == ReplicationState.RUNNING
-                                    && t.getDestination() == ReplicationState.STOPPING) {
-
-                                Throwable error = push.getLastError();
-                                if (error != null && error instanceof HttpResponseException) {
-                                    Log.e(TAG, "Status code: " + Integer.toString(((HttpResponseException) error).getStatusCode()));
-                                    switch (((HttpResponseException) error).getStatusCode()) {
-                                        case 503:
-                                            Log.e(TAG, "Service unavailable, the server is probably down");
-                                            mHandler.post(
-                                                    new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            Toast.makeText(getBaseContext(),
-                                                                    "Remote database is offline",
-                                                                    Toast.LENGTH_LONG).show();
-                                                        }
-                                                    });
-                                            break;
-                                        default:
-                                            Log.e(TAG, "Unhandled status code received");
-                                    }
-                                } else {
-                                    // No error and transition from running to stopped -> success
-                                    mHandler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Toast.makeText(getBaseContext(),
-                                                    "Successfully backed up database",
-                                                    Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                    });
 
                     push.setContinuous(intent.getBooleanExtra(CONTINUOUS_EXTRA, false));
                     push.start();
