@@ -158,7 +158,7 @@ public class DataManagementService extends Service {
                 } else {
                     // One-Shot replication
                     push.setContinuous(false);
-                    if (!push.isRunning()) {
+                    if (push.isRunning()) {
                         // Start up replication
                         if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
                             Log.v(TAG, "Restarting replication as one-shot");
@@ -385,7 +385,9 @@ public class DataManagementService extends Service {
 
 
                         // If wifi connected and charging, continue
-                        if (isWifiConnected(getBaseContext()) && isCharging(getBaseContext())) {
+                        if (!mReplication.isContinuous()
+                                && isWifiConnected(getBaseContext())
+                                && isCharging(getBaseContext())) {
                             Log.v(TAG, "Wifi is connected: " + isWifiConnected(getBaseContext()));
                             Log.v(TAG, "Restarting replication as continuous (from one-shot)");
                             mReplication.setContinuous(true);
