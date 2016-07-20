@@ -26,7 +26,8 @@ public class MyReceiver extends BroadcastReceiver {
         WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         supState = wifiInfo.getSupplicantState();
-        return supState == SupplicantState.COMPLETED;
+        return wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED
+            && supState == SupplicantState.COMPLETED;
     }
 
     boolean isCharging(Context context) {

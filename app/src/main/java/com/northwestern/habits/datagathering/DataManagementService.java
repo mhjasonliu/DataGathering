@@ -112,7 +112,9 @@ public class DataManagementService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mHandler == null) { mHandler = new Handler(Looper.getMainLooper()); }
+        if (mHandler == null) {
+            mHandler = new Handler(Looper.getMainLooper());
+        }
         Replication push = null;
         try {
             push = getReplicationInstance();
@@ -150,6 +152,7 @@ public class DataManagementService extends Service {
                     } else {
                         // Push not running, no need to worry about one-shot, just start it
                         push.setContinuous(true);
+                        Log.v(TAG, "Starting continuous replication");
                         push.start();
                     }
                 } else {
@@ -158,17 +161,14 @@ public class DataManagementService extends Service {
                     if (!push.isRunning()) {
                         // Start up replication
                         if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
+                            Log.v(TAG, "Restarting replication as one-shot");
                             push.restart();
-                        } else {
-                            push.start();
                         }
+                    } else {
+                        Log.v(TAG, "Starting replication as one-shot");
+                        push.start();
                     }
                 }
-
-                push.setContinuous(intent.getBooleanExtra(CONTINUOUS_EXTRA, false));
-                push.start();
-
-
                 break;
             case ACTION_STOP_BACKUP:
                 // If the backup is not null, is running, and is continuous, stop it
@@ -190,6 +190,7 @@ public class DataManagementService extends Service {
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
+                    Log.v(TAG, "Stopping continuous backup");
                     push.stop();
                 }
 
@@ -335,7 +336,7 @@ public class DataManagementService extends Service {
                         if (error != null && error instanceof HttpResponseException) {
                             switch (((HttpResponseException) error).getStatusCode()) {
                                 case 503:
-                                    Log.e(TAG, "Service unavailable, the server is probably down");
+                                    Log.e(TAG, "Service unavailable");
                                     error.printStackTrace();
                                     mHandler.post(
                                             new Runnable() {
@@ -385,6 +386,8 @@ public class DataManagementService extends Service {
 
                         // If wifi connected and charging, continue
                         if (isWifiConnected(getBaseContext()) && isCharging(getBaseContext())) {
+                            Log.v(TAG, "Wifi is connected: " + isWifiConnected(getBaseContext()));
+                            Log.v(TAG, "Restarting replication as continuous (from one-shot)");
                             mReplication.setContinuous(true);
                             mReplication.restart();
                         }
@@ -401,7 +404,8 @@ public class DataManagementService extends Service {
         WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         supState = wifiInfo.getSupplicantState();
-        return supState == SupplicantState.COMPLETED;
+        return wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED
+                && supState == SupplicantState.COMPLETED;
     }
 
     boolean isCharging(Context context) {
