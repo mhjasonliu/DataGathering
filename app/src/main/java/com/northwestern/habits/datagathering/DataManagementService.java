@@ -98,8 +98,11 @@ public class DataManagementService extends Service {
 
     public static final String ACTION_WRITE_CSVS = "write csvs";
     public static final String ACTION_BACKUP = "BACKUP";
+    public static final String ACTION_STOP_BACKUP = "stop_backup";
+    public static final String CONTINUOUS_EXTRA = "continuous";
 
     private Handler mHandler;
+    private Replication push;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -120,10 +123,13 @@ public class DataManagementService extends Service {
                 // Do a push replication
                 try {
                     URL url = new URL(CouchBaseData.URL_STRING);
-                    final Replication push = new Replication(
-                            CouchBaseData.getDatabase(getApplicationContext()),
-                            url,
-                            Replication.Direction.PUSH);
+                    if (push == null) {
+                        push = new Replication(
+                                CouchBaseData.getDatabase(getApplicationContext()),
+                                url,
+                                Replication.Direction.PUSH);
+                    }
+
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     List<String> docs = new ArrayList<>();
                     docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
@@ -159,18 +165,19 @@ public class DataManagementService extends Service {
                                 } else {
                                     // No error and transition from running to stopped -> success
                                     mHandler.post(new Runnable() {
-                                                      @Override
-                                                      public void run() {
-                                                          Toast.makeText(getBaseContext(),
-                                                                  "Successfully backed up database",
-                                                                  Toast.LENGTH_SHORT).show();
-                                                      }});
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(getBaseContext(),
+                                                    "Successfully backed up database",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
                                 }
                             }
                         }
                     });
 
-                    push.setContinuous(false);
+                    push.setContinuous(intent.getBooleanExtra(CONTINUOUS_EXTRA, false));
                     push.start();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -180,6 +187,30 @@ public class DataManagementService extends Service {
                     e.printStackTrace();
                 }
 
+
+                break;
+            case ACTION_STOP_BACKUP:
+                // If the backup is not null, is running, and is continuous, stop it
+                // If it is not continuous, forced replication was performed.
+                if (push != null && push.isRunning() && push.isContinuous()) {
+                    // Alert user if the backup is not finished
+                    final String toastText;
+                    if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
+                        toastText = "Database backup prematurely stopped: " +
+                                        push.getCompletedChangesCount() + " out of " + Integer.toString(push.getChangesCount())
+                                        + " changes backed up.";
+                    } else {
+                        toastText = "Database backup stopped";
+                    }
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getBaseContext(), toastText,
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    push.stop();
+                }
 
                 break;
             default:
