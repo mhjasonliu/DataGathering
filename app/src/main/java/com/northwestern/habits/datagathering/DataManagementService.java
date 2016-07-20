@@ -5,9 +5,14 @@ import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.net.wifi.SupplicantState;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
@@ -103,11 +108,19 @@ public class DataManagementService extends Service {
     public static final String CONTINUOUS_EXTRA = "continuous";
 
     private Handler mHandler;
-    private Replication push;
+    private Replication mReplication;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mHandler = new Handler(Looper.getMainLooper());
+        Replication push = null;
+        try {
+            push = getReplicationInstance();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
 
         switch (intent.getAction()) {
             case ACTION_WRITE_CSVS:
@@ -122,92 +135,34 @@ public class DataManagementService extends Service {
             case ACTION_BACKUP:
 
                 // Do a push replication
-                try {
-                    URL url = new URL(CouchBaseData.URL_STRING);
-                    if (push == null) {
-                        push = new Replication(
-                                CouchBaseData.getDatabase(getApplicationContext()),
-                                url,
-                                Replication.Direction.PUSH);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                List<String> docs = new ArrayList<>();
+                docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
+                assert push != null;
+                push.setDocIds(docs);
 
-                        push.addChangeListener(new Replication.ChangeListener() {
-                            @Override
-                            public void changed(Replication.ChangeEvent event) {
-                                Log.v(TAG, event.toString());
-                                ReplicationStateTransition t = event.getTransition();
-                                if (t != null
-                                        && t.getSource() == ReplicationState.RUNNING
-                                        && t.getDestination() == ReplicationState.STOPPING) {
-
-                                    Throwable error = push.getLastError();
-                                    if (error != null && error instanceof HttpResponseException) {
-                                        switch (((HttpResponseException) error).getStatusCode()) {
-                                            case 503:
-                                                Log.e(TAG, "Service unavailable, the server is probably down");
-                                                error.printStackTrace();
-                                                mHandler.post(
-                                                        new Runnable() {
-                                                            @Override
-                                                public void run() {
-                                                Toast.makeText(getBaseContext(),
-                                                        "Remote database is offline",
-                                                        Toast.LENGTH_LONG).show();
-                                            }
-                                        });
-                                        break;
-                                        case 404:
-                                            mHandler.post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Toast.makeText(getBaseContext(),
-                                                            "Could not find the server",
-                                                            Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
-                                            break;
-                                        default:
-                                                Log.e(TAG, "Unhandled status code received: " +
-                                                        ((HttpResponseException) error).getStatusCode());
-                                        }
-                                    } else if (error != null && error instanceof HttpHostConnectException) {
-                                        mHandler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(getBaseContext(), "Could not connect to " +
-                                                                "remote database, please connect to the internet.",
-                                                        Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                    } else {
-                                        // No error and transition from running to stopped -> success
-                                        mHandler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(getBaseContext(),
-                                                        "Successfully backed up database",
-                                                        Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                        });
+                if (intent.getBooleanExtra(CONTINUOUS_EXTRA, false)) {
+                    // Continuous request
+                    if (push.isRunning()) {
+                        // Push already running, if continuous, leave it, if one-shot, leave it
+                        // aka do nothing
+                        break;
+                    } else {
+                        // Push not running, no need to worry about one-shot, just start it
+                        push.setContinuous(true);
+                        push.start();
                     }
-
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    List<String> docs = new ArrayList<>();
-                    docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
-                    push.setDocIds(new ArrayList<String>());
-
-                    push.setContinuous(intent.getBooleanExtra(CONTINUOUS_EXTRA, false));
-                    push.start();
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (CouchbaseLiteException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } else {
+                    // One-Shot replication
+                    push.setContinuous(false);
+                    if (!push.isRunning()) {
+                        // Start up replication
+                        push.start();
+                    }
                 }
+
+                push.setContinuous(intent.getBooleanExtra(CONTINUOUS_EXTRA, false));
+                push.start();
 
 
                 break;
@@ -219,8 +174,8 @@ public class DataManagementService extends Service {
                     final String toastText;
                     if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
                         toastText = "Database backup prematurely stopped: " +
-                                        push.getCompletedChangesCount() + " out of " + Integer.toString(push.getChangesCount())
-                                        + " changes backed up.";
+                                push.getCompletedChangesCount() + " out of " + Integer.toString(push.getChangesCount())
+                                + " changes backed up.";
                     } else {
                         toastText = "Database backup stopped";
                     }
@@ -263,7 +218,7 @@ public class DataManagementService extends Service {
 //        CouchBaseData.resetCurrentDocument(c);
         SharedPreferences p = c.getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
         String id = p.getString(Preferences.CURRENT_DOCUMENT, "");
-        Document d = null;
+        Document d;
         try {
             d = CouchBaseData.getCurrentDocument(c);
 
@@ -354,5 +309,101 @@ public class DataManagementService extends Service {
             e.printStackTrace();
         }
 
+    }
+
+    public Replication getReplicationInstance() throws IOException, CouchbaseLiteException {
+        URL url = new URL(CouchBaseData.URL_STRING);
+        if (mReplication == null) {
+            mReplication = new Replication(
+                    CouchBaseData.getDatabase(getApplicationContext()),
+                    url,
+                    Replication.Direction.PUSH);
+
+            mReplication.addChangeListener(new Replication.ChangeListener() {
+                @Override
+                public void changed(Replication.ChangeEvent event) {
+                    Log.v(TAG, event.toString());
+                    ReplicationStateTransition t = event.getTransition();
+                    if (t != null
+                            && t.getSource() == ReplicationState.RUNNING
+                            && t.getDestination() == ReplicationState.STOPPING) {
+                        Throwable error = mReplication.getLastError();
+                        if (error != null && error instanceof HttpResponseException) {
+                            switch (((HttpResponseException) error).getStatusCode()) {
+                                case 503:
+                                    Log.e(TAG, "Service unavailable, the server is probably down");
+                                    error.printStackTrace();
+                                    mHandler.post(
+                                            new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Toast.makeText(getBaseContext(),
+                                                            "Remote database is offline",
+                                                            Toast.LENGTH_LONG).show();
+                                                }
+                                            });
+                                    break;
+                                case 404:
+                                    mHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(getBaseContext(),
+                                                    "Could not find the server",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                    break;
+                                default:
+                                    Log.e(TAG, "Unhandled status code received: " +
+                                            ((HttpResponseException) error).getStatusCode());
+                            }
+                        } else if (error != null && error instanceof HttpHostConnectException) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getBaseContext(), "Could not connect to " +
+                                                    "remote database, please connect to the internet.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else {
+                            // No error and transition from running to stopped -> success
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getBaseContext(),
+                                            "Successfully backed up database",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+
+                        // If wifi connected and charging, continue
+                        if (isWifiConnected(getBaseContext()) && isCharging(getBaseContext())) {
+                            mReplication.setContinuous(true);
+                            mReplication.restart();
+                        }
+                    }
+                }
+            });
+        }
+        return mReplication;
+    }
+
+
+    private boolean isWifiConnected(Context c) {
+        SupplicantState supState;
+        WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        supState = wifiInfo.getSupplicantState();
+        return supState == SupplicantState.COMPLETED;
+    }
+
+    boolean isCharging(Context context) {
+        // Check for charging
+        Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
     }
 }
