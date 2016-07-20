@@ -20,6 +20,7 @@ import com.northwestern.habits.datagathering.banddata.BandDataService;
  */
 public class MyReceiver extends BroadcastReceiver {
     private static final String TAG = "BroadcastReceiver";
+
     private boolean isWifiConnected(Context c) {
         SupplicantState supState;
         WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
@@ -48,7 +49,11 @@ public class MyReceiver extends BroadcastReceiver {
                     // Power connected, start backup if wifi connected
                     if (isWifiConnected(context)) {
                         Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
-                        // TODO start database backup
+                        // start database backup
+                        Intent i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_BACKUP);
+                        i.putExtra(DataManagementService.CONTINUOUS_EXTRA, true);
+                        context.startService(i);
                     }
                     break;
                 case Intent.ACTION_POWER_DISCONNECTED:
@@ -57,8 +62,13 @@ public class MyReceiver extends BroadcastReceiver {
                     // Power disconnected. stop backup if it is running
 
                     Toast.makeText(context, "Stopping databse backup", Toast.LENGTH_SHORT).show();
-                    // TODO stop database backup
-                    break;
+                    // stop database backup
+                {
+                    Intent i = new Intent(context, DataManagementService.class);
+                    i.setAction(DataManagementService.ACTION_STOP_BACKUP);
+                    context.startService(i);
+                }
+                break;
 
                 case WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION:
                     Log.v(TAG, "Wifi action received");
@@ -67,13 +77,20 @@ public class MyReceiver extends BroadcastReceiver {
                         // Wifi is connected, start backup if power connected
                         if (isCharging(context)) {
                             Toast.makeText(context, "Starting databse backup", Toast.LENGTH_SHORT).show();
-                            // TODO start database backup
+                            // start database backup
+                            Intent i = new Intent(context, DataManagementService.class);
+                            i.setAction(DataManagementService.ACTION_BACKUP);
+                            i.putExtra(DataManagementService.CONTINUOUS_EXTRA, true);
+                            context.startService(i);
                         }
 
                     } else {
                         // Wifi disconnected, stop backup if it is running
                         Toast.makeText(context, "Stopping databse backup", Toast.LENGTH_SHORT).show();
-                        // TODO stop database backup
+                        // stop database backup
+                        Intent i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_STOP_BACKUP);
+                        context.startService(i);
 
                     }
 
