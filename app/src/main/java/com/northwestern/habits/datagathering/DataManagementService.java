@@ -112,7 +112,7 @@ public class DataManagementService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mHandler = new Handler(Looper.getMainLooper());
+        if (mHandler == null) { mHandler = new Handler(Looper.getMainLooper()); }
         Replication push = null;
         try {
             push = getReplicationInstance();
@@ -157,7 +157,11 @@ public class DataManagementService extends Service {
                     push.setContinuous(false);
                     if (!push.isRunning()) {
                         // Start up replication
-                        push.start();
+                        if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
+                            push.restart();
+                        } else {
+                            push.start();
+                        }
                     }
                 }
 
@@ -325,8 +329,8 @@ public class DataManagementService extends Service {
                     Log.v(TAG, event.toString());
                     ReplicationStateTransition t = event.getTransition();
                     if (t != null
-                            && t.getSource() == ReplicationState.RUNNING
-                            && t.getDestination() == ReplicationState.STOPPING) {
+                            && t.getSource() == ReplicationState.STOPPING
+                            && t.getDestination() == ReplicationState.STOPPED) {
                         Throwable error = mReplication.getLastError();
                         if (error != null && error instanceof HttpResponseException) {
                             switch (((HttpResponseException) error).getStatusCode()) {
