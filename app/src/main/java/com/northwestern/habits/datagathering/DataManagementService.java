@@ -384,11 +384,36 @@ public class DataManagementService extends Service {
                         }
 
 
+
                         // If wifi connected and charging, continue
                         if (!mReplication.isContinuous()
                                 && isWifiConnected(getBaseContext())
                                 && isCharging(getBaseContext())) {
-                            Log.v(TAG, "Wifi is connected: " + isWifiConnected(getBaseContext()));
+
+                            if (event.getCompletedChangeCount() > 0
+                                    && event.getCompletedChangeCount()
+                                    == event.getCompletedChangeCount()) {
+                                // Full replication completed successfully...
+                                // Delete the old document and start a new one
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                try {
+                                    CouchBaseData.getCurrentDocument(getApplicationContext()).delete();
+                                    prefs.edit().remove(Preferences.CURRENT_DOCUMENT).apply();
+                                    mHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(getBaseContext(),
+                                                    "Deleted old database after backing it up",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                } catch (CouchbaseLiteException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
                             Log.v(TAG, "Restarting replication as continuous (from one-shot)");
                             mReplication.setContinuous(true);
                             mReplication.restart();
