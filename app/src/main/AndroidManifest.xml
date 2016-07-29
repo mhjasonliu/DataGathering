@@ -19,13 +19,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
-        <activity android:name=".MainActivity" >
-        </activity>
-        <activity android:name=".DeviceManagementActivity" >
-        </activity>
         <activity android:name=".ManageConnectionActivity" >
-        </activity>
-        <activity android:name=".ManageBandConnection" >
         </activity>
 
         <service
@@ -46,9 +40,6 @@
             android:process=":NecklaceData" >
         </service>
 
-        <activity android:name=".PhoneDataActivity" >
-        </activity>
-
         <service
             android:name=".phonedata.PhoneDataService"
             android:enabled="true"
@@ -56,15 +47,7 @@
             android:process=":PhoneData" >
             android:process=":NecklaceData" >
         </service>
-        <service
-            android:name=".ServerCommunicationService"
-            android:enabled="true"
-            android:exported="true"
-            android:process=":ServerCommunication" >
-        </service>
 
-        <activity android:name=".LabelActivity" >
-        </activity>
         <activity
             android:name=".userinterface.UserActivity"
             android:label="@string/app_name"

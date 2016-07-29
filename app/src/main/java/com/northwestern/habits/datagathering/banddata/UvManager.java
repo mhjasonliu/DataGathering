@@ -225,48 +225,7 @@ public class UvManager extends DataManager {
                         e.printStackTrace();
                     }
                 }
-
-//                // Get hour and date string from the event timestamp
-//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
-//
-//                // Form the directory path and file name
-//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-//                String fileName = DataGatheringApplication.getDataFileName(
-//                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
-//                        info.getMacAddress());
-//
-//                // Create the directory if it does not exist
-//                File directory = new File(dirPath);
-//                if (!directory.exists()) {
-//                    directory.mkdirs();
-//                }
-//
-//                // Write to csv
-//                File csv = new File(dirPath, fileName);
-//                try {
-//                    FileWriter fw;
-//                    if (!csv.exists()) {
-//                        csv.createNewFile();
-//                        fw = new FileWriter(csv, true);
-//                        fw.append("Time,Level,UV_Exposure_Today\n");
-//                    } else {
-//                        fw = new FileWriter(csv, true);
-//                    }
-//
-//                    fw.append(getDateTime(event));
-//                    fw.append(',');
-//                    fw.append(event.getUVIndexLevel().toString());
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getUVExposureToday()));
-//                    fw.append('\n');
-//                    fw.close();
-//                    Log.v(TAG, "Wrote to " + csv.getPath());
-//                } catch (IOException | InvalidBandVersionException e1) {
-//                    e1.printStackTrace();
-//                }
             }
         }
     }
-
 }

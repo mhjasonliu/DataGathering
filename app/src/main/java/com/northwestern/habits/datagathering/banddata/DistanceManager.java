@@ -219,49 +219,6 @@ public class DistanceManager extends DataManager {
                         e.printStackTrace();
                     }
                 }
-//                // Get hour and date string from the event timestamp
-//                int hour = DataGatheringApplication.getHourFromTimestamp(event.getTimestamp());
-//                String date = DataGatheringApplication.getDateFromTimestamp(event.getTimestamp());
-//
-//                // Form the directory path and file name
-//                String dirPath = DataGatheringApplication.getDataFilePath(context, hour);
-//                String fileName = DataGatheringApplication.getDataFileName(
-//                        DataStorageContract.AccelerometerTable.TABLE_NAME, hour, date, T_BAND2,
-//                        info.getMacAddress());
-//
-//                // Create the directory if it does not exist
-//                File directory = new File(dirPath);
-//                if (!directory.exists()) {
-//                    directory.mkdirs();
-//                }
-//
-//                // Write to csv
-//                File csv = new File(dirPath, fileName);
-//                try {
-//                    FileWriter fw;
-//                    if (!csv.exists()) {
-//                        csv.createNewFile();
-//                        fw = new FileWriter(csv, true);
-//                        fw.append("Time,Motion_Type,Pace,Speed,Total_Distance\n");
-//                    } else {
-//                        fw = new FileWriter(csv, true);
-//                    }
-//
-//                    fw.append(getDateTime(event));
-//                    fw.append(',');
-//                    fw.append(event.getMotionType().toString());
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getPace()));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getSpeed()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getTotalDistance()));
-//                    fw.append('\n');
-//                    fw.close();
-//                    Log.v(TAG, "Wrote to " + csv.getPath());
-//                } catch (IOException e1) {
-//                    e1.printStackTrace();
-//                }
             }
         }
     }
