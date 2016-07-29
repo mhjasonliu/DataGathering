@@ -56,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 1) Manage connections
  * Accomplished by maintaining a
  */
-public class DataManagementService extends Service {
+public class DataManagementService extends Service implements DocIdBroadcastReceiver {
 
     public static final String T_ACCEL = "Accelerometer";
     public static final String T_Altimeter = "Altimeter";
@@ -72,6 +72,16 @@ public class DataManagementService extends Service {
     public static final String T_UV = "UV";
 
     private static final String TAG = "DataManagementService";
+
+    @Override
+    public void registerReceiver() {
+        registerReceiver(_receiver, _filter);
+    }
+
+    @Override
+    public void unregisterReceiver() {
+        unregisterReceiver(_receiver);
+    }
 
 
     public interface DataManagementFunctions {
@@ -199,6 +209,7 @@ public class DataManagementService extends Service {
                 Log.e(TAG, "Nonexistant action requested");
         }
 
+        registerReceiver();
         return START_NOT_STICKY;
     }
 
@@ -398,7 +409,7 @@ public class DataManagementService extends Service {
                                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                                 try {
                                     CouchBaseData.getCurrentDocument(getApplicationContext()).delete();
-                                    prefs.edit().remove(Preferences.CURRENT_DOCUMENT).apply();
+                                    prefs.edit().remove(Preferences.CURRENT_DOCUMENT).commit();
                                     mHandler.post(new Runnable() {
                                         @Override
                                         public void run() {
@@ -440,5 +451,13 @@ public class DataManagementService extends Service {
         Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
+    }
+
+
+    @Override
+    public void onDestroy() {
+        // Unregister broadcast receiver
+        unregisterReceiver();
+        super.onDestroy();
     }
 }

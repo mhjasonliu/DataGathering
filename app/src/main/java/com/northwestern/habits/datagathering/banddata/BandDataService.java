@@ -16,6 +16,7 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
+import com.northwestern.habits.datagathering.DocIdBroadcastReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.lang.ref.WeakReference;
@@ -25,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class BandDataService extends Service {
+public class BandDataService extends Service implements DocIdBroadcastReceiver {
 
     /* ****************** STRINGS FOR IDENTIFICATION OF EXTRAS ********************************* */
     public static final String ACCEL_REQ_EXTRA = "accelerometer";
@@ -172,6 +173,7 @@ public class BandDataService extends Service {
             isReconnecting = false;
         }
 
+        registerReceiver();
         isStarted = true;
         return Service.START_REDELIVER_INTENT;
     }
@@ -192,6 +194,8 @@ public class BandDataService extends Service {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        unregisterReceiver();
         super.onDestroy();
     }
 
@@ -379,6 +383,16 @@ public class BandDataService extends Service {
             default:
                 Log.e(TAG, "Unknown subscription requested " + request);
         }
+    }
+
+    @Override
+    public void registerReceiver() {
+        registerReceiver(_receiver, _filter);
+    }
+
+    @Override
+    public void unregisterReceiver() {
+        unregisterReceiver(_receiver);
     }
 
     public class StopAllStreams extends AsyncTask<Void, Void, Void> {

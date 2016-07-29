@@ -245,25 +245,17 @@ public class GyroscopeManager extends DataManager {
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
-                Log.v(TAG, "gyro");
                 this.lastDataSample = System.currentTimeMillis();
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Angular_Accel_x", event.getAccelerationX());
-                    datapoint.put("Angular_Accel_y", event.getAccelerationY());
-                    datapoint.put("Angular_Accel_z", event.getAccelerationZ());
+                    datapoint.put("Linear_Accel_x", event.getAccelerationX());
+                    datapoint.put("Linear_Accel_y", event.getAccelerationY());
+                    datapoint.put("Linear_Accel_z", event.getAccelerationZ());
                     datapoint.put("Angular_Velocity_x", event.getAngularVelocityX());
                     datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
                     datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
                     datapoint.put("label", label);
-
-                    Log.v(TAG, "Linear X: " + event.getAccelerationX());
-                    Log.v(TAG, "Linear Y: " + event.getAccelerationY());
-                    Log.v(TAG, "Linear Z: " + event.getAccelerationZ());
-                    Log.v(TAG, "Angular X: " + event.getAngularVelocityX());
-                    Log.v(TAG, "Angular Y: " + event.getAngularVelocityY());
-                    Log.v(TAG, "Angular Z: " + event.getAngularVelocityZ());
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

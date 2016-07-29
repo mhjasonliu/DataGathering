@@ -37,19 +37,6 @@ public class CouchBaseData {
         return database;
     }
 
-//    public static void setCurrentDocument(Context c, String id) {
-//        try {
-//            currentDocument = getDatabaseInstance(c).getDocument(id);
-//        } catch (CouchbaseLiteException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-//    public static void resetCurrentDocument(Context c) {
-//        currentDocument = null;
-//        c.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE).edit().remove(Preferences.CURRENT_DOCUMENT).apply();
-//    }
-
     public static Document getCurrentDocument(Context c) throws CouchbaseLiteException, IOException {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");

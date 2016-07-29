@@ -21,6 +21,7 @@ import android.view.View;
 import com.couchbase.lite.replicator.Replication;
 import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.DataManagementService;
+import com.northwestern.habits.datagathering.DocIdBroadcastReceiver;
 import com.northwestern.habits.datagathering.R;
 
 public class UserActivity extends AppCompatActivity {
@@ -41,6 +42,7 @@ public class UserActivity extends AppCompatActivity {
                 public void onClick(final View view) {
                     Snackbar.make(view, "Syncing database with back end", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
+                    sendBroadcast(new Intent(DocIdBroadcastReceiver.ACTION_BROADCAST_CHANGE_ID));
 
                     Intent i = new Intent(getApplicationContext(), DataManagementService.class);
                     i.setAction(DataManagementService.ACTION_BACKUP);
