@@ -199,6 +199,7 @@ public class PedometerManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Total_Steps", event.getTotalSteps());
                     datapoint.put("label", label);
                     try {

@@ -249,6 +249,7 @@ public class GyroscopeManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Linear_Accel_x", event.getAccelerationX());
                     datapoint.put("Linear_Accel_y", event.getAccelerationY());
                     datapoint.put("Linear_Accel_z", event.getAccelerationZ());

@@ -196,6 +196,7 @@ public class HeartRateManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("rate", event.getHeartRate());
                     datapoint.put("quality", event.getQuality());
                     datapoint.put("label", label);

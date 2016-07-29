@@ -192,6 +192,7 @@ public class BarometerManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Pressure", event.getAirPressure());
                     datapoint.put("Temperature", event.getTemperature());
                     datapoint.put("label", label);

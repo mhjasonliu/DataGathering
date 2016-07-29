@@ -196,6 +196,7 @@ public class AmbientManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Ambient_Brightness", event.getBrightness());
                     datapoint.put("label", label);
                     dataBuffer.put(datapoint);

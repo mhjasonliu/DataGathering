@@ -189,6 +189,7 @@ public class CaloriesManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Calories", event.getCalories());
                     datapoint.put("label", label);
                     try {

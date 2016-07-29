@@ -194,6 +194,7 @@ public class SkinTempManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Skin_Temperature", event.getTemperature());
                     datapoint.put("label", label);
 

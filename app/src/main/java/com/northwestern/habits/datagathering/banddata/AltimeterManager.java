@@ -219,6 +219,7 @@ public class AltimeterManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Total_Gain", event.getTotalGain());
                     datapoint.put("Total_Loss", event.getTotalLoss());
                     datapoint.put("Stepping_Gain", event.getSteppingGain());

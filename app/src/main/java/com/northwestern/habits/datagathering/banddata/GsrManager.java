@@ -197,6 +197,7 @@ public class GsrManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Resistance", event.getResistance());
                     datapoint.put("label", label);
                     dataBuffer.put(datapoint);

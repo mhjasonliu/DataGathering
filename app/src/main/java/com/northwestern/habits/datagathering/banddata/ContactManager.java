@@ -193,6 +193,7 @@ public class ContactManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Contact_State", event.getContactState());
                     datapoint.put("label", label);
 

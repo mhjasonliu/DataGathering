@@ -188,6 +188,7 @@ public class DistanceManager extends DataManager {
                 JSONObject datapoint = new JSONObject();
                 try {
                     datapoint.put("Time", event.getTimestamp());
+                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Motion_Type", event.getMotionType());
                     datapoint.put("Pace", event.getPace());
                     datapoint.put("Speed", event.getSpeed());
