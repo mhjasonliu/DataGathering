@@ -337,7 +337,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
 
             mReplication.addChangeListener(new Replication.ChangeListener() {
                 @Override
-                public void changed(Replication.ChangeEvent event) {
+                public void changed(final Replication.ChangeEvent event) {
                     Log.v(TAG, event.toString());
                     ReplicationStateTransition t = event.getTransition();
                     if (t != null
@@ -388,7 +388,12 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                 @Override
                                 public void run() {
                                     Toast.makeText(getBaseContext(),
-                                            "Successfully backed up database",
+                                            "Successfully backed up database replications " +
+                                            Integer.toString(event.getCompletedChangeCount()) +
+                                            " out of " + Integer.toString(event.getChangeCount()) +
+                                            "\nDocument: " +
+                                                    PreferenceManager.getDefaultSharedPreferences(
+                                                            getBaseContext()).getString(Preferences.CURRENT_DOCUMENT, "_"),
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -406,10 +411,9 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                     == event.getCompletedChangeCount()) {
                                 // Full replication completed successfully...
                                 // Delete the old document and start a new one
-                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                                 try {
                                     CouchBaseData.getCurrentDocument(getApplicationContext()).delete();
-                                    prefs.edit().remove(Preferences.CURRENT_DOCUMENT).commit();
+                                    sendBroadcast(new Intent(ACTION_BROADCAST_CHANGE_ID));
                                     mHandler.post(new Runnable() {
                                         @Override
                                         public void run() {

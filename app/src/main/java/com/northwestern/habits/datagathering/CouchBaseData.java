@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -50,6 +51,13 @@ public class CouchBaseData {
             SharedPreferences.Editor e = prefs.edit();
             e.putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId());
             e.apply();
+
+            // Broadcast the new id across processes
+            Intent i = new Intent(DocIdBroadcastReceiver.ACTION_BROADCAST_CHANGE_ID);
+            i.putExtra(DocIdBroadcastReceiver.NEW_ID_EXTRA, currentDocument.getId());
+
+            c.sendBroadcast(i);
+
             Log.v("CBD", "Created new document " + currentDocument.getId());
             Map<String, Object> properties = new HashMap<>();
             properties.put("Initialized", true);
