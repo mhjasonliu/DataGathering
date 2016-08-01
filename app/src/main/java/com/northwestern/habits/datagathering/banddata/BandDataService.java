@@ -18,6 +18,7 @@ import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DocIdBroadcastReceiver;
 import com.northwestern.habits.datagathering.Preferences;
+import com.northwestern.habits.datagathering.Replicator;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -67,23 +68,25 @@ public class BandDataService extends Service implements DocIdBroadcastReceiver {
 
     private SQLiteOpenHelper dbHelper;
 
+    private Replicator mReplicator;
+
     private int NOTIFICATION_ID = 255;
 
 
     // Data managers
-    AccelerometerManager accManager = new AccelerometerManager("", null, this);
-    AltimeterManager altManager = new AltimeterManager("", null, this);
-    AmbientManager ambManager = new AmbientManager("", null, this);
-    BarometerManager barometerManager = new BarometerManager("", null, this);
-    CaloriesManager calManager = new CaloriesManager("", null, this);
-    ContactManager conManager = new ContactManager("", null, this);
-    DistanceManager distManager = new DistanceManager("", null, this);
-    GsrManager gsrManager = new GsrManager("", null, this);
-    GyroscopeManager gyroManager = new GyroscopeManager("", null, this);
-    HeartRateManager heartManager = new HeartRateManager("", null, this);
-    PedometerManager pedoManager = new PedometerManager("", null, this);
-    SkinTempManager skinTempManager = new SkinTempManager("", null, this);
-    UvManager uvManager = new UvManager("", null, this);
+    AccelerometerManager accManager;// = new AccelerometerManager("", null, getApplicationContext());
+    AltimeterManager altManager;// = new AltimeterManager("", null, getApplicationContext());
+    AmbientManager ambManager;// = new AmbientManager("", null, getApplicationContext());
+    BarometerManager barometerManager;// = new BarometerManager("", null, getApplicationContext());
+    CaloriesManager calManager;// = new CaloriesManager("", null, getApplicationContext());
+    ContactManager conManager;// = new ContactManager("", null, getApplicationContext());
+    DistanceManager distManager;// = new DistanceManager("", null, getApplicationContext());
+    GsrManager gsrManager;// = new GsrManager("", null, getApplicationContext());
+    GyroscopeManager gyroManager;// = new GyroscopeManager("", null, getApplicationContext());
+    HeartRateManager heartManager;// = new HeartRateManager("", null, getApplicationContext());
+    PedometerManager pedoManager;// = new PedometerManager("", null, getApplicationContext());
+    SkinTempManager skinTempManager;// = new SkinTempManager("", null, getApplicationContext());
+    UvManager uvManager;// = new UvManager("", null, this);
 
     boolean isStarted = false;
     private boolean isReconnecting = false;
@@ -98,10 +101,27 @@ public class BandDataService extends Service implements DocIdBroadcastReceiver {
 
         startForeground(NOTIFICATION_ID, b.build());
 
+        mReplicator = new Replicator(this);
+
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
 
         // Check for registered bands
         Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+
+
+        accManager = new AccelerometerManager("", null, getApplicationContext());
+        altManager = new AltimeterManager("", null, getApplicationContext());
+        ambManager = new AmbientManager("", null, getApplicationContext());
+        barometerManager = new BarometerManager("", null, getApplicationContext());
+        calManager = new CaloriesManager("", null, getApplicationContext());
+        conManager = new ContactManager("", null, getApplicationContext());
+        distManager = new DistanceManager("", null, getApplicationContext());
+        gsrManager = new GsrManager("", null, getApplicationContext());
+        gyroManager = new GyroscopeManager("", null, getApplicationContext());
+        heartManager = new HeartRateManager("", null, getApplicationContext());
+        pedoManager = new PedometerManager("", null, getApplicationContext());
+        skinTempManager = new SkinTempManager("", null, getApplicationContext());
+        uvManager = new UvManager("", null, this);
 
         // Lock thread while reconnecting
         if (!isReconnecting) {
@@ -304,79 +324,79 @@ public class BandDataService extends Service implements DocIdBroadcastReceiver {
         switch (request) {
             case ACCEL_REQ_EXTRA:
                 if (accManager == null)
-                    accManager = new AccelerometerManager(studyName, dbHelper, this);
+                    accManager = new AccelerometerManager(studyName, dbHelper, getApplicationContext());
 
                 accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
                 if (altManager == null)
-                    altManager = new AltimeterManager(studyName, dbHelper, this);
+                    altManager = new AltimeterManager(studyName, dbHelper, getApplicationContext());
 
                 altManager.subscribe(band);
                 break;
             case AMBIENT_REQ_EXTRA:
                 if (ambManager == null)
-                    ambManager = new AmbientManager(studyName, dbHelper, this);
+                    ambManager = new AmbientManager(studyName, dbHelper, getApplicationContext());
 
                 ambManager.subscribe(band);
                 break;
             case BAROMETER_REQ_EXTRA:
                 if (barometerManager == null)
-                    barometerManager = new BarometerManager(studyName, dbHelper, this);
+                    barometerManager = new BarometerManager(studyName, dbHelper, getApplicationContext());
 
                 barometerManager.subscribe(band);
                 break;
             case CALORIES_REQ_EXTRA:
                 if (calManager == null)
-                    calManager = new CaloriesManager(studyName, dbHelper, this);
+                    calManager = new CaloriesManager(studyName, dbHelper, getApplicationContext());
 
                 calManager.subscribe(band);
                 break;
             case CONTACT_REQ_EXTRA:
                 if (conManager == null)
-                    conManager = new ContactManager(studyName, dbHelper, this);
+                    conManager = new ContactManager(studyName, dbHelper, getApplicationContext());
 
                 conManager.subscribe(band);
                 break;
             case DISTANCE_REQ_EXTRA:
                 if (distManager == null)
-                    distManager = new DistanceManager(studyName, dbHelper, this);
+                    distManager = new DistanceManager(studyName, dbHelper, getApplicationContext());
 
                 distManager.subscribe(band);
                 break;
             case GSR_REQ_EXTRA:
                 if (gsrManager == null)
-                    gsrManager = new GsrManager(studyName, dbHelper, this);
+                    gsrManager = new GsrManager(studyName, dbHelper, getApplicationContext());
 
                 gsrManager.subscribe(band);
                 break;
             case GYRO_REQ_EXTRA:
                 if (gyroManager == null)
-                    gyroManager = new GyroscopeManager(studyName, dbHelper, this);
+                    gyroManager = new GyroscopeManager(studyName, dbHelper, getApplicationContext());
 
                 gyroManager.subscribe(band);
                 break;
             case HEART_RATE_REQ_EXTRA:
                 if (heartManager == null)
-                    heartManager = new HeartRateManager(studyName, dbHelper, this);
+                    heartManager = new HeartRateManager(studyName, dbHelper, getApplicationContext());
 
                 heartManager.subscribe(band);
                 break;
             case PEDOMETER_REQ_EXTRA:
                 if (pedoManager == null)
-                    pedoManager = new PedometerManager(studyName, dbHelper, this);
+                    pedoManager = new PedometerManager(studyName, dbHelper, getApplicationContext());
 
                 pedoManager.subscribe(band);
                 break;
             case SKIN_TEMP_REQ_EXTRA:
                 if (skinTempManager == null)
-                    skinTempManager = new SkinTempManager(studyName, dbHelper, this);
+                    skinTempManager = new SkinTempManager(studyName, dbHelper, getApplicationContext());
 
                 skinTempManager.subscribe(band);
                 break;
             case UV_REQ_EXTRA:
                 if (uvManager == null)
-                    uvManager = new UvManager(studyName, dbHelper, this);
+                    uvManager = new UvManager(studyName, dbHelper, getApplicationContext());
 
                 uvManager.subscribe(band);
                 break;

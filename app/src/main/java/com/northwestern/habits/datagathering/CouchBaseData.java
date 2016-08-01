@@ -31,18 +31,24 @@ public class CouchBaseData {
 
     public static final String DB_NAME = "data_gathering_db";
 
+    private static Database database;
+    private static Document currentDocument;
+    private static Manager currentManager;
+
     public static Database getDatabase(Context c) throws CouchbaseLiteException, IOException {
-        Database database;
-        database = getManager(c).getDatabase(DB_NAME);
-        database.setMaxRevTreeDepth(1);
+        c = c.getApplicationContext();
+        if (database == null) {
+            database = getManager(c).getDatabase(DB_NAME);
+            database.setMaxRevTreeDepth(1);
+        }
         return database;
     }
 
     public static Document getCurrentDocument(Context c) throws CouchbaseLiteException, IOException {
+        c = c.getApplicationContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
         if (id.equals("")) {
-            Document currentDocument = null;
             try {
                 currentDocument = getDatabase(c).createDocument();
             } catch (IOException e) {
@@ -64,19 +70,21 @@ public class CouchBaseData {
             currentDocument.putProperties(properties);
             return currentDocument;
         } else {
-            Database database;
-            AndroidContext ac = new AndroidContext(c);
-            Manager manager = new Manager(ac, Manager.DEFAULT_OPTIONS);
-            database = manager.getDatabase(DB_NAME);
-
-            Log.v("CBD", "Accessed old document " + id);
+            if (currentDocument == null) {
+                database = getDatabase(c);
+            } else {
+                Log.v("CBD", "Accessed old document " + id);
+            }
             return database.getDocument(id);
         }
     }
 
-    public static Manager getManager(Context c) throws IOException {
-        AndroidContext ac = new AndroidContext(c);
-        return new Manager(ac, Manager.DEFAULT_OPTIONS);
+    private static Manager getManager(Context c) throws IOException {
+        if (currentManager == null) {
+            AndroidContext ac = new AndroidContext(c);
+            currentManager = new Manager(ac, Manager.DEFAULT_OPTIONS);
+        }
+        return currentManager;
     }
 
     public static Replication getReplicationInstance(Context c) throws MalformedURLException {

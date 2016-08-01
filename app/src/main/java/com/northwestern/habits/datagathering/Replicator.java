@@ -2,7 +2,6 @@ package com.northwestern.habits.datagathering;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +16,6 @@ import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
@@ -51,33 +49,83 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The purpose of this service is to:
- * 1) manage connections and 2) fulfill streaming requests
- * <p/>
- * 1) Manage connections
- * Accomplished by maintaining a
+ * Created by William on 8/1/2016.
  */
-public class DataManagementService extends Service implements DocIdBroadcastReceiver {
+public class Replicator implements DocIdBroadcastReceiver {
 
-    public static final String T_ACCEL = "Accelerometer";
-    public static final String T_Altimeter = "Altimeter";
-    public static final String T_Ambient = "Ambient_Light";
-    public static final String T_Barometer = "Barometer";
-    public static final String T_Calories = "Calories";
-    public static final String T_Distance = "Distance";
-    public static final String T_GSR = "GSR";
-    public static final String T_Gyroscope = "Gyroscope";
-    public static final String T_Heart_Rate = "Heart_Rate";
-    public static final String T_PEDOMETER = "Pedometer";
-    public static final String T_SKIN_TEMP = "Skin_Temperature";
-    public static final String T_UV = "UV";
+    private static final String TAG = "Replicator";
+    private Context mContext;
+    private IntentFilter repFilter = new IntentFilter(ACTION_BACKUP);
 
-    private static final String TAG = "DataManagementService";
+    BroadcastReceiver backupCastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getStringExtra(TYPE_EXTRA)) {
+                case CSV_EXTRA:
+                    String folderName = PreferenceManager.getDefaultSharedPreferences(mContext)
+                            .getString(Preferences.CURRENT_DOCUMENT, "folder");
+                    try {
+                        exportToCsv(folderName, mContext);
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case START_EXTRA:
+
+                    // Do a push replication
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+                    List<String> docs = new ArrayList<>();
+                    docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
+                    assert mReplication != null;
+                    mReplication.setDocIds(docs);
+
+                    // Continuous request
+                    if (mReplication.isRunning()) {
+                        // Push already running, if continuous, leave it, if one-shot, leave it
+                        // aka do nothing
+                        break;
+                    } else {
+                        // Push not running, no need to worry about one-shot, just start it
+                        mReplication.setContinuous(true);
+                        Log.v(TAG, "Starting continuous replication");
+                        mReplication.start();
+                    }
+                    break;
+                case STOP_EXTRA:
+                    // If the backup is not null, is running, and is continuous, stop it
+                    // If it is not continuous, forced replication was performed.
+                    if (mReplication != null && mReplication.isRunning() && mReplication.isContinuous()) {
+                        // Alert user if the backup is not finished
+                        final String toastText;
+                        if (mReplication.getStatus() == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
+                            toastText = "Database backup prematurely stopped: " +
+                                    mReplication.getCompletedChangesCount() + " out of " + Integer.toString(mReplication.getChangesCount())
+                                    + " changes backed up.";
+                        } else {
+                            toastText = "Database backup stopped";
+                        }
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, toastText,
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        Log.v(TAG, "Stopping continuous backup");
+                        mReplication.stop();
+                    }
+
+                    break;
+                default:
+                    Log.e(TAG, "Nonexistant action requested");
+            }
+        }
+    };
 
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            new DocIDRecieveRunnable().run(context, intent);
+            new DocIdBroadcastReceiver.DocIDRecieveRunnable().run(context, intent);
             // Update replication to also match the new document
             try {
                 getReplicationInstance();
@@ -89,14 +137,15 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
         }
     };
 
+
     @Override
     public void registerReceiver() {
-        registerReceiver(mReceiver, _filter);
+        mContext.registerReceiver(mReceiver, _filter);
     }
 
     @Override
     public void unregisterReceiver() {
-        unregisterReceiver(mReceiver);
+        mContext.unregisterReceiver(mReceiver);
     }
 
 
@@ -118,121 +167,33 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
         }
     }
 
-    public DataManagementService() {
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-
-    public static final String ACTION_WRITE_CSVS = "write csvs";
     public static final String ACTION_BACKUP = "BACKUP";
-    public static final String ACTION_STOP_BACKUP = "stop_backup";
-    public static final String CONTINUOUS_EXTRA = "continuous";
+    public static final String TYPE_EXTRA = "backup type";
+    public static final String START_EXTRA = "start";
+    public static final String STOP_EXTRA = "stop";
+    public static final String CSV_EXTRA = "csv";
+
 
     private Handler mHandler;
     private Replication mReplication;
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public Replicator(Context c) {
+        mContext = c;
         if (mHandler == null) {
             mHandler = new Handler(Looper.getMainLooper());
         }
-        Replication push = null;
+
         try {
-            push = getReplicationInstance();
+            mReplication = getReplicationInstance();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (CouchbaseLiteException e) {
             e.printStackTrace();
         }
 
-        switch (intent.getAction()) {
-            case ACTION_WRITE_CSVS:
-                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                        .getString(Preferences.CURRENT_DOCUMENT, "folder");
-                try {
-                    exportToCsv(folderName, getApplicationContext());
-                } catch (CouchbaseLiteException e) {
-                    e.printStackTrace();
-                }
-                break;
-            case ACTION_BACKUP:
 
-                // Do a push replication
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                List<String> docs = new ArrayList<>();
-                docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
-                assert push != null;
-                push.setDocIds(docs);
-
-                if (intent.getBooleanExtra(CONTINUOUS_EXTRA, false)) {
-                    // Continuous request
-                    if (push.isRunning()) {
-                        // Push already running, if continuous, leave it, if one-shot, leave it
-                        // aka do nothing
-                        break;
-                    } else {
-                        // Push not running, no need to worry about one-shot, just start it
-                        push.setContinuous(true);
-                        Log.v(TAG, "Starting continuous replication");
-                        getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
-                            .putExtra(Replicator.TYPE_EXTRA, Replicator.START_EXTRA));
-                        push.start();
-                    }
-                } else {
-                    // One-Shot replication
-                    push.setContinuous(false);
-                    if (push.isRunning()) {
-                        // Start up replication
-                        if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
-                            Log.v(TAG, "Restarting replication as one-shot");
-                            getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
-                                .putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
-                            push.restart();
-                        }
-                    } else {
-                        Log.v(TAG, "Starting replication as one-shot");
-                        push.start();
-                    }
-                }
-                break;
-            case ACTION_STOP_BACKUP:
-                // If the backup is not null, is running, and is continuous, stop it
-                // If it is not continuous, forced replication was performed.
-                if (push != null && push.isRunning() && push.isContinuous()) {
-                    // Alert user if the backup is not finished
-                    final String toastText;
-                    if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
-                        toastText = "Database backup prematurely stopped: " +
-                                push.getCompletedChangesCount() + " out of " + Integer.toString(push.getChangesCount())
-                                + " changes backed up.";
-                    } else {
-                        toastText = "Database backup stopped";
-                    }
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getBaseContext(), toastText,
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    Log.v(TAG, "Stopping continuous backup");
-                    getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP).
-                        putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
-                    push.stop();
-                }
-
-                break;
-            default:
-                Log.e(TAG, "Nonexistant action requested");
-        }
-
+        mContext.registerReceiver(backupCastReceiver, repFilter);
         registerReceiver();
-        return START_NOT_STICKY;
     }
 
     public static void exportToCsv(String fName, Context c) throws CouchbaseLiteException {
@@ -254,7 +215,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
         // Get the current document and create a new one
 //        Document d = CouchBaseData.getCurrentDocument(c);
 //        CouchBaseData.resetCurrentDocument(c);
-        SharedPreferences p = c.getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        SharedPreferences p = c.getSharedPreferences(Preferences.NAME, c.MODE_PRIVATE);
         String id = p.getString(Preferences.CURRENT_DOCUMENT, "");
         Document d;
         try {
@@ -353,7 +314,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
         URL url = new URL(CouchBaseData.URL_STRING);
         if (mReplication == null) {
             mReplication = new Replication(
-                    CouchBaseData.getDatabase(getApplicationContext()),
+                    CouchBaseData.getDatabase(mContext),
                     url,
                     Replication.Direction.PUSH);
 
@@ -376,7 +337,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                             new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    Toast.makeText(getBaseContext(),
+                                                    Toast.makeText(mContext,
                                                             "Remote database is offline",
                                                             Toast.LENGTH_LONG).show();
                                                 }
@@ -386,7 +347,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                     mHandler.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Toast.makeText(getBaseContext(),
+                                            Toast.makeText(mContext,
                                                     "Could not find the server",
                                                     Toast.LENGTH_SHORT).show();
                                         }
@@ -400,7 +361,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(getBaseContext(), "Could not connect to " +
+                                    Toast.makeText(mContext, "Could not connect to " +
                                                     "remote database, please connect to the internet.",
                                             Toast.LENGTH_SHORT).show();
                                 }
@@ -410,24 +371,23 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(getBaseContext(),
+                                    Toast.makeText(mContext,
                                             "Successfully backed up database replications " +
-                                            Integer.toString(event.getCompletedChangeCount()) +
-                                            " out of " + Integer.toString(event.getChangeCount()) +
-                                            "\nDocument: " +
+                                                    Integer.toString(event.getCompletedChangeCount()) +
+                                                    " out of " + Integer.toString(event.getChangeCount()) +
+                                                    "\nDocument: " +
                                                     PreferenceManager.getDefaultSharedPreferences(
-                                                            getBaseContext()).getString(Preferences.CURRENT_DOCUMENT, "_"),
+                                                            mContext).getString(Preferences.CURRENT_DOCUMENT, "_"),
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
 
 
-
                         // If wifi connected and charging, continue
                         if (!mReplication.isContinuous()
-                                && isWifiConnected(getBaseContext())
-                                && isCharging(getBaseContext())) {
+                                && isWifiConnected(mContext)
+                                && isCharging(mContext)) {
 
                             if (event.getCompletedChangeCount() > 0
                                     && event.getCompletedChangeCount()
@@ -435,12 +395,12 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                 // Full replication completed successfully...
                                 // Delete the old document and start a new one
                                 try {
-                                    CouchBaseData.getCurrentDocument(getApplicationContext()).delete();
-                                    sendBroadcast(new Intent(ACTION_BROADCAST_CHANGE_ID));
+                                    CouchBaseData.getCurrentDocument(mContext).delete();
+                                    mContext.sendBroadcast(new Intent(ACTION_BROADCAST_CHANGE_ID));
                                     mHandler.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Toast.makeText(getBaseContext(),
+                                            Toast.makeText(mContext,
                                                     "Deleted old database after backing it up",
                                                     Toast.LENGTH_SHORT).show();
                                         }
@@ -455,9 +415,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                             Log.v(TAG, "Restarting replication as continuous (from one-shot)");
                             mReplication.setContinuous(true);
                             mReplication.restart();
-                            getBaseContext().sendBroadcast(
-                                    new Intent(Replicator.ACTION_BACKUP)
-                                            .putExtra(Replicator.TYPE_EXTRA, Replicator.START_EXTRA));
                         }
                     }
                 }
@@ -465,12 +422,11 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
         } else {
             // mReplication is not null, make sure it is listening for the correct document
             List<String> list = new LinkedList<>();
-            list.add(CouchBaseData.getCurrentDocument(getBaseContext()).getId());
+            list.add(CouchBaseData.getCurrentDocument(mContext).getId());
             mReplication.setDocIds(list);
         }
         return mReplication;
     }
-
 
 
     private boolean isWifiConnected(Context c) {
@@ -490,10 +446,4 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
     }
 
 
-    @Override
-    public void onDestroy() {
-        // Unregister broadcast receiver
-        unregisterReceiver();
-        super.onDestroy();
-    }
 }
