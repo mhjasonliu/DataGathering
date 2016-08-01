@@ -16,6 +16,7 @@ import com.couchbase.lite.replicator.Replication;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +51,8 @@ public class CouchBaseData {
         String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
         if (id.equals("")) {
             try {
-                currentDocument = getDatabase(c).createDocument();
+                currentDocument = getDatabase(c).getDocument(
+                        BluetoothConnectionLayer.getAdapter().getAddress() + "_" + Calendar.getInstance().getTime());
             } catch (IOException e) {
                 e.printStackTrace();
             }
