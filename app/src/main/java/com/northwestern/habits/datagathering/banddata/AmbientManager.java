@@ -197,8 +197,8 @@ public class AmbientManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Type", STREAM_TYPE);
+                    datapoint.put("Label", label);
                     datapoint.put("Ambient_Brightness", event.getBrightness());
-                    datapoint.put("label", label);
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {
                     e.printStackTrace();

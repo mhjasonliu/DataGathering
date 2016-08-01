@@ -220,6 +220,7 @@ public class AltimeterManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Type", STREAM_TYPE);
+                    datapoint.put("Label", label);
                     datapoint.put("Total_Gain", event.getTotalGain());
                     datapoint.put("Total_Loss", event.getTotalLoss());
                     datapoint.put("Stepping_Gain", event.getSteppingGain());
@@ -229,7 +230,6 @@ public class AltimeterManager extends DataManager {
                     datapoint.put("Rate", event.getRate());
                     datapoint.put("Flights_Ascended", event.getFlightsAscended());
                     datapoint.put("Flights_Descended", event.getFlightsDescended());
-                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

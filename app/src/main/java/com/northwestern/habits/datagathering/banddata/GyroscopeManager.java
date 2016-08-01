@@ -250,13 +250,13 @@ public class GyroscopeManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Type", STREAM_TYPE);
+                    datapoint.put("Label", label);
                     datapoint.put("Linear_Accel_x", event.getAccelerationX());
                     datapoint.put("Linear_Accel_y", event.getAccelerationY());
                     datapoint.put("Linear_Accel_z", event.getAccelerationZ());
                     datapoint.put("Angular_Velocity_x", event.getAngularVelocityX());
                     datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
                     datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
-                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {

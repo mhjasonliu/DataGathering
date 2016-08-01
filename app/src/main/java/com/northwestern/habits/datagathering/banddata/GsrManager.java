@@ -198,8 +198,8 @@ public class GsrManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Type", STREAM_TYPE);
+                    datapoint.put("Label", label);
                     datapoint.put("Resistance", event.getResistance());
-                    datapoint.put("label", label);
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {
                     e.printStackTrace();

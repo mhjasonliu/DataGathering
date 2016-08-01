@@ -189,11 +189,11 @@ public class DistanceManager extends DataManager {
                 try {
                     datapoint.put("Time", event.getTimestamp());
                     datapoint.put("Type", STREAM_TYPE);
+                    datapoint.put("Label", label);
                     datapoint.put("Motion_Type", event.getMotionType());
                     datapoint.put("Pace", event.getPace());
                     datapoint.put("Speed", event.getSpeed());
                     datapoint.put("Total_Distance", event.getTotalDistance());
-                    datapoint.put("label", label);
 
                     dataBuffer.put(datapoint);
                 } catch (JSONException e) {
