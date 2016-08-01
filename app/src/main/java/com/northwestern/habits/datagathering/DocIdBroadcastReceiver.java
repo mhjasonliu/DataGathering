@@ -15,6 +15,12 @@ public interface DocIdBroadcastReceiver {
     BroadcastReceiver _receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            new DocIDRecieveRunnable().run(context, intent);
+        }
+    };
+
+    class DocIDRecieveRunnable {
+        public void run(Context context, Intent intent) {
             // Delete the current reference to docID
             SharedPreferences.Editor prefs = PreferenceManager.getDefaultSharedPreferences(context).edit();
             if (intent.hasExtra(NEW_ID_EXTRA)) {
@@ -24,7 +30,7 @@ public interface DocIdBroadcastReceiver {
             }
             prefs.apply();
         }
-    };
+    }
 
     String ACTION_BROADCAST_CHANGE_ID = "change id";
 
