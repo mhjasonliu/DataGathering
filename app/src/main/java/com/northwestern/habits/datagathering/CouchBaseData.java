@@ -68,7 +68,8 @@ public class CouchBaseData {
 
             Log.v("CBD", "Created new document " + currentDocument.getId());
             Map<String, Object> properties = new HashMap<>();
-            properties.put("Initialized", true);
+            properties.put("Time_Created", Calendar.getInstance().getTime());
+
             currentDocument.putProperties(properties);
             return currentDocument;
         } else {
