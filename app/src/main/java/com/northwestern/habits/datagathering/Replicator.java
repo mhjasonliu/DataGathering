@@ -37,11 +37,10 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -292,24 +291,6 @@ public class Replicator implements DocIdBroadcastReceiver {
         }
     }
 
-    private void curlDbOnline() throws MalformedURLException {
-        String address = CouchBaseData.URL_STRING;
-        address = "http://107.170.25.202:4984/db/" + "_online";
-
-        URL url = new URL(address);
-
-        try {
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            OutputStream os = con.getOutputStream();
-            Log.v(TAG, "Aasdf status code: " + Integer.toString(con.getResponseCode()));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     public Replication getReplicationInstance() throws IOException, CouchbaseLiteException {
         URL url = new URL(CouchBaseData.URL_STRING);
         if (mReplication == null) {
@@ -324,6 +305,20 @@ public class Replicator implements DocIdBroadcastReceiver {
                     Log.v(TAG, event.toString());
                     Log.v(TAG, "Listening for document " + mReplication.getDocIds().toString());
                     ReplicationStateTransition t = event.getTransition();
+
+                    if (t.getDestination() == ReplicationState.RUNNING) {
+                        try {
+                            Map<String, Object> properties = new HashMap<>();
+                            properties.put("Time_Updated", Calendar.getInstance().getTime());
+                            CouchBaseData.getCurrentDocument(mContext).putProperties(properties);
+
+                        } catch (CouchbaseLiteException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
                     if (t != null
                             && t.getSource() == ReplicationState.STOPPING
                             && t.getDestination() == ReplicationState.STOPPED) {
