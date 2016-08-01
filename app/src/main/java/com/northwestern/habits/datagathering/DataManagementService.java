@@ -3,6 +3,7 @@ package com.northwestern.habits.datagathering;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -73,14 +74,29 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
 
     private static final String TAG = "DataManagementService";
 
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            new DocIDRecieveRunnable().run(context, intent);
+            // Update replication to also match the new document
+            try {
+                getReplicationInstance();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     @Override
     public void registerReceiver() {
-        registerReceiver(_receiver, _filter);
+        registerReceiver(mReceiver, _filter);
     }
 
     @Override
     public void unregisterReceiver() {
-        unregisterReceiver(_receiver);
+        unregisterReceiver(mReceiver);
     }
 
 
@@ -339,6 +355,7 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                 @Override
                 public void changed(final Replication.ChangeEvent event) {
                     Log.v(TAG, event.toString());
+                    Log.v(TAG, "Listening for document " + mReplication.getDocIds().toString());
                     ReplicationStateTransition t = event.getTransition();
                     if (t != null
                             && t.getSource() == ReplicationState.STOPPING
@@ -436,9 +453,15 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                     }
                 }
             });
+        } else {
+            // mReplication is not null, make sure it is listening for the correct document
+            List<String> list = new LinkedList<>();
+            list.add(CouchBaseData.getCurrentDocument(getBaseContext()).getId());
+            mReplication.setDocIds(list);
         }
         return mReplication;
     }
+
 
 
     private boolean isWifiConnected(Context c) {
