@@ -55,8 +55,8 @@ public class CouchBaseData {
         }
         Log.v("CBD", "Created new document " + currentDocument.getId());
         Map<String, Object> properties = new HashMap<>();
-        properties.put("Time_Created", Calendar.getInstance().getTime());
-        properties.put("Version", 2.0031);
+        properties.put("Time_Created", Long.toString(Calendar.getInstance().getTimeInMillis()));
+        properties.put("Version", 2.0032);
 
         currentDocument.putProperties(properties);
         return currentDocument;

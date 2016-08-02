@@ -243,7 +243,7 @@ public class GyroscopeManager extends DataManager {
             if (event != null) {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
-                datapoint.put("Time", event.getTimestamp());
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
                 datapoint.put("Label", label);
                 datapoint.put("Linear_Accel_x", event.getAccelerationX());
                 datapoint.put("Linear_Accel_y", event.getAccelerationY());
