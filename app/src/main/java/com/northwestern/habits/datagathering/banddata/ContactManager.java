@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandContactEvent;
 import com.microsoft.band.sensors.BandContactEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class ContactManager extends DataManager {
     public ContactManager(Context context) {
         super("ContactManager", context, 100);
         STREAM_TYPE = "CON";
+        dataBuffer = new DataSeries(DataManagementService.T_Contact, BUFFER_SIZE);
     }
 
     @Override
@@ -205,7 +207,7 @@ public class ContactManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_Contact, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

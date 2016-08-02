@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandBarometerEvent;
 import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class BarometerManager extends DataManager {
     public BarometerManager(Context context) {
         super("BarometerManager", context, 100);
         STREAM_TYPE = "BAR";
+        dataBuffer = new DataSeries(DataManagementService.T_Barometer, BUFFER_SIZE);
     }
 
     @Override
@@ -205,10 +207,8 @@ public class BarometerManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(DataManagementService.T_Barometer, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }

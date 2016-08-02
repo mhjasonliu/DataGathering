@@ -16,6 +16,7 @@ import com.microsoft.band.InvalidBandVersionException;
 import com.microsoft.band.sensors.BandPedometerEvent;
 import com.microsoft.band.sensors.BandPedometerEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public class PedometerManager extends DataManager {
     public PedometerManager(Context context) {
         super("PedometerManager", context, 100);
         STREAM_TYPE = "Pedometer";
+        dataBuffer = new DataSeries(DataManagementService.T_PEDOMETER, BUFFER_SIZE);
     }
 
     @Override
@@ -216,7 +218,7 @@ public class PedometerManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_PEDOMETER, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

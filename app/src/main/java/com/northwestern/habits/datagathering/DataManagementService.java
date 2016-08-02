@@ -55,6 +55,7 @@ public class DataManagementService extends Service {
     public static final String T_Ambient = "Ambient_Light";
     public static final String T_Barometer = "Barometer";
     public static final String T_Calories = "Calories";
+    public static final String T_Contact = "Contact_State";
     public static final String T_Distance = "Distance";
     public static final String T_GSR = "GSR";
     public static final String T_Gyroscope = "Gyroscope";

@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandDistanceEvent;
 import com.microsoft.band.sensors.BandDistanceEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public class DistanceManager extends DataManager {
     public DistanceManager(Context context) {
         super("DistanceManager", context, 100);
         STREAM_TYPE = "DIST";
+        dataBuffer = new DataSeries(DataManagementService.T_Distance, BUFFER_SIZE);
     }
 
     @Override
@@ -203,7 +205,7 @@ public class DistanceManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_Distance, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

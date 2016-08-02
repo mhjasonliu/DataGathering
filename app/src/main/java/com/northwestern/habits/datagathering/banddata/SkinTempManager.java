@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandSkinTemperatureEvent;
 import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class SkinTempManager extends DataManager {
     public SkinTempManager(Context context) {
         super("SkinTempManager", context, 100);
         STREAM_TYPE = "SkinTemp";
+        dataBuffer = new DataSeries(DataManagementService.T_SKIN_TEMP, BUFFER_SIZE);
     }
 
     @Override
@@ -207,7 +209,7 @@ public class SkinTempManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_SKIN_TEMP, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

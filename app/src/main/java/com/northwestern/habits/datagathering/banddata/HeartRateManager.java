@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public class HeartRateManager extends DataManager {
     public HeartRateManager(Context context) {
         super("HeartRateManager", context, 100);
         STREAM_TYPE = "heartRate";
+        dataBuffer = new DataSeries(DataManagementService.T_Heart_Rate, BUFFER_SIZE);
     }
 
     @Override
@@ -208,7 +210,7 @@ public class HeartRateManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_Heart_Rate, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

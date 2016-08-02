@@ -44,7 +44,6 @@ public abstract class DataManager implements EventListener {
             mHandler = new Handler();
 
         BUFFER_SIZE = buffSize;
-        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
     }
 
 

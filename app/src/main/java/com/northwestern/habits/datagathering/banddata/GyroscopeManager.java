@@ -17,6 +17,7 @@ import com.microsoft.band.sensors.BandGyroscopeEvent;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.io.IOException;
@@ -55,6 +56,7 @@ public class GyroscopeManager extends DataManager {
     public GyroscopeManager(Context context) {
         super("GyroscopeManager", context, 100);
         STREAM_TYPE = "GYR";
+        dataBuffer = new DataSeries(DataManagementService.T_Gyroscope, BUFFER_SIZE);
     }
 
     @Override
@@ -262,7 +264,7 @@ public class GyroscopeManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_Gyroscope, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

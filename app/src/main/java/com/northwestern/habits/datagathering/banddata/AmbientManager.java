@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAmbientLightEvent;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class AmbientManager extends DataManager {
     public AmbientManager(Context context) {
         super("AmbientManager", context, 100);
         STREAM_TYPE = "AMB";
+        dataBuffer = new DataSeries(DataManagementService.T_Ambient, BUFFER_SIZE);
     }
 
     @Override
@@ -208,10 +210,8 @@ public class AmbientManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(DataManagementService.T_Ambient, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }

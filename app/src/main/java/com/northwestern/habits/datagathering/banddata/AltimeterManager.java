@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAltimeterEvent;
 import com.microsoft.band.sensors.BandAltimeterEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class AltimeterManager extends DataManager {
     public AltimeterManager(Context context) {
         super("AltimeterManager",context, 100);
         STREAM_TYPE = "Altimeter";
+        dataBuffer = new DataSeries(DataManagementService.T_Altimeter, BUFFER_SIZE);
     }
 
     @Override
@@ -218,7 +220,7 @@ public class AltimeterManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_Altimeter, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

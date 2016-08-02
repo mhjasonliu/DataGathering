@@ -14,6 +14,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandCaloriesEvent;
 import com.microsoft.band.sensors.BandCaloriesEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class CaloriesManager extends DataManager {
     public CaloriesManager(Context context) {
         super("CaloriesManager", context, 100);
         STREAM_TYPE = "CAL";
+        dataBuffer = new DataSeries(DataManagementService.T_Calories, BUFFER_SIZE);
     }
 
     @Override
@@ -200,7 +202,7 @@ public class CaloriesManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_Calories, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

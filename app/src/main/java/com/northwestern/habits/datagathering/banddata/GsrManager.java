@@ -15,6 +15,7 @@ import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class GsrManager extends DataManager {
     public GsrManager(Context context) {
         super("GsrManager", context, 100);
         STREAM_TYPE = "GSR";
+        dataBuffer = new DataSeries(DataManagementService.T_GSR, BUFFER_SIZE);
     }
 
     @Override
@@ -209,7 +211,7 @@ public class GsrManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_GSR, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }

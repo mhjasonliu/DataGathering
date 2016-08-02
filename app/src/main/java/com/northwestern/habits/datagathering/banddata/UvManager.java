@@ -15,6 +15,7 @@ import com.microsoft.band.InvalidBandVersionException;
 import com.microsoft.band.sensors.BandUVEvent;
 import com.microsoft.band.sensors.BandUVEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
+import com.northwestern.habits.datagathering.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public class UvManager extends DataManager {
     public UvManager(Context context) {
         super("UvManager", context, 100);
         STREAM_TYPE = "UV";
+        dataBuffer = new DataSeries(DataManagementService.T_UV, BUFFER_SIZE);
     }
 
     @Override
@@ -211,7 +213,7 @@ public class UvManager extends DataManager {
                                 return true;
                             }
                         });
-                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        dataBuffer = new DataSeries(DataManagementService.T_UV, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
