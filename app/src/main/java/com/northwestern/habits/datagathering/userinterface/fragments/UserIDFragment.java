@@ -8,23 +8,18 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -36,14 +31,6 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class UserIDFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private static final String TAG = "UserIDFragment";
     private Button rButton;
@@ -77,10 +64,6 @@ public class UserIDFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -106,21 +89,22 @@ public class UserIDFragment extends Fragment {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // Perform the request
+                        // Dialog to enter
+//                        // Perform the request
                         new IdRequestTask(visibleList, enableList).execute();
-
-                        // Make necessary views appear
-                        for (View view : visibleList) {
-                            view.setVisibility(View.VISIBLE);
-                        }
-
-                        // Make necessary views disappear
-                        for (View view : enableList) {
-                            view.setEnabled(false);
-                        }
-
-                        // Disable swiping
-                        scrollLockRequest(true);
+//
+//                        // Make necessary views appear
+//                        for (View view : visibleList) {
+//                            view.setVisibility(View.VISIBLE);
+//                        }
+//
+//                        // Make necessary views disappear
+//                        for (View view : enableList) {
+//                            view.setEnabled(false);
+//                        }
+//
+//                        // Disable swiping
+//                        scrollLockRequest(true);
                     }
                 }
         );
@@ -230,99 +214,144 @@ public class UserIDFragment extends Fragment {
 
 
             final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
-            if (mResponse.equals("")) {
-                // Handle failure
-                alertBuilder.setTitle("Failed to get ID");
-                alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
-                        "You may need to connect to a Northwestern VPN.");
-                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+//            if (mResponse.equals("")) {
+//                // Handle failure
+//                alertBuilder.setTitle("Failed to get ID");
+//                alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
+//                        "You may need to connect to a Northwestern VPN.");
+//                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                    }
+//                });
+//
+//            } else {
+            // Enable the buttons
+//            for (View view : enableViews) {
+//                view.setEnabled(true);
+//            }
+//
+//            // Handle success
+//            alertBuilder.setTitle("Success!");
+//            alertBuilder.setMessage("Successfully received an ID for this user. (" +
+//                    mResponse + ")");
+//
+//            alertBuilder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    dialog.dismiss();
+//                    advanceScroll();
+//                }
+//            });
+////            }
+//            alertBuilder.create().show();
+            android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
+            final EditText input = new EditText(getContext());
+            builder
+                    .setTitle("Hello")
+                    .setMessage("World")
+                    .setView(input)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
-            } else {
-                // Enable the buttons
-                for (View view : enableViews) {
-                    view.setEnabled(true);
-                }
+                        public void onClick(DialogInterface dialog, int which) {
+                            String value = input.getText().toString();
+                            if (input.getText().toString().trim().length() == 0) {
+                                Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                                InputMethodManager imm = (InputMethodManager) getContext()
+                                        .getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                            } else {
+                                Toast.makeText(getContext(), "User ID set to " + value,
+                                        Toast.LENGTH_SHORT).show();
+                                for (View view : enableViews) {
+                                    view.setEnabled(true);
+                                }
+                                dialog.dismiss();
+                                advanceScroll();
+                                InputMethodManager imm = (InputMethodManager) getContext()
+                                        .getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                            }
 
-                // Handle success
-                alertBuilder.setTitle("Success!");
-                alertBuilder.setMessage("Successfully received an ID for this user. (" +
-                        mResponse + ")");
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 
-                alertBuilder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        advanceScroll();
-                    }
-                });
-            }
-            alertBuilder.create().show();
+                        public void onClick(DialogInterface dialog, int which) {
+                            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                            dialog.dismiss();
+                        }
+
+                    });
+
+            builder.show();
+            input.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
 
         }
 
         @Override
         protected Void doInBackground(Void[] params) {
-            String dataUrl = "https://vfsmpmapps10.fsm.northwestern.edu/php/getUserID.cgi";
-            String dataUrlParameters = "";
-            URL url;
-            HttpURLConnection connection = null;
-            try {
-                // Create connection
-//                Log.v(TAG, "connecting...");
-                url = new URL(dataUrl);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                connection.setRequestProperty("Content-Length", "" + Integer.toString(dataUrlParameters.getBytes().length));
-                connection.setRequestProperty("Content-Language", "en-US");
-                connection.setUseCaches(false);
-                connection.setDoInput(true);
-                connection.setDoOutput(true);
-                // Send request
-//                Log.v(TAG, "Requesting...");
-                DataOutputStream wr = new DataOutputStream(
-                        connection.getOutputStream());
-                wr.writeBytes(dataUrlParameters);
-                wr.flush();
-                wr.close();
-                // Get Response
-//                Log.v(TAG, "Reading response...");
-                InputStream is = connection.getInputStream();
-                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                String line;
-                StringBuilder response = new StringBuilder();
-                while ((line = rd.readLine()) != null) {
-                    response.append(line);
-                    response.append('\r');
-                }
-                rd.close();
-                mResponse = response.toString();
-                Log.v(TAG, mResponse);
-
-                SharedPreferences.Editor e = getContext().
-                        getSharedPreferences(Preferences.NAME, 0).edit();
-                e.putString(Preferences.USER_ID, mResponse);
-
-                // Reset the registered devices so that they get reregistered
-                e.putStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-                e.apply();
-
-            } catch (Exception e) {
-
-                e.printStackTrace();
-
-            } finally {
-
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
+//            String dataUrl = "https://vfsmpmapps10.fsm.northwestern.edu/php/getUserID.cgi";
+//            String dataUrlParameters = "";
+//            URL url;
+//            HttpURLConnection connection = null;
+//            try {
+//                // Create connection
+////                Log.v(TAG, "connecting...");
+//                url = new URL(dataUrl);
+//                connection = (HttpURLConnection) url.openConnection();
+//                connection.setRequestMethod("POST");
+//                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+//                connection.setRequestProperty("Content-Length", "" + Integer.toString(dataUrlParameters.getBytes().length));
+//                connection.setRequestProperty("Content-Language", "en-US");
+//                connection.setUseCaches(false);
+//                connection.setDoInput(true);
+//                connection.setDoOutput(true);
+//                // Send request
+////                Log.v(TAG, "Requesting...");
+//                DataOutputStream wr = new DataOutputStream(
+//                        connection.getOutputStream());
+//                wr.writeBytes(dataUrlParameters);
+//                wr.flush();
+//                wr.close();
+//                // Get Response
+////                Log.v(TAG, "Reading response...");
+//                InputStream is = connection.getInputStream();
+//                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+//                String line;
+//                StringBuilder response = new StringBuilder();
+//                while ((line = rd.readLine()) != null) {
+//                    response.append(line);
+//                    response.append('\r');
+//                }
+//                rd.close();
+//                mResponse = response.toString();
+//                Log.v(TAG, mResponse);
+//
+//                SharedPreferences.Editor e = getContext().
+//                        getSharedPreferences(Preferences.NAME, 0).edit();
+//                e.putString(Preferences.USER_ID, mResponse);
+//
+//                // Reset the registered devices so that they get reregistered
+//                e.putStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
+//                e.apply();
+//
+//            } catch (Exception e) {
+//
+//                e.printStackTrace();
+//
+//            } finally {
+//
+//                if (connection != null) {
+//                    connection.disconnect();
+//                }
+//            }
             return null;
         }
     }
