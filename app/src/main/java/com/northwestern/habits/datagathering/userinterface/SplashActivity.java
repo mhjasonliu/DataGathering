@@ -17,7 +17,7 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        onStartup(this);
+        onStartup(this.getApplicationContext());
 
         // If there is a password set, open to UserActivity, else AdvancedSettings
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
@@ -42,7 +42,8 @@ public class SplashActivity extends Activity {
 
         // Start replication if plugged in and charging
         if (MyReceiver.isCharging(context) && MyReceiver.isWifiConnected(context)) {
-            i = new Intent(DataManagementService.ACTION_BACKUP);
+            i = new Intent(context, DataManagementService.class);
+            i.setAction(DataManagementService.ACTION_BACKUP);
             context.startService(i);
         }
     }
