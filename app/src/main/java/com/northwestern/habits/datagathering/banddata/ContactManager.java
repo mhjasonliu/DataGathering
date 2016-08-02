@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -28,8 +27,8 @@ import java.util.Map;
  */
 public class ContactManager extends DataManager {
 
-    public ContactManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "ContactManager", db, context);
+    public ContactManager(Context context) {
+        super("ContactManager", context, 100);
         STREAM_TYPE = "CON";
     }
 

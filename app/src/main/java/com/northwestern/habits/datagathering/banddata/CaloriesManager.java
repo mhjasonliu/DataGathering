@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -29,8 +28,8 @@ import java.util.Map;
  */
 public class CaloriesManager extends DataManager {
 
-    public CaloriesManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
-        super(sName, "CaloriesManager", dbHelper, context);
+    public CaloriesManager(Context context) {
+        super("CaloriesManager", context, 100);
         STREAM_TYPE = "CAL";
     }
 

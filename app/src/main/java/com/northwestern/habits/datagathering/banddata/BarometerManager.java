@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -28,8 +27,8 @@ import java.util.Map;
  */
 public class BarometerManager extends DataManager {
 
-    public BarometerManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
-        super(sName, "BarometerManager", dbHelper, context);
+    public BarometerManager(Context context) {
+        super("BarometerManager", context, 100);
         STREAM_TYPE = "BAR";
     }
 

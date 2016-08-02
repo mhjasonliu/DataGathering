@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,8 +28,8 @@ import java.util.Map;
  * Created by William on 12/31/2015
  */
 public class PedometerManager extends DataManager {
-    public PedometerManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "PedometerManager", db, context);
+    public PedometerManager(Context context) {
+        super("PedometerManager", context, 100);
         STREAM_TYPE = "Pedometer";
     }
 

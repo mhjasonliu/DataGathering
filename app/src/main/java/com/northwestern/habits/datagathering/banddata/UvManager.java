@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -29,8 +28,8 @@ import java.util.Map;
  */
 public class UvManager extends DataManager {
 
-    public UvManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "UvManager", db, context);
+    public UvManager(Context context) {
+        super("UvManager", context,100);
         STREAM_TYPE = "UV";
     }
 

@@ -1,12 +1,8 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Document;
-import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -14,13 +10,10 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAmbientLightEvent;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
-import com.northwestern.habits.datagathering.CouchBaseData;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,8 +21,8 @@ import java.util.Map;
  */
 public class AmbientManager extends DataManager {
 
-    public AmbientManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
-        super(sName, "AmbientManager", dbHelper, context);
+    public AmbientManager(Context context) {
+        super("AmbientManager", context, 100);
         STREAM_TYPE = "AMB";
     }
 
@@ -193,37 +186,32 @@ public class AmbientManager extends DataManager {
         @Override
         public void onBandAmbientLightChanged(final BandAmbientLightEvent event) {
             if (event != null) {
-                JSONObject datapoint = new JSONObject();
-                try {
+                Map<String, Object> datapoint = new HashMap<>();
                     datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
                     datapoint.put("Label", label);
                     datapoint.put("Ambient_Brightness", event.getBrightness());
                     dataBuffer.put(datapoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
 
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
-                    try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
-                            @Override
-                            public boolean update(UnsavedRevision newRevision) {
-                                Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" +  getDateTime(event), dataBuffer.toString());
-                                newRevision.setUserProperties(properties);
-                                return true;
-                            }
-                        });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+//                if (dataBuffer.isFull()) {
+//                    try {
+//                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
+//                            @Override
+//                            public boolean update(UnsavedRevision newRevision) {
+//                                Map<String, Object> properties = newRevision.getUserProperties();
+//                                properties.putAll(dataBuffer.pack());
+//
+//                                newRevision.setUserProperties(properties);
+//                                return true;
+//                            }
+//                        });
+//                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+//                    } catch (CouchbaseLiteException e) {
+//                        e.printStackTrace();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
             }
         }
     }

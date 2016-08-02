@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -28,8 +27,8 @@ import java.util.Map;
  * Created by William on 12/31/2015
  */
 public class GsrManager extends DataManager {
-    public GsrManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "GsrManager", db, context);
+    public GsrManager(Context context) {
+        super("GsrManager", context, 100);
         STREAM_TYPE = "GSR";
     }
 

@@ -2,7 +2,6 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -53,8 +52,8 @@ public class GyroscopeManager extends DataManager {
         e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.GYRO), f).apply();
     }
 
-    public GyroscopeManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "GyroscopeManager", db, context);
+    public GyroscopeManager(Context context) {
+        super("GyroscopeManager", context, 100);
         STREAM_TYPE = "GYR";
     }
 
@@ -261,8 +260,6 @@ public class GyroscopeManager extends DataManager {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-//                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-//                                        + "_" + getDateTime(event), dataBuffer.toString());
                                 properties.putAll(dataBuffer.pack());
 
                                 newRevision.setUserProperties(properties);

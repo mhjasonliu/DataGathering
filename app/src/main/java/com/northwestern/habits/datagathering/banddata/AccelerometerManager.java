@@ -2,7 +2,6 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -71,8 +70,8 @@ public class AccelerometerManager extends DataManager {
     }
 
 
-    public AccelerometerManager(String sName, SQLiteOpenHelper dbHelper, Context context) {
-        super(sName, "AccelerometerManager", dbHelper, context);
+    public AccelerometerManager(Context context) {
+        super("AccelerometerManager", context, 100);
         STREAM_TYPE = "Accelerometer";
     }
 

@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -28,8 +27,8 @@ import java.util.Map;
  */
 public class SkinTempManager extends DataManager {
 
-    public SkinTempManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "SkinTempManager", db, context);
+    public SkinTempManager(Context context) {
+        super("SkinTempManager", context, 100);
         STREAM_TYPE = "SkinTemp";
     }
 

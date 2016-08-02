@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
@@ -37,14 +36,15 @@ import java.util.concurrent.TimeoutException;
 public abstract class DataManager implements EventListener {
 
     // Constructor
-    public DataManager(String sName, String tag, SQLiteOpenHelper helper, Context context) {
-        studyName = sName;
+    public DataManager(String tag, Context context, int buffSize) {
         TAG = tag;
-//        database = helper.getWritableDatabase();
         this.context = context;
         toastingFailure = false;
         if (mHandler == null)
             mHandler = new Handler();
+
+        BUFFER_SIZE = buffSize;
+        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
     }
 
 
@@ -62,6 +62,9 @@ public abstract class DataManager implements EventListener {
     protected int restartCount = 0;
     protected String STREAM_TYPE;
     protected static int label = 0;
+
+    protected DataSeries dataBuffer;
+    protected int BUFFER_SIZE = 1;
 
     protected static boolean toastingFailure;
 

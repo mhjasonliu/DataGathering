@@ -2,10 +2,9 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -42,12 +41,8 @@ public class BandDataService extends Service {
     public static final String SKIN_TEMP_REQ_EXTRA = "skinTemperature";
     public static final String UV_REQ_EXTRA = "ultraViolet";
 
-    public static final String INDEX_EXTRA = "index";
-    public static final String STUDY_ID_EXTRA = "study";
-    public static final String LOCATION_EXTRA = "location";
     public static final String FREQUENCY_EXTRA = "frequency";
 
-    public static final String CONTINUE_STUDY_EXTRA = "continue study";
     public static final String STOP_STREAM_EXTRA = "stop stream";
 
 
@@ -57,16 +52,13 @@ public class BandDataService extends Service {
 
     // General stuff (maintained by main)
     private BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
-    private HashMap<String, Boolean> modes = new HashMap<>();
 
     private HashMap<BandInfo, List<String>> bandStreams = new HashMap<>();
     protected static HashMap<BandInfo, String> locations = new HashMap<>();
 
     protected String studyName;
 
-    private SQLiteOpenHelper dbHelper;
-
-
+    @SuppressWarnings("FieldCanBeLocal")
     private int NOTIFICATION_ID = 255;
 
 
@@ -104,20 +96,20 @@ public class BandDataService extends Service {
         // Check for registered bands
         Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
 
-
-        accManager = new AccelerometerManager("", null, getApplicationContext());
-        altManager = new AltimeterManager("", null, getApplicationContext());
-        ambManager = new AmbientManager("", null, getApplicationContext());
-        barometerManager = new BarometerManager("", null, getApplicationContext());
-        calManager = new CaloriesManager("", null, getApplicationContext());
-        conManager = new ContactManager("", null, getApplicationContext());
-        distManager = new DistanceManager("", null, getApplicationContext());
-        gsrManager = new GsrManager("", null, getApplicationContext());
-        gyroManager = new GyroscopeManager("", null, getApplicationContext());
-        heartManager = new HeartRateManager("", null, getApplicationContext());
-        pedoManager = new PedometerManager("", null, getApplicationContext());
-        skinTempManager = new SkinTempManager("", null, getApplicationContext());
-        uvManager = new UvManager("", null, this);
+        Context appContext = getApplicationContext();
+        accManager = new AccelerometerManager(appContext);
+        altManager = new AltimeterManager(appContext);
+        ambManager = new AmbientManager(appContext);
+        barometerManager = new BarometerManager(appContext);
+        calManager = new CaloriesManager(appContext);
+        conManager = new ContactManager(appContext);
+        distManager = new DistanceManager(appContext);
+        gsrManager = new GsrManager(appContext);
+        gyroManager = new GyroscopeManager(appContext);
+        heartManager = new HeartRateManager(appContext);
+        pedoManager = new PedometerManager(appContext);
+        skinTempManager = new SkinTempManager(appContext);
+        uvManager = new UvManager(appContext);
 
         // Lock thread while reconnecting
         if (!isReconnecting) {
@@ -318,79 +310,79 @@ public class BandDataService extends Service {
         switch (request) {
             case ACCEL_REQ_EXTRA:
                 if (accManager == null)
-                    accManager = new AccelerometerManager(studyName, dbHelper, getApplicationContext());
+                    accManager = new AccelerometerManager(getApplicationContext());
 
                 accManager.subscribe(band);
                 break;
             case ALT_REQ_EXTRA:
                 if (altManager == null)
-                    altManager = new AltimeterManager(studyName, dbHelper, getApplicationContext());
+                    altManager = new AltimeterManager(getApplicationContext());
 
                 altManager.subscribe(band);
                 break;
             case AMBIENT_REQ_EXTRA:
                 if (ambManager == null)
-                    ambManager = new AmbientManager(studyName, dbHelper, getApplicationContext());
+                    ambManager = new AmbientManager(getApplicationContext());
 
                 ambManager.subscribe(band);
                 break;
             case BAROMETER_REQ_EXTRA:
                 if (barometerManager == null)
-                    barometerManager = new BarometerManager(studyName, dbHelper, getApplicationContext());
+                    barometerManager = new BarometerManager(getApplicationContext());
 
                 barometerManager.subscribe(band);
                 break;
             case CALORIES_REQ_EXTRA:
                 if (calManager == null)
-                    calManager = new CaloriesManager(studyName, dbHelper, getApplicationContext());
+                    calManager = new CaloriesManager(getApplicationContext());
 
                 calManager.subscribe(band);
                 break;
             case CONTACT_REQ_EXTRA:
                 if (conManager == null)
-                    conManager = new ContactManager(studyName, dbHelper, getApplicationContext());
+                    conManager = new ContactManager(getApplicationContext());
 
                 conManager.subscribe(band);
                 break;
             case DISTANCE_REQ_EXTRA:
                 if (distManager == null)
-                    distManager = new DistanceManager(studyName, dbHelper, getApplicationContext());
+                    distManager = new DistanceManager(getApplicationContext());
 
                 distManager.subscribe(band);
                 break;
             case GSR_REQ_EXTRA:
                 if (gsrManager == null)
-                    gsrManager = new GsrManager(studyName, dbHelper, getApplicationContext());
+                    gsrManager = new GsrManager(getApplicationContext());
 
                 gsrManager.subscribe(band);
                 break;
             case GYRO_REQ_EXTRA:
                 if (gyroManager == null)
-                    gyroManager = new GyroscopeManager(studyName, dbHelper, getApplicationContext());
+                    gyroManager = new GyroscopeManager(getApplicationContext());
 
                 gyroManager.subscribe(band);
                 break;
             case HEART_RATE_REQ_EXTRA:
                 if (heartManager == null)
-                    heartManager = new HeartRateManager(studyName, dbHelper, getApplicationContext());
+                    heartManager = new HeartRateManager(getApplicationContext());
 
                 heartManager.subscribe(band);
                 break;
             case PEDOMETER_REQ_EXTRA:
                 if (pedoManager == null)
-                    pedoManager = new PedometerManager(studyName, dbHelper, getApplicationContext());
+                    pedoManager = new PedometerManager(getApplicationContext());
 
                 pedoManager.subscribe(band);
                 break;
             case SKIN_TEMP_REQ_EXTRA:
                 if (skinTempManager == null)
-                    skinTempManager = new SkinTempManager(studyName, dbHelper, getApplicationContext());
+                    skinTempManager = new SkinTempManager(getApplicationContext());
 
                 skinTempManager.subscribe(band);
                 break;
             case UV_REQ_EXTRA:
                 if (uvManager == null)
-                    uvManager = new UvManager(studyName, dbHelper, getApplicationContext());
+                    uvManager = new UvManager(getApplicationContext());
 
                 uvManager.subscribe(band);
                 break;
@@ -398,20 +390,6 @@ public class BandDataService extends Service {
                 Log.e(TAG, "Unknown subscription requested " + request);
         }
     }
-
-    public class StopAllStreams extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            for (BandInfo band : bandStreams.keySet()) {
-                for (String type : bandStreams.get(band)) {
-                    genericUnsubscribeFactory(type, band);
-                }
-            }
-            return null;
-        }
-    }
-
 
     /* ******************************** IPC STUFF **************************************** */
     /*

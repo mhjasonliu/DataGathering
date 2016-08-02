@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -27,8 +26,8 @@ import java.util.Map;
  * Created by William on 12/31/2015
  */
 public class DistanceManager extends DataManager {
-    public DistanceManager(String sName, SQLiteOpenHelper db, Context context) {
-        super(sName, "DistanceManager", db, context);
+    public DistanceManager(Context context) {
+        super("DistanceManager", context, 100);
         STREAM_TYPE = "DIST";
     }
 
