@@ -233,7 +233,7 @@ public class GyroscopeManager extends DataManager {
             implements BandGyroscopeEventListener {
 
         private BandInfo info;
-        private final int BUFFER_SIZE = 5;
+        private final int BUFFER_SIZE = 100;
         private DataSeries dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
 
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
@@ -265,7 +265,7 @@ public class GyroscopeManager extends DataManager {
 
                 if (dataBuffer.isFull()) {
                     try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();

@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -38,41 +37,39 @@ public class CouchBaseData {
 
     public static Database getDatabase(Context c) throws CouchbaseLiteException, IOException {
         c = c.getApplicationContext();
-        if (database == null) {
-            database = getManager(c).getDatabase(DB_NAME);
-            database.setMaxRevTreeDepth(1);
+        return getManager(c).getDatabase(DB_NAME);
+//        if (database == null) {
+//            database = getManager(c).getDatabase(DB_NAME);
+//            database.setMaxRevTreeDepth(1);
+//        }
+//        return database;
+    }
+
+    public static Document getNewDocument (Context c) throws CouchbaseLiteException, IOException {
+
+        try {
+            currentDocument = getDatabase(c).getDocument(
+                    BluetoothConnectionLayer.getAdapter().getAddress() + "_" + Calendar.getInstance().getTime());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return database;
+        Log.v("CBD", "Created new document " + currentDocument.getId());
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("Time_Created", Calendar.getInstance().getTime());
+        properties.put("Version", 2);
+
+        currentDocument.putProperties(properties);
+        return currentDocument;
+
     }
 
     public static Document getCurrentDocument(Context c) throws CouchbaseLiteException, IOException {
+        ((Document) null).delete();
         c = c.getApplicationContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
         if (id.equals("")) {
-            try {
-                currentDocument = getDatabase(c).getDocument(
-                        BluetoothConnectionLayer.getAdapter().getAddress() + "_" + Calendar.getInstance().getTime());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            SharedPreferences.Editor e = prefs.edit();
-            e.putString(Preferences.CURRENT_DOCUMENT, currentDocument.getId());
-            e.apply();
-
-            // Broadcast the new id across processes
-            Intent i = new Intent(DocIdBroadcastReceiver.ACTION_BROADCAST_CHANGE_ID);
-            i.putExtra(DocIdBroadcastReceiver.NEW_ID_EXTRA, currentDocument.getId());
-
-            c.sendBroadcast(i);
-
-            Log.v("CBD", "Created new document " + currentDocument.getId());
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("Time_Created", Calendar.getInstance().getTime());
-            properties.put("Version", 1);
-
-            currentDocument.putProperties(properties);
-            return currentDocument;
+            return getNewDocument(c);
         } else {
             if (currentDocument == null) {
                 database = getDatabase(c);

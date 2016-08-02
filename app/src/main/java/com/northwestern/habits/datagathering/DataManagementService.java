@@ -25,7 +25,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
+import com.couchbase.lite.Query;
+import com.couchbase.lite.QueryEnumerator;
+import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
 import com.couchbase.lite.replicator.ReplicationStateTransition;
@@ -43,7 +47,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -152,79 +155,80 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
 
         switch (intent.getAction()) {
             case ACTION_WRITE_CSVS:
-                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                        .getString(Preferences.CURRENT_DOCUMENT, "folder");
-                try {
-                    exportToCsv(folderName, getApplicationContext());
-                } catch (CouchbaseLiteException e) {
-                    e.printStackTrace();
-                }
+//                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+//                        .getString(Preferences.CURRENT_DOCUMENT, "folder");
+//                try {
+//                    exportToCsv(folderName, getApplicationContext());
+//                } catch (CouchbaseLiteException e) {
+//                    e.printStackTrace();
+//                }
                 break;
             case ACTION_BACKUP:
+                startOneShotRep();
 
-                // Do a push replication
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                List<String> docs = new ArrayList<>();
-                docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
-                assert push != null;
-                push.setDocIds(docs);
-
-                if (intent.getBooleanExtra(CONTINUOUS_EXTRA, false)) {
-                    // Continuous request
-                    if (push.isRunning()) {
-                        // Push already running, if continuous, leave it, if one-shot, leave it
-                        // aka do nothing
-                        break;
-                    } else {
-                        // Push not running, no need to worry about one-shot, just start it
-                        push.setContinuous(true);
-                        Log.v(TAG, "Starting continuous replication");
-                        getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
-                            .putExtra(Replicator.TYPE_EXTRA, Replicator.START_EXTRA));
-                        push.start();
-                    }
-                } else {
-                    // One-Shot replication
-                    push.setContinuous(false);
-                    if (push.isRunning()) {
-                        // Start up replication
-                        if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
-                            Log.v(TAG, "Restarting replication as one-shot");
-                            getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
-                                .putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
-                            push.restart();
-                        }
-                    } else {
-                        Log.v(TAG, "Starting replication as one-shot");
-                        push.start();
-                    }
-                }
+//                // Do a push replication
+//                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+//                List<String> docs = new ArrayList<>();
+//                docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
+//                assert push != null;
+//                push.setDocIds(docs);
+//
+//                if (intent.getBooleanExtra(CONTINUOUS_EXTRA, false)) {
+//                    // Continuous request
+//                    if (push.isRunning()) {
+//                        // Push already running, if continuous, leave it, if one-shot, leave it
+//                        // aka do nothing
+//                        break;
+//                    } else {
+//                        // Push not running, no need to worry about one-shot, just start it
+//                        push.setContinuous(true);
+//                        Log.v(TAG, "Starting continuous replication");
+//                        getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
+//                            .putExtra(Replicator.TYPE_EXTRA, Replicator.START_EXTRA));
+//                        push.start();
+//                    }
+//                } else {
+//                    // One-Shot replication
+//                    push.setContinuous(false);
+//                    if (push.isRunning()) {
+//                        // Start up replication
+//                        if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
+//                            Log.v(TAG, "Restarting replication as one-shot");
+//                            getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
+//                                .putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
+//                            push.restart();
+//                        }
+//                    } else {
+//                        Log.v(TAG, "Starting replication as one-shot");
+//                        push.start();
+//                    }
+//                }
                 break;
             case ACTION_STOP_BACKUP:
                 // If the backup is not null, is running, and is continuous, stop it
                 // If it is not continuous, forced replication was performed.
-                if (push != null && push.isRunning() && push.isContinuous()) {
-                    // Alert user if the backup is not finished
-                    final String toastText;
-                    if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
-                        toastText = "Database backup prematurely stopped: " +
-                                push.getCompletedChangesCount() + " out of " + Integer.toString(push.getChangesCount())
-                                + " changes backed up.";
-                    } else {
-                        toastText = "Database backup stopped";
-                    }
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getBaseContext(), toastText,
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    Log.v(TAG, "Stopping continuous backup");
-                    getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP).
-                        putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
-                    push.stop();
-                }
+//                if (push != null && push.isRunning() && push.isContinuous()) {
+//                    // Alert user if the backup is not finished
+//                    final String toastText;
+//                    if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
+//                        toastText = "Database backup prematurely stopped: " +
+//                                push.getCompletedChangesCount() + " out of " + Integer.toString(push.getChangesCount())
+//                                + " changes backed up.";
+//                    } else {
+//                        toastText = "Database backup stopped";
+//                    }
+//                    mHandler.post(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            Toast.makeText(getBaseContext(), toastText,
+//                                    Toast.LENGTH_SHORT).show();
+//                        }
+//                    });
+//                    Log.v(TAG, "Stopping continuous backup");
+//                    getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP).
+//                            putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
+//                    push.stop();
+//                }
 
                 break;
             default:
@@ -233,6 +237,100 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
 
         registerReceiver();
         return START_NOT_STICKY;
+    }
+
+
+    private boolean isReplicating = false;
+
+    private void startOneShotRep() {
+
+        if (!isReplicating) {
+            try {
+                final Database db = CouchBaseData.getDatabase(this);
+                Query q = db.createAllDocumentsQuery();
+                q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
+
+                QueryEnumerator result = q.run();
+                // Pack the docIDs into a list
+                final List<String> ids = new LinkedList<>();
+                for (Iterator<QueryRow> it = result; it.hasNext(); ) {
+                    ids.add(it.next().getDocumentId());
+                }
+
+                // Do a one-shot replication
+                URL url = new URL(CouchBaseData.URL_STRING);
+                Replication push = new Replication(db,
+                        url,
+                        Replication.Direction.PUSH);
+
+                push.setContinuous(false);
+                push.setDocIds(ids);
+                push.addChangeListener(new Replication.ChangeListener() {
+                    @Override
+                    public void changed(final Replication.ChangeEvent event) {
+                        Log.v(TAG, event.toString());
+                        boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
+                        boolean errorDidOccur = event.getError() != null;
+                        boolean changesNotZero = event.getCompletedChangeCount() != 0;
+                        boolean isTransitioningToStopped = false;
+                        try {
+                            isTransitioningToStopped =
+                                    event.getTransition().getDestination() == ReplicationState.STOPPED;
+                        } catch (NullPointerException e) {}
+
+                        if (isTransitioningToStopped) {
+                            isReplicating = false;
+                        }
+
+
+                        if (errorDidOccur) {
+                            // TODO handle error
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getBaseContext(),
+                                            "Error occurred while replicating " +
+                                                    event.getError(), Toast.LENGTH_SHORT).show();
+                                    event.getError().printStackTrace();
+                                }
+                            });
+                        } else if (isTransitioningToStopped) {
+
+                            if (didCompleteAll && changesNotZero) {
+                                Log.v(TAG, "Successful backup of " + event.getCompletedChangeCount() + " docs.");
+                                Log.v(TAG, "Deleting docs");
+                                // Delete old documents
+                                for (String id : ids) {
+                                    try {
+                                        db.getDocument(id).purge();
+                                    } catch (CouchbaseLiteException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                            }
+
+                            // Start a new rep if plugged in and charging
+                            if (isCharging(getBaseContext()) && isWifiConnected(getBaseContext())) {
+                                try {
+                                    Thread.sleep(30000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                startOneShotRep();
+                            }
+                        }
+                    }
+                });
+                push.start();
+
+
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void exportToCsv(String fName, Context c) throws CouchbaseLiteException {
@@ -412,16 +510,15 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                 public void run() {
                                     Toast.makeText(getBaseContext(),
                                             "Successfully backed up database replications " +
-                                            Integer.toString(event.getCompletedChangeCount()) +
-                                            " out of " + Integer.toString(event.getChangeCount()) +
-                                            "\nDocument: " +
+                                                    Integer.toString(event.getCompletedChangeCount()) +
+                                                    " out of " + Integer.toString(event.getChangeCount()) +
+                                                    "\nDocument: " +
                                                     PreferenceManager.getDefaultSharedPreferences(
                                                             getBaseContext()).getString(Preferences.CURRENT_DOCUMENT, "_"),
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
-
 
 
                         // If wifi connected and charging, continue
@@ -470,7 +567,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
         }
         return mReplication;
     }
-
 
 
     private boolean isWifiConnected(Context c) {
