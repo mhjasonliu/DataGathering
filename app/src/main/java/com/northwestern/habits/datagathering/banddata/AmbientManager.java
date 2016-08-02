@@ -3,6 +3,9 @@ package com.northwestern.habits.datagathering.banddata;
 import android.content.Context;
 import android.util.Log;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -10,9 +13,9 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAmbientLightEvent;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
+import com.northwestern.habits.datagathering.CouchBaseData;
 
-import org.json.JSONArray;
-
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -173,8 +176,6 @@ public class AmbientManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandAmbientLightEventListener(BandInfo bInfo, String name) {
             super();
@@ -186,32 +187,34 @@ public class AmbientManager extends DataManager {
         @Override
         public void onBandAmbientLightChanged(final BandAmbientLightEvent event) {
             if (event != null) {
+                this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Label", label);
-                    datapoint.put("Ambient_Brightness", event.getBrightness());
-                    dataBuffer.put(datapoint);
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
+                datapoint.put("Label", label);
+                datapoint.put("Ambient_Brightness", event.getBrightness());
+
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 
-//                if (dataBuffer.isFull()) {
-//                    try {
-//                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
-//                            @Override
-//                            public boolean update(UnsavedRevision newRevision) {
-//                                Map<String, Object> properties = newRevision.getUserProperties();
-//                                properties.putAll(dataBuffer.pack());
-//
-//                                newRevision.setUserProperties(properties);
-//                                return true;
-//                            }
-//                        });
-//                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
-//                    } catch (CouchbaseLiteException e) {
-//                        e.printStackTrace();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
+                if (dataBuffer.isFull()) {
+                    try {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
+                            @Override
+                            public boolean update(UnsavedRevision newRevision) {
+                                Map<String, Object> properties = newRevision.getUserProperties();
+                                properties.putAll(dataBuffer.pack());
+
+                                newRevision.setUserProperties(properties);
+                                return true;
+                            }
+                        });
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }

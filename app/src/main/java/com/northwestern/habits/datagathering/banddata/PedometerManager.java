@@ -17,11 +17,8 @@ import com.microsoft.band.sensors.BandPedometerEvent;
 import com.microsoft.band.sensors.BandPedometerEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -182,8 +179,6 @@ public class PedometerManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandPedometerEventListener(BandInfo bandInfo, String name) {
             super();
@@ -195,40 +190,34 @@ public class PedometerManager extends DataManager {
         @Override
         public void onBandPedometerChanged(final BandPedometerEvent event) {
             if (event != null) {
-                JSONObject datapoint = new JSONObject();
+                this.lastDataSample = System.currentTimeMillis();
+                Map<String, Object> datapoint = new HashMap<>();
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
+                datapoint.put("Label", label);
+                datapoint.put("Total_Steps", event.getTotalSteps());
                 try {
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
-                    datapoint.put("Label", label);
-                    datapoint.put("Total_Steps", event.getTotalSteps());
-                    try {
-                        datapoint.put("Steps_Today", event.getStepsToday());
-                    } catch (InvalidBandVersionException e) {
-                        e.printStackTrace();
-                    }
-
-                    dataBuffer.put(datapoint);
-                } catch (JSONException e) {
+                    datapoint.put("Steps_Today", event.getStepsToday());
+                } catch (InvalidBandVersionException e) {
                     e.printStackTrace();
                 }
 
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
+
+                if (dataBuffer.isFull()) {
                     try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" + getDateTime(event), dataBuffer.toString());
+                                properties.putAll(dataBuffer.pack());
+
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
                         });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }

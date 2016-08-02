@@ -15,11 +15,8 @@ import com.microsoft.band.sensors.BandSkinTemperatureEvent;
 import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -177,8 +174,6 @@ public class SkinTempManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandSkinTempEventListener(BandInfo bandInfo, String name) {
             super();
@@ -189,36 +184,31 @@ public class SkinTempManager extends DataManager {
 
         @Override
         public void onBandSkinTemperatureChanged(final BandSkinTemperatureEvent event) {
+
             if (event != null) {
-                JSONObject datapoint = new JSONObject();
-                try {
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
-                    datapoint.put("Label", label);
-                    datapoint.put("Skin_Temperature", event.getTemperature());
+                this.lastDataSample = System.currentTimeMillis();
+                Map<String, Object> datapoint = new HashMap<>();
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
+                datapoint.put("Label", label);
+                datapoint.put("Skin_Temperature", event.getTemperature());
 
-                    dataBuffer.put(datapoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
+                if (dataBuffer.isFull()) {
                     try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                properties.putAll(dataBuffer.pack());
+
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
                         });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }

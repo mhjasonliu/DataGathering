@@ -11,16 +11,12 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
-import com.microsoft.band.InvalidBandVersionException;
 import com.microsoft.band.sensors.BandCaloriesEvent;
 import com.microsoft.band.sensors.BandCaloriesEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -172,8 +168,6 @@ public class CaloriesManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandCaloriesEventListener(BandInfo bandInfo, String name) {
             super();
@@ -185,39 +179,29 @@ public class CaloriesManager extends DataManager {
         @Override
         public void onBandCaloriesChanged(final BandCaloriesEvent event) {
             if (event != null) {
-                JSONObject datapoint = new JSONObject();
-                try {
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
-                    datapoint.put("Label", label);
-                    datapoint.put("Calories", event.getCalories());
-                    try {
-                        datapoint.put("Calories_Today", event.getCaloriesToday());
-                    } catch (InvalidBandVersionException e) {
-                        e.printStackTrace();
-                    }
-                    dataBuffer.put(datapoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                this.lastDataSample = System.currentTimeMillis();
+                Map<String, Object> datapoint = new HashMap<>();
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
+                datapoint.put("Label", label);
+                datapoint.put("Calories", event.getCalories());
+
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
+                if (dataBuffer.isFull()) {
                     try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                properties.putAll(dataBuffer.pack());
+
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
                         });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }

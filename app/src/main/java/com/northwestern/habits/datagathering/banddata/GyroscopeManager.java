@@ -228,10 +228,6 @@ public class GyroscopeManager extends DataManager {
     private class CustomBandGyroEventListener extends CustomListener
             implements BandGyroscopeEventListener {
 
-        private BandInfo info;
-        private final int BUFFER_SIZE = 100;
-        private DataSeries dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
-
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
             super();
             info = mInfo;
@@ -267,9 +263,7 @@ public class GyroscopeManager extends DataManager {
                             }
                         });
                         dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }

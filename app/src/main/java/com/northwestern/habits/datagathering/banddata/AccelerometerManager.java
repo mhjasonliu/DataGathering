@@ -19,10 +19,6 @@ import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.CouchBaseData;
 import com.northwestern.habits.datagathering.Preferences;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -219,19 +215,10 @@ public class AccelerometerManager extends DataManager {
 
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         @Override
         public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Band info: ");
-            builder.append(info.getName());
-            builder.append("\nUser name: ");
-            builder.append(uName);
-            builder.append("\nLocation: ");
-            builder.append(location);
-            return builder.toString();
+            return "Band info: " + info.getName() + "\nUser name: " + uName + "\nLocation: " + location;
         }
 
         public BandAccelerometerEventListenerCustom(BandInfo mInfo, String name) {
@@ -245,39 +232,35 @@ public class AccelerometerManager extends DataManager {
         @Override
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             Log.e(TAG, "accel changed");
-            if (event != null) {
-                this.lastDataSample = event.getTimestamp();
-                JSONObject datapoint = new JSONObject();
-                try {
-                    datapoint.put("Time", event.getTimestamp());
+            {
+                if (event != null) {
+                    this.lastDataSample = System.currentTimeMillis();
+                    Map<String, Object> datapoint = new HashMap<>();
+                    datapoint.put("Time", Long.toString(event.getTimestamp()));
+                    datapoint.put("Label", label);
                     datapoint.put("x", event.getAccelerationX());
                     datapoint.put("y", event.getAccelerationY());
                     datapoint.put("z", event.getAccelerationZ());
-                    datapoint.put("label", label);
 
-                    dataBuffer.put(datapoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                    dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
-                    try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
-                            @Override
-                            public boolean update(UnsavedRevision newRevision) {
-                                Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" + getDateTime(event), dataBuffer.toString());
-                                newRevision.setUserProperties(properties);
-                                return true;
-                            }
-                        });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    if (dataBuffer.isFull()) {
+                        try {
+                            CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
+                                @Override
+                                public boolean update(UnsavedRevision newRevision) {
+                                    Map<String, Object> properties = newRevision.getUserProperties();
+                                    properties.putAll(dataBuffer.pack());
+
+                                    newRevision.setUserProperties(properties);
+                                    return true;
+                                }
+                            });
+                            dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                        } catch (CouchbaseLiteException | IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }

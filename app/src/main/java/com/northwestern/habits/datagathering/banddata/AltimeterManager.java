@@ -15,11 +15,8 @@ import com.microsoft.band.sensors.BandAltimeterEvent;
 import com.microsoft.band.sensors.BandAltimeterEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -188,74 +185,46 @@ public class AltimeterManager extends DataManager {
 
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         @Override
         public void onBandAltimeterChanged(final BandAltimeterEvent event) {
+
             if (event != null) {
+                this.lastDataSample = System.currentTimeMillis();
+                Map<String, Object> datapoint = new HashMap<>();
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
+                datapoint.put("Label", label);
+                datapoint.put("Total_Gain", event.getTotalGain());
+                datapoint.put("Total_Loss", event.getTotalLoss());
+                datapoint.put("Stepping_Gain", event.getSteppingGain());
+                datapoint.put("Stepping_Loss", event.getSteppingLoss());
+                datapoint.put("Steps_Ascended", event.getStepsAscended());
+                datapoint.put("Steps_Descended", event.getStepsDescended());
+                datapoint.put("Rate", event.getRate());
+                datapoint.put("Flights_Ascended", event.getFlightsAscended());
+                datapoint.put("Flights_Descended", event.getFlightsDescended());
 
-//                    fw.append(getDateTime(event));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getTotalGain()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getTotalLoss()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getSteppingGain()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getSteppingLoss()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getStepsAscended()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getStepsDescended()));
-//                    fw.append(',');
-//                    fw.append(Float.toString(event.getRate()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getFlightsAscended()));
-//                    fw.append(',');
-//                    fw.append(Long.toString(event.getFlightsDescended()));
-//                    fw.append('\n');
-                JSONObject datapoint = new JSONObject();
-                try {
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
-                    datapoint.put("Label", label);
-                    datapoint.put("Total_Gain", event.getTotalGain());
-                    datapoint.put("Total_Loss", event.getTotalLoss());
-                    datapoint.put("Stepping_Gain", event.getSteppingGain());
-                    datapoint.put("Stepping_Loss", event.getSteppingLoss());
-                    datapoint.put("Steps_Ascended", event.getStepsAscended());
-                    datapoint.put("Steps_Descended", event.getStepsDescended());
-                    datapoint.put("Rate", event.getRate());
-                    datapoint.put("Flights_Ascended", event.getFlightsAscended());
-                    datapoint.put("Flights_Descended", event.getFlightsDescended());
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
-                    dataBuffer.put(datapoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-
-                if (dataBuffer.length() >= BUFFER_SIZE) {
+                if (dataBuffer.isFull()) {
                     try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE + "_"
-                                        + getDateTime(event), dataBuffer.toString());
+                                properties.putAll(dataBuffer.pack());
+
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
                         });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
+
         }
     }
 }

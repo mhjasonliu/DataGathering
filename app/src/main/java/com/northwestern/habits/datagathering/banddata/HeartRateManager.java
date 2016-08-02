@@ -15,11 +15,8 @@ import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.northwestern.habits.datagathering.CouchBaseData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -179,8 +176,6 @@ public class HeartRateManager extends DataManager {
         private BandInfo info;
         private String uName;
         private String location;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
 
         public CustomBandHeartRateEventListener(BandInfo bandInfo, String name) {
             info = bandInfo;
@@ -190,38 +185,31 @@ public class HeartRateManager extends DataManager {
 
         @Override
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
-            Log.v(TAG, "");
             if (event != null) {
-                JSONObject datapoint = new JSONObject();
-                try {
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
-                    datapoint.put("Label", label);
-                    datapoint.put("rate", event.getHeartRate());
-                    datapoint.put("quality", event.getQuality());
+                this.lastDataSample = System.currentTimeMillis();
+                Map<String, Object> datapoint = new HashMap<>();
+                datapoint.put("Time", Long.toString(event.getTimestamp()));
+                datapoint.put("Label", label);
+                datapoint.put("rate", event.getHeartRate());
+                datapoint.put("quality", event.getQuality());
 
-                    dataBuffer.put(datapoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
+                if (dataBuffer.isFull()) {
                     try {
-                        CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
+                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" +  getDateTime(event), dataBuffer.toString());
+                                properties.putAll(dataBuffer.pack());
+
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
                         });
-                        dataBuffer = new JSONArray();
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
+                    } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
                     }
                 }
