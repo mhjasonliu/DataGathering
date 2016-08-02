@@ -11,7 +11,7 @@ import android.os.BatteryManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.northwestern.habits.datagathering.banddata.BandDataService;
+import com.northwestern.habits.datagathering.userinterface.SplashActivity;
 
 /**
  * Created by William on 7/11/2016.
@@ -19,7 +19,12 @@ import com.northwestern.habits.datagathering.banddata.BandDataService;
 public class MyReceiver extends BroadcastReceiver {
     private static final String TAG = "BroadcastReceiver";
 
-    private boolean isWifiConnected(Context c) {
+    /**
+     * Returns whether or not the wifi is accessable
+     * @param c context from which to access the wifi service
+     * @return boolean
+     */
+    public static boolean isWifiConnected(Context c) {
         SupplicantState supState;
         WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
@@ -28,7 +33,12 @@ public class MyReceiver extends BroadcastReceiver {
             && supState == SupplicantState.COMPLETED;
     }
 
-    boolean isCharging(Context context) {
+    /**
+     * Returns whether or not the phone is charging
+     * @param context from which to access the battery manager
+     * @return boolean
+     */
+    public static boolean isCharging(Context context) {
         // Check for charging
         Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         assert i != null;
@@ -92,8 +102,7 @@ public class MyReceiver extends BroadcastReceiver {
 
                     break;
                 case Intent.ACTION_BOOT_COMPLETED:
-                    // Start streaming sensors that were cut off when powered down
-                    context.startService(new Intent(context, BandDataService.class));
+                    SplashActivity.onStartup(context);
                     break;
                 default:
                     Log.e(TAG, "Unknown type sent to receiver: " + intent.getAction());

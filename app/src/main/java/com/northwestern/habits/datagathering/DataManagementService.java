@@ -4,14 +4,9 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.net.wifi.SupplicantState;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.os.BatteryManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -224,7 +219,8 @@ public class DataManagementService extends Service {
                             }
 
                             // Start a new rep if plugged in and charging
-                            if (isCharging(getBaseContext()) && isWifiConnected(getBaseContext())) {
+                            if (MyReceiver.isCharging(getBaseContext()) &&
+                                    MyReceiver.isWifiConnected(getBaseContext())) {
                                 try {
                                     // Sleep to prevent overuse of the battery
                                     Thread.sleep(30000);
@@ -340,35 +336,5 @@ public class DataManagementService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Returns whether or not the wifi is accessable
-     * @param c context from which to access the wifi service
-     * @return boolean
-     */
-    private boolean isWifiConnected(Context c) {
-        SupplicantState supState;
-        WifiManager wifiManager = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        supState = wifiInfo.getSupplicantState();
-        return wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED
-                && supState == SupplicantState.COMPLETED;
-    }
-
-    /**
-     * Returns whether or not the phone is charging
-     * @param context from which to access the battery manager
-     * @return boolean
-     */
-    private boolean isCharging(Context context) {
-        // Check for charging
-        Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int plugged;
-        if (i != null) {
-            plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
-        }
-        return false;
     }
 }
