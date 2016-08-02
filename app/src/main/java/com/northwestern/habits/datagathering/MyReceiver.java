@@ -4,8 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -33,6 +31,7 @@ public class MyReceiver extends BroadcastReceiver {
     boolean isCharging(Context context) {
         // Check for charging
         Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        assert i != null;
         int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
     }
@@ -41,8 +40,6 @@ public class MyReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null) {
-            ConnectivityManager connManager;
-            NetworkInfo network;
             switch (intent.getAction()) {
                 case Intent.ACTION_POWER_CONNECTED:
                     Log.v(TAG, "Power connected action received.");
