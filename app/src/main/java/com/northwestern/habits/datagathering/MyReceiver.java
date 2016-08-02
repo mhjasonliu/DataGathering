@@ -53,7 +53,6 @@ public class MyReceiver extends BroadcastReceiver {
                         // start database backup
                         Intent i = new Intent(context, DataManagementService.class);
                         i.setAction(DataManagementService.ACTION_BACKUP);
-                        i.putExtra(DataManagementService.CONTINUOUS_EXTRA, true);
                         context.startService(i);
                     }
                     break;
@@ -81,7 +80,6 @@ public class MyReceiver extends BroadcastReceiver {
                             // start database backup
                             Intent i = new Intent(context, DataManagementService.class);
                             i.setAction(DataManagementService.ACTION_BACKUP);
-                            i.putExtra(DataManagementService.CONTINUOUS_EXTRA, true);
                             context.startService(i);
                         }
 

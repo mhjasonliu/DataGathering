@@ -109,10 +109,33 @@ public class DataManagementService extends Service {
                 }
                 break;
             case ACTION_BACKUP:
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getBaseContext(), "Starting database backup",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
                 startOneShotRep();
                 break;
             case ACTION_STOP_BACKUP:
-                throw new UnsupportedOperationException();
+                try {
+                    Database db = CouchBaseData.getDatabase(getBaseContext());
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getBaseContext(), "Stopping all database replications",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    for (Replication r :
+                            db.getActiveReplications()) {
+                        r.stop();
+                    }
+                } catch (CouchbaseLiteException | IOException e) {
+                    e.printStackTrace();
+                }
+
             default:
                 Log.e(TAG, "Nonexistant action requested");
         }
