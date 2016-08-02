@@ -2,8 +2,10 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
@@ -11,6 +13,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
@@ -61,6 +64,10 @@ public class BandDataService extends Service {
     @SuppressWarnings("FieldCanBeLocal")
     private int NOTIFICATION_ID = 255;
 
+    private BroadcastReceiver userIDReceiver;
+    public static final String ACTION_USER_ID = "User_ID";
+    public static final String USER_ID_EXTRA = "User_ID_Extra";
+
 
     // Data managers
     AccelerometerManager accManager;// = new AccelerometerManager("", null, getApplicationContext());
@@ -89,6 +96,23 @@ public class BandDataService extends Service {
         b.setSmallIcon(android.R.drawable.arrow_up_float);
 
         startForeground(NOTIFICATION_ID, b.build());
+
+        // Deal with user id stuff
+        if (userIDReceiver == null) {
+            userIDReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    DataManager.userID = intent.getStringExtra(USER_ID_EXTRA);
+                    PreferenceManager.getDefaultSharedPreferences(getBaseContext())
+                            .edit().putString(Preferences.USER_ID, DataManager.userID).apply();
+                }
+            };
+            getBaseContext().registerReceiver(userIDReceiver, new IntentFilter(ACTION_USER_ID));
+        }
+        String id = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getString(Preferences.USER_ID, "");
+        if (!id.equals("")) {
+            DataManager.userID = id;
+        }
 
 
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
@@ -201,6 +225,9 @@ public class BandDataService extends Service {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        getBaseContext().unregisterReceiver(userIDReceiver);
+        userIDReceiver = null;
 
         super.onDestroy();
     }

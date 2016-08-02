@@ -51,7 +51,7 @@ public abstract class DataManager implements EventListener {
     protected HashMap<BandInfo, CustomListener> listeners = new HashMap<>();
     protected HashMap<BandInfo, BandClient> clients = new HashMap<>();
 
-    String userID = "Placeholder_User_ID_Ask_Will_For_New_Version_Of_App";
+    public static String userID = "Placeholder_User_ID_Ask_Will_For_New_Version_Of_App";
     protected final String T_BAND2 = "Microsoft_Band_2";
     protected String TAG = "DataManager"; // Should be reset in the constructor
     SQLiteDatabase database; // Should be reset in the constructor

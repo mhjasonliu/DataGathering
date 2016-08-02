@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -258,21 +260,24 @@ public class UserIDFragment extends Fragment {
                             String value = input.getText().toString();
                             if (input.getText().toString().trim().length() == 0) {
                                 Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
-                                dialog.dismiss();
                                 InputMethodManager imm = (InputMethodManager) getContext()
                                         .getSystemService(Context.INPUT_METHOD_SERVICE);
                                 imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                                dialog.dismiss();
                             } else {
+                                getContext().sendBroadcast(
+                                        new Intent(BandDataService.ACTION_USER_ID)
+                                                .putExtra(BandDataService.USER_ID_EXTRA, value));
                                 Toast.makeText(getContext(), "User ID set to " + value,
                                         Toast.LENGTH_SHORT).show();
                                 for (View view : enableViews) {
                                     view.setEnabled(true);
                                 }
-                                dialog.dismiss();
-                                advanceScroll();
                                 InputMethodManager imm = (InputMethodManager) getContext()
                                         .getSystemService(Context.INPUT_METHOD_SERVICE);
                                 imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                                dialog.dismiss();
+                                advanceScroll();
                             }
 
                         }

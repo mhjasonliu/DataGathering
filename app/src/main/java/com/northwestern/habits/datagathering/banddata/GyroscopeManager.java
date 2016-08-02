@@ -262,6 +262,7 @@ public class GyroscopeManager extends DataManager {
                                 properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
                                 properties.put(DataManagementService.T_DEVICE, T_BAND2);
                                 properties.put(DataManagementService.USER_ID, userID);
+                                Log.v(TAG, "User id is " + userID);
 
                                 newRevision.setUserProperties(properties);
                                 return true;
