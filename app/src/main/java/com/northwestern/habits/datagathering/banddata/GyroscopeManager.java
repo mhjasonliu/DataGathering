@@ -20,9 +20,6 @@ import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.CouchBaseData;
 import com.northwestern.habits.datagathering.Preferences;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -245,22 +242,17 @@ public class GyroscopeManager extends DataManager {
         public void onBandGyroscopeChanged(final BandGyroscopeEvent event) {
             if (event != null) {
                 this.lastDataSample = System.currentTimeMillis();
-                JSONObject datapoint = new JSONObject();
-                try {
-                    datapoint.put("Time", event.getTimestamp());
-                    datapoint.put("Type", STREAM_TYPE);
-                    datapoint.put("Label", label);
-                    datapoint.put("Linear_Accel_x", event.getAccelerationX());
-                    datapoint.put("Linear_Accel_y", event.getAccelerationY());
-                    datapoint.put("Linear_Accel_z", event.getAccelerationZ());
-                    datapoint.put("Angular_Velocity_x", event.getAngularVelocityX());
-                    datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
-                    datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
+                Map<String, Object> datapoint = new HashMap<>();
+                datapoint.put("Time", event.getTimestamp());
+                datapoint.put("Label", label);
+                datapoint.put("Linear_Accel_x", event.getAccelerationX());
+                datapoint.put("Linear_Accel_y", event.getAccelerationY());
+                datapoint.put("Linear_Accel_z", event.getAccelerationZ());
+                datapoint.put("Angular_Velocity_x", event.getAngularVelocityX());
+                datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
+                datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
 
-                    dataBuffer.putDataPoint(datapoint, event.getTimestamp());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 
                 if (dataBuffer.isFull()) {
@@ -271,9 +263,8 @@ public class GyroscopeManager extends DataManager {
                                 Map<String, Object> properties = newRevision.getUserProperties();
 //                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
 //                                        + "_" + getDateTime(event), dataBuffer.toString());
-                                JSONObject o = dataBuffer.pack();
-                                Log.v(TAG, o.toString());
-                                properties.put("data_series", o);
+                                properties.putAll(dataBuffer.pack());
+
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
