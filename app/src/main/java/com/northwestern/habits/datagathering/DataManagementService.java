@@ -3,7 +3,6 @@ package com.northwestern.habits.datagathering;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -60,7 +59,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 1) Manage connections
  * Accomplished by maintaining a
  */
-public class DataManagementService extends Service implements DocIdBroadcastReceiver {
+public class DataManagementService extends Service {
 
     public static final String T_ACCEL = "Accelerometer";
     public static final String T_Altimeter = "Altimeter";
@@ -76,32 +75,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
     public static final String T_UV = "UV";
 
     private static final String TAG = "DataManagementService";
-
-    BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            new DocIDRecieveRunnable().run(context, intent);
-            // Update replication to also match the new document
-            try {
-                getReplicationInstance();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (CouchbaseLiteException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
-    @Override
-    public void registerReceiver() {
-        registerReceiver(mReceiver, _filter);
-    }
-
-    @Override
-    public void unregisterReceiver() {
-        unregisterReceiver(mReceiver);
-    }
-
 
     public interface DataManagementFunctions {
         void placeHolder(String text);
@@ -195,7 +168,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                 Log.e(TAG, "Nonexistant action requested");
         }
 
-        registerReceiver();
         return START_NOT_STICKY;
     }
 
@@ -493,7 +465,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                                 // Delete the old document and start a new one
                                 try {
                                     CouchBaseData.getCurrentDocument(getApplicationContext()).delete();
-                                    sendBroadcast(new Intent(ACTION_BROADCAST_CHANGE_ID));
                                     mHandler.post(new Runnable() {
                                         @Override
                                         public void run() {
@@ -546,7 +517,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
     @Override
     public void onDestroy() {
         // Unregister broadcast receiver
-        unregisterReceiver();
         super.onDestroy();
     }
 }
