@@ -20,7 +20,6 @@ import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.CouchBaseData;
 import com.northwestern.habits.datagathering.Preferences;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -234,8 +233,8 @@ public class GyroscopeManager extends DataManager {
             implements BandGyroscopeEventListener {
 
         private BandInfo info;
-        private final int BUFFER_SIZE = 100;
-        private JSONArray dataBuffer = new JSONArray();
+        private final int BUFFER_SIZE = 5;
+        private DataSeries dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
 
         public CustomBandGyroEventListener(BandInfo mInfo, String name) {
             super();
@@ -258,25 +257,28 @@ public class GyroscopeManager extends DataManager {
                     datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
                     datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
 
-                    dataBuffer.put(datapoint);
+                    dataBuffer.putDataPoint(datapoint, event.getTimestamp());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
 
-                if (dataBuffer.length() >= BUFFER_SIZE) {
+                if (dataBuffer.isFull()) {
                     try {
                         CouchBaseData.getCurrentDocument(context).update(new Document.DocumentUpdater() {
                             @Override
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
-                                        + "_" + getDateTime(event), dataBuffer.toString());
+//                                properties.put(info.getMacAddress() + "_" + STREAM_TYPE
+//                                        + "_" + getDateTime(event), dataBuffer.toString());
+                                JSONObject o = dataBuffer.pack();
+                                Log.v(TAG, o.toString());
+                                properties.put("data_series", o);
                                 newRevision.setUserProperties(properties);
                                 return true;
                             }
                         });
-                        dataBuffer = new JSONArray();
+                        dataBuffer = new DataSeries(STREAM_TYPE, BUFFER_SIZE);
                     } catch (CouchbaseLiteException e) {
                         e.printStackTrace();
                     } catch (IOException e) {

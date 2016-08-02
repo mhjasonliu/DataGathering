@@ -306,22 +306,23 @@ public class Replicator implements DocIdBroadcastReceiver {
                     Log.v(TAG, "Listening for document " + mReplication.getDocIds().toString());
                     ReplicationStateTransition t = event.getTransition();
 
-                    if (t.getDestination() == ReplicationState.RUNNING) {
-                        try {
-                            Map<String, Object> properties = new HashMap<>();
-                            properties.put("Time_Updated", Calendar.getInstance().getTime());
-                            CouchBaseData.getCurrentDocument(mContext).putProperties(properties);
-
-                        } catch (CouchbaseLiteException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
                     if (t != null
                             && t.getSource() == ReplicationState.STOPPING
                             && t.getDestination() == ReplicationState.STOPPED) {
+
+                        if (t.getDestination() == ReplicationState.RUNNING) {
+                            try {
+                                Map<String, Object> properties = new HashMap<>();
+                                properties.put("Time_Updated", Calendar.getInstance().getTime());
+                                CouchBaseData.getCurrentDocument(mContext).putProperties(properties);
+
+                            } catch (CouchbaseLiteException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                         Throwable error = mReplication.getLastError();
                         if (error != null && error instanceof HttpResponseException) {
                             switch (((HttpResponseException) error).getStatusCode()) {
