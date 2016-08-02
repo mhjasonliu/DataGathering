@@ -63,7 +63,7 @@ public class DistanceManager extends DataManager {
                                     client.getConnectionState() == ConnectionState.CONNECTED) {
                                 // Create the listener
                                 CustomBandDistanceEventListener aListener =
-                                        new CustomBandDistanceEventListener(info, studyName);
+                                        new CustomBandDistanceEventListener(info, userID);
 
                                 // Register the listener
                                 client.getSensorManager().registerDistanceEventListener(
@@ -200,6 +200,9 @@ public class DistanceManager extends DataManager {
                             public boolean update(UnsavedRevision newRevision) {
                                 Map<String, Object> properties = newRevision.getUserProperties();
                                 properties.putAll(dataBuffer.pack());
+                                properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
+                                properties.put(DataManagementService.T_DEVICE, T_BAND2);
+                                properties.put(DataManagementService.USER_ID, userID);
 
                                 newRevision.setUserProperties(properties);
                                 return true;

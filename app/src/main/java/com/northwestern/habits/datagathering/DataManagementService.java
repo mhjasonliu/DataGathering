@@ -64,6 +64,10 @@ public class DataManagementService extends Service {
     public static final String T_SKIN_TEMP = "Skin_Temperature";
     public static final String T_UV = "UV";
 
+    public static final String T_DEVICE = "Device_Type";
+    public static final String DEVICE_MAC = "Device_Mac";
+    public static final String USER_ID = "User_ID";
+
     private static final String TAG = "DataManagementService";
 
     /**
