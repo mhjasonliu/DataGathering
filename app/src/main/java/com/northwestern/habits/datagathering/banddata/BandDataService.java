@@ -18,7 +18,6 @@ import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DocIdBroadcastReceiver;
 import com.northwestern.habits.datagathering.Preferences;
-import com.northwestern.habits.datagathering.Replicator;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -68,7 +67,6 @@ public class BandDataService extends Service implements DocIdBroadcastReceiver {
 
     private SQLiteOpenHelper dbHelper;
 
-    private Replicator mReplicator;
 
     private int NOTIFICATION_ID = 255;
 
@@ -101,7 +99,6 @@ public class BandDataService extends Service implements DocIdBroadcastReceiver {
 
         startForeground(NOTIFICATION_ID, b.build());
 
-        mReplicator = new Replicator(this);
 
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
 

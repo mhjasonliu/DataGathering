@@ -165,44 +165,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                 break;
             case ACTION_BACKUP:
                 startOneShotRep();
-
-//                // Do a push replication
-//                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//                List<String> docs = new ArrayList<>();
-//                docs.add(prefs.getString(Preferences.CURRENT_DOCUMENT, ""));
-//                assert push != null;
-//                push.setDocIds(docs);
-//
-//                if (intent.getBooleanExtra(CONTINUOUS_EXTRA, false)) {
-//                    // Continuous request
-//                    if (push.isRunning()) {
-//                        // Push already running, if continuous, leave it, if one-shot, leave it
-//                        // aka do nothing
-//                        break;
-//                    } else {
-//                        // Push not running, no need to worry about one-shot, just start it
-//                        push.setContinuous(true);
-//                        Log.v(TAG, "Starting continuous replication");
-//                        getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
-//                            .putExtra(Replicator.TYPE_EXTRA, Replicator.START_EXTRA));
-//                        push.start();
-//                    }
-//                } else {
-//                    // One-Shot replication
-//                    push.setContinuous(false);
-//                    if (push.isRunning()) {
-//                        // Start up replication
-//                        if (push.getStatus() == Replication.ReplicationStatus.REPLICATION_IDLE) {
-//                            Log.v(TAG, "Restarting replication as one-shot");
-//                            getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP)
-//                                .putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
-//                            push.restart();
-//                        }
-//                    } else {
-//                        Log.v(TAG, "Starting replication as one-shot");
-//                        push.start();
-//                    }
-//                }
                 break;
             case ACTION_STOP_BACKUP:
                 // If the backup is not null, is running, and is continuous, stop it
@@ -225,8 +187,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
 //                        }
 //                    });
 //                    Log.v(TAG, "Stopping continuous backup");
-//                    getBaseContext().sendBroadcast(new Intent(Replicator.ACTION_BACKUP).
-//                            putExtra(Replicator.TYPE_EXTRA, Replicator.STOP_EXTRA));
 //                    push.stop();
 //                }
 
@@ -552,9 +512,6 @@ public class DataManagementService extends Service implements DocIdBroadcastRece
                             Log.v(TAG, "Restarting replication as continuous (from one-shot)");
                             mReplication.setContinuous(true);
                             mReplication.restart();
-                            getBaseContext().sendBroadcast(
-                                    new Intent(Replicator.ACTION_BACKUP)
-                                            .putExtra(Replicator.TYPE_EXTRA, Replicator.START_EXTRA));
                         }
                     }
                 }
