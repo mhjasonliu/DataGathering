@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -133,7 +134,7 @@ public class AdvancedSettingsActivity extends Activity
     public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems) {
         devices = deviceItems;
         BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
-        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         final SharedPreferences.Editor e = prefs.edit();
         Set<String> previouslyRegistered = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
         String myAddress = BluetoothAdapter.getDefaultAdapter().getAddress();
@@ -397,7 +398,8 @@ public class AdvancedSettingsActivity extends Activity
             List<String> macs = params[0];
             HashMap<String, String> ids = new HashMap<>();
 
-            SharedPreferences.Editor e = getSharedPreferences(Preferences.NAME, 0).edit();
+            SharedPreferences.Editor e =
+                    PreferenceManager.getDefaultSharedPreferences(AdvancedSettingsActivity.this).edit();
             HttpURLConnection connection = null;
 
             try {
@@ -484,7 +486,7 @@ public class AdvancedSettingsActivity extends Activity
                     }
                 });
                 // Add added devices to the list of mac addresses
-                SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(AdvancedSettingsActivity.this);
                 Set<String> devices = new HashSet<>(prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>()));
                 devices.addAll(responses.keySet());
                 SharedPreferences.Editor e = prefs.edit();

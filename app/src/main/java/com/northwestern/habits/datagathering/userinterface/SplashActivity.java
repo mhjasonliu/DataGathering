@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 
 import com.northwestern.habits.datagathering.DataManagementService;
 import com.northwestern.habits.datagathering.MyReceiver;
@@ -20,7 +21,7 @@ public class SplashActivity extends Activity {
         onStartup(this.getApplicationContext());
 
         // If there is a password set, open to UserActivity, else AdvancedSettings
-        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         Intent i;
         if (prefs.getString(Preferences.PASSWORD, "").equals("")) {
             i = new Intent(this, AdvancedSettingsActivity.class);

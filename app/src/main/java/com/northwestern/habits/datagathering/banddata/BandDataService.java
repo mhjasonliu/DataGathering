@@ -131,7 +131,7 @@ public class BandDataService extends Service {
         DataManager.label = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getInt(Preferences.LABEL, 0);
 
 
-        SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Check for registered bands
         Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());

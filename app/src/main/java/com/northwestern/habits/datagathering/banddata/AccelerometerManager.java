@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -47,7 +48,7 @@ public class AccelerometerManager extends DataManager {
         }
 
         // Record frequency change
-        SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor e = prefs.edit();
         e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.ACCEL), f);
         e.apply();

@@ -7,8 +7,6 @@ import com.microsoft.band.sensors.SampleRate;
  */
 public class Preferences {
 
-    public static final String NAME = "my_prefs";
-
     // Preference fields
     public static final String USER_ID = "userID";
     public static final String PASSWORD = "password";

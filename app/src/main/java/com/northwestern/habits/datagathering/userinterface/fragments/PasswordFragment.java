@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -99,7 +100,7 @@ public class PasswordFragment extends Fragment {
 
         // Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
-            private final String pwd = getContext().getSharedPreferences(Preferences.NAME, 0)
+            private final String pwd = PreferenceManager.getDefaultSharedPreferences(getContext())
                     .getString(Preferences.PASSWORD, "");
 
             @Override
@@ -113,7 +114,7 @@ public class PasswordFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 oldPasswordBox.setChecked(s.toString()
-                        .equals(getContext().getSharedPreferences(Preferences.NAME, 0)
+                        .equals(PreferenceManager.getDefaultSharedPreferences(getContext())
                                 .getString(Preferences.PASSWORD, "")));
             }
         });
@@ -124,7 +125,7 @@ public class PasswordFragment extends Fragment {
         confirmPwd.addTextChangedListener(newPasswordWatcher);
 
 
-        if (getContext().getSharedPreferences(Preferences.NAME, 0).getString(Preferences.PASSWORD, "")
+        if (PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Preferences.PASSWORD, "")
                 .equals("")) {
             oldPasswordBox.setChecked(true);
             oldPword.setEnabled(false);
@@ -205,7 +206,7 @@ public class PasswordFragment extends Fragment {
     private View.OnClickListener changePasswordListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            SharedPreferences.Editor editor = getContext().getSharedPreferences(Preferences.NAME, 0).edit();
+            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
             editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
             editor.apply();
 

@@ -3,6 +3,7 @@ package com.northwestern.habits.datagathering;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -37,7 +38,7 @@ public class CustomDrawerListener
         int id = item.getItemId();
 
         if (id == R.id.advanced_options) {
-            String password = mContext.getSharedPreferences(Preferences.NAME, 0)
+            String password = PreferenceManager.getDefaultSharedPreferences(mContext)
                     .getString(Preferences.PASSWORD, "");
             if (password.equals("")) {
                 startAdvancedSettings(mContext);
@@ -80,7 +81,7 @@ public class CustomDrawerListener
         protected CustomAlertDialog(final Context context) {
             super(context);
             final EditText input = new EditText(context);
-            password = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE)
+            password = PreferenceManager.getDefaultSharedPreferences(context)
                     .getString(Preferences.PASSWORD, "");
 
             input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);

@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -115,7 +116,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 ((Spinner) ((View) parent.getParent())
                         .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
                 sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
-                SharedPreferences p = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+                SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor e = p.edit();
                 DeviceListItem d = (DeviceListItem) parent.getTag();
                 Log.e(TAG, ((TextView) view).getText().toString());
@@ -318,8 +319,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         GridLayout gridLayout = (GridLayout) v.findViewById(R.id.sensor_grid);
         int childCount = gridLayout.getChildCount();
         View box;
-        SharedPreferences preferences = context.getSharedPreferences(Preferences.NAME,
-                Context.MODE_PRIVATE);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         for (int i = 0; i < childCount; i++) {
             box = gridLayout.getChildAt(i);
             if (box instanceof CheckBox) {
@@ -367,7 +367,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private CompoundButton.OnCheckedChangeListener sensorBoxListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             SharedPreferences.Editor e = prefs.edit();
             e.putBoolean(Preferences.getSensorKey(((DeviceListItem) buttonView.getTag()).getMAC(),
                     buttonView.getText().toString()), isChecked);

@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -121,8 +122,7 @@ public class UserIDFragment extends Fragment {
         );
 
         // If there is no user ID, disable the continue button and freeze the scrolling
-        SharedPreferences prefs = context.getSharedPreferences(
-                Preferences.NAME, Context.MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean notContainsID = !prefs.contains(Preferences.USER_ID);
         if (notContainsID) {
             skipButton.setEnabled(false);

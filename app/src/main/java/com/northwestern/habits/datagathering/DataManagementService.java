@@ -274,7 +274,7 @@ public class DataManagementService extends Service {
         // Get the current document and create a new one
 //        Document d = CouchBaseData.getCurrentDocument(c);
 //        CouchBaseData.resetCurrentDocument(c);
-        SharedPreferences p = c.getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
         p.getString(Preferences.CURRENT_DOCUMENT, "");
         Document d;
         try {
