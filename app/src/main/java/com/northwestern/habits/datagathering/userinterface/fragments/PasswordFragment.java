@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -20,6 +19,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
@@ -222,8 +222,8 @@ public class PasswordFragment extends Fragment {
             oldPword.setEnabled(true);
 
             // Alert the user that password changed
-            Snackbar.make(getActivity().getCurrentFocus(), "Password changed",
-                    Snackbar.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Password changed",
+                    Toast.LENGTH_SHORT).show();
 
         }
     };
