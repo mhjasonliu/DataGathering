@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -44,7 +43,7 @@ public class UserIDFragment extends Fragment {
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
-     * <p/>
+     * <p>
      * //     * @param param1 Parameter 1.
      * //     * @param param2 Parameter 2.
      *
@@ -92,28 +91,14 @@ public class UserIDFragment extends Fragment {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // Dialog to enter
-//                        // Perform the request
-                        new IdRequestTask(visibleList, enableList).execute();
-//
-//                        // Make necessary views appear
-//                        for (View view : visibleList) {
-//                            view.setVisibility(View.VISIBLE);
-//                        }
-//
-//                        // Make necessary views disappear
-//                        for (View view : enableList) {
-//                            view.setEnabled(false);
-//                        }
-//
-//                        // Disable swiping
-//                        scrollLockRequest(true);
+                        requestUserID(visibleList, enableList);
                     }
                 }
         );
 
         skipButton.setOnClickListener(
-                new View.OnClickListener() {
+                new View.OnClickListener()
+                {
                     @Override
                     public void onClick(View v) {
                         advanceScroll();
@@ -177,7 +162,7 @@ public class UserIDFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p/>
+     * <p>
      * See the Android Training lesson <a href=
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
@@ -186,181 +171,78 @@ public class UserIDFragment extends Fragment {
         public void onScrollLockRequest(boolean shouldLock);
 
         public void advanceScrollRequest();
+
     }
 
-    public class IdRequestTask extends AsyncTask<Void, Void, Void> {
-        private String mResponse = "";
-        private List<View> hideViews;
-        List<View> enableViews;
+    private void requestUserID(List<View> hideViews, final List<View> enableViews) {
 
-        public IdRequestTask(List<View> hViews, List<View> eViews) {
-            super();
-            hideViews = hViews;
-            enableViews = eViews;
+        // set the visibility for progress bar
+        for (View view : hideViews) {
+            view.setVisibility(View.INVISIBLE);
         }
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            // set the visibility for progress bar
-            for (View view : hideViews) {
-                view.setVisibility(View.INVISIBLE);
-            }
-
-            rButton.setEnabled(true);
+        rButton.setEnabled(true);
 
 
-            // Disable swiping
-            scrollLockRequest(false);
+        // Disable swiping
+        scrollLockRequest(false);
 
 
-            final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
-//            if (mResponse.equals("")) {
-//                // Handle failure
-//                alertBuilder.setTitle("Failed to get ID");
-//                alertBuilder.setMessage("Make sure that you are connected to the internet.\n" +
-//                        "You may need to connect to a Northwestern VPN.");
-//                alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                    }
-//                });
-//
-//            } else {
-            // Enable the buttons
-//            for (View view : enableViews) {
-//                view.setEnabled(true);
-//            }
-//
-//            // Handle success
-//            alertBuilder.setTitle("Success!");
-//            alertBuilder.setMessage("Successfully received an ID for this user. (" +
-//                    mResponse + ")");
-//
-//            alertBuilder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                    dialog.dismiss();
-//                    advanceScroll();
-//                }
-//            });
-////            }
-//            alertBuilder.create().show();
-            android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
-            final EditText input = new EditText(getContext());
-            builder
-                    .setTitle("Hello")
-                    .setMessage("World")
-                    .setView(input)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+        final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
+        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
+        final EditText input = new EditText(getContext());
+        builder
+                .setTitle("User ID")
+                .setMessage("Gvie the user a unique ID\n" +
+                        "WARNING: the app is currently not configured to check if the ID is " +
+                        "unique... please be creative.")
+                .setView(input)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
-                        public void onClick(DialogInterface dialog, int which) {
-                            String value = input.getText().toString();
-                            if (input.getText().toString().trim().length() == 0) {
-                                Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
-                                InputMethodManager imm = (InputMethodManager) getContext()
-                                        .getSystemService(Context.INPUT_METHOD_SERVICE);
-                                imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                                dialog.dismiss();
-                            } else {
-                                getContext().sendBroadcast(
-                                        new Intent(BandDataService.ACTION_USER_ID)
-                                                .putExtra(BandDataService.USER_ID_EXTRA, value));
-                                // Set user id preference in this process
-                                PreferenceManager.getDefaultSharedPreferences(context).edit()
-                                        .putString(Preferences.USER_ID, value).apply();
+                    public void onClick(DialogInterface dialog, int which) {
+                        String value = input.getText().toString();
+                        if (input.getText().toString().trim().length() == 0) {
+                            Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
+                            InputMethodManager imm = (InputMethodManager) getContext()
+                                    .getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                            dialog.dismiss();
+                        } else {
+                            getContext().sendBroadcast(
+                                    new Intent(BandDataService.ACTION_USER_ID)
+                                            .putExtra(BandDataService.USER_ID_EXTRA, value));
+                            // Set user id preference in this process
+                            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                                    .putString(Preferences.USER_ID, value).apply();
 
-                                Toast.makeText(getContext(), "User ID set to " + value,
-                                        Toast.LENGTH_SHORT).show();
-                                for (View view : enableViews) {
-                                    view.setEnabled(true);
-                                }
-                                InputMethodManager imm = (InputMethodManager) getContext()
-                                        .getSystemService(Context.INPUT_METHOD_SERVICE);
-                                imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                                dialog.dismiss();
+                            Toast.makeText(getContext(), "User ID set to " + value,
+                                    Toast.LENGTH_SHORT).show();
+                            for (View view : enableViews) {
+                                view.setEnabled(true);
                             }
-
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-
-                        public void onClick(DialogInterface dialog, int which) {
-                            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            InputMethodManager imm = (InputMethodManager) getContext()
+                                    .getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
                             dialog.dismiss();
                         }
 
-                    });
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 
-            builder.show();
-            input.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                    public void onClick(DialogInterface dialog, int which) {
+                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                        dialog.dismiss();
+                    }
+
+                });
+
+        builder.show();
+        input.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
 
-        }
-
-        @Override
-        protected Void doInBackground(Void[] params) {
-//            String dataUrl = "https://vfsmpmapps10.fsm.northwestern.edu/php/getUserID.cgi";
-//            String dataUrlParameters = "";
-//            URL url;
-//            HttpURLConnection connection = null;
-//            try {
-//                // Create connection
-////                Log.v(TAG, "connecting...");
-//                url = new URL(dataUrl);
-//                connection = (HttpURLConnection) url.openConnection();
-//                connection.setRequestMethod("POST");
-//                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-//                connection.setRequestProperty("Content-Length", "" + Integer.toString(dataUrlParameters.getBytes().length));
-//                connection.setRequestProperty("Content-Language", "en-US");
-//                connection.setUseCaches(false);
-//                connection.setDoInput(true);
-//                connection.setDoOutput(true);
-//                // Send request
-////                Log.v(TAG, "Requesting...");
-//                DataOutputStream wr = new DataOutputStream(
-//                        connection.getOutputStream());
-//                wr.writeBytes(dataUrlParameters);
-//                wr.flush();
-//                wr.close();
-//                // Get Response
-////                Log.v(TAG, "Reading response...");
-//                InputStream is = connection.getInputStream();
-//                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-//                String line;
-//                StringBuilder response = new StringBuilder();
-//                while ((line = rd.readLine()) != null) {
-//                    response.append(line);
-//                    response.append('\r');
-//                }
-//                rd.close();
-//                mResponse = response.toString();
-//                Log.v(TAG, mResponse);
-//
-//                SharedPreferences.Editor e = getContext().
-//                        getSharedPreferences(Preferences.NAME, 0).edit();
-//                e.putString(Preferences.USER_ID, mResponse);
-//
-//                // Reset the registered devices so that they get reregistered
-//                e.putStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-//                e.apply();
-//
-//            } catch (Exception e) {
-//
-//                e.printStackTrace();
-//
-//            } finally {
-//
-//                if (connection != null) {
-//                    connection.disconnect();
-//                }
-//            }
-            return null;
-        }
     }
 }
