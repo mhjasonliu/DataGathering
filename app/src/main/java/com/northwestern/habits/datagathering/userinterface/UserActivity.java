@@ -157,13 +157,13 @@ public class UserActivity extends AppCompatActivity {
                 eatingButton.callOnClick();
                 break;
             case DataManagementService.L_DRINKING:
-                eatingButton.callOnClick();
+                drinkButton.callOnClick();
                 break;
             case DataManagementService.L_NOTHING:
-                eatingButton.callOnClick();
+                nothingButton.callOnClick();
                 break;
             case DataManagementService.L_SWALLOW:
-                eatingButton.callOnClick();
+                swallowButton.callOnClick();
                 break;
             default:
                 Log.e(TAG, "Unrecognized label stored in preferences");

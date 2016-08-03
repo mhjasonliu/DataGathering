@@ -268,6 +268,10 @@ public class UserIDFragment extends Fragment {
                                 getContext().sendBroadcast(
                                         new Intent(BandDataService.ACTION_USER_ID)
                                                 .putExtra(BandDataService.USER_ID_EXTRA, value));
+                                // Set user id preference in this process
+                                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                                        .putString(Preferences.USER_ID, value).apply();
+
                                 Toast.makeText(getContext(), "User ID set to " + value,
                                         Toast.LENGTH_SHORT).show();
                                 for (View view : enableViews) {
@@ -277,7 +281,6 @@ public class UserIDFragment extends Fragment {
                                         .getSystemService(Context.INPUT_METHOD_SERVICE);
                                 imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
                                 dialog.dismiss();
-                                advanceScroll();
                             }
 
                         }
