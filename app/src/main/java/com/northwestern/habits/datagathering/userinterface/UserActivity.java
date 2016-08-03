@@ -8,29 +8,29 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import com.couchbase.lite.replicator.Replication;
 import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.DataManagementService;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 public class UserActivity extends AppCompatActivity {
 
-    private Replication push;
+    private static final String TAG = "UserActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,20 +38,6 @@ public class UserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if (fab != null) {
-            fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(final View view) {
-                    Snackbar.make(view, "Syncing database with back end", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                    Intent i = new Intent(getApplicationContext(), DataManagementService.class);
-                    i.setAction(DataManagementService.ACTION_BACKUP);
-                    startService(i);
-                }
-            });
-        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -71,11 +57,12 @@ public class UserActivity extends AppCompatActivity {
         final Button nothingButton = (Button) findViewById(R.id.button_nothing);
         Button swallowButton = (Button) findViewById(R.id.button_swallow);
 
-
         assert eatingButton != null;
         assert drinkButton != null;
         assert nothingButton != null;
         assert swallowButton != null;
+
+        // Set onclick listeners
         eatingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,8 +126,8 @@ public class UserActivity extends AppCompatActivity {
                 } else {
                     // Switch the background, saving the original
                     originalBackground = v.getBackground();
-                    Drawable newBackground = originalBackground;
-                    newBackground.setColorFilter(Color.CYAN, PorterDuff.Mode.ADD);
+                    Drawable newBackground = originalBackground.getConstantState().newDrawable();
+                    newBackground.setColorFilter(Color.CYAN, PorterDuff.Mode.DARKEN);
                     v.setBackground(newBackground);
 
                     // Remember the last label
@@ -161,9 +148,32 @@ public class UserActivity extends AppCompatActivity {
             }
         });
 
+
+        // Set enabled status
+        int label = PreferenceManager.getDefaultSharedPreferences(this)
+                .getInt(Preferences.LABEL, DataManagementService.L_NOTHING);
+        switch (label) {
+            case DataManagementService.L_EATING:
+                eatingButton.callOnClick();
+                break;
+            case DataManagementService.L_DRINKING:
+                eatingButton.callOnClick();
+                break;
+            case DataManagementService.L_NOTHING:
+                eatingButton.callOnClick();
+                break;
+            case DataManagementService.L_SWALLOW:
+                eatingButton.callOnClick();
+                break;
+            default:
+                Log.e(TAG, "Unrecognized label stored in preferences");
+        }
     }
 
     private void sendLabelBroadcast(int label) {
+        // Store label in preferences
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit().putInt(DataManagementService.USER_ID, label);
         Intent i = new Intent(BandDataService.ACTION_LABEL);
         i.putExtra(BandDataService.LABEL_EXTRA, label);
         this.sendBroadcast(i);
