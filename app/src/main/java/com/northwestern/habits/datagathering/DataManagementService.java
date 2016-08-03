@@ -68,6 +68,13 @@ public class DataManagementService extends Service {
     public static final String DEVICE_MAC = "Device_Mac";
     public static final String USER_ID = "User_ID";
 
+    public static final int L_NOTHING = 0;
+    public static final int L_EATING = 1;
+    public static final int L_DRINKING = 2;
+    public static final int L_SWALLOW = 3;
+
+
+
     private static final String TAG = "DataManagementService";
 
     /**

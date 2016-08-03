@@ -4,6 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -17,11 +20,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 
 import com.couchbase.lite.replicator.Replication;
 import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.DataManagementService;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 public class UserActivity extends AppCompatActivity {
 
@@ -58,6 +63,110 @@ public class UserActivity extends AppCompatActivity {
         if (navigationView != null) {
             navigationView.setNavigationItemSelectedListener(new CustomDrawerListener(this, drawer));
         }
+
+
+        // Deal with the buttons
+        final Button eatingButton = (Button) findViewById(R.id.button_eating);
+        final Button drinkButton = (Button) findViewById(R.id.button_drinking);
+        final Button nothingButton = (Button) findViewById(R.id.button_nothing);
+        Button swallowButton = (Button) findViewById(R.id.button_swallow);
+
+
+        assert eatingButton != null;
+        assert drinkButton != null;
+        assert nothingButton != null;
+        assert swallowButton != null;
+        eatingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Disable this button
+                v.setEnabled(false);
+
+                // Enable other buttons
+                drinkButton.setEnabled(true);
+                nothingButton.setEnabled(true);
+
+                sendLabelBroadcast(DataManagementService.L_EATING);
+            }
+        });
+        drinkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Disable this button
+                v.setEnabled(false);
+
+                // Enable other buttons
+                eatingButton.setEnabled(true);
+                nothingButton.setEnabled(true);
+
+                sendLabelBroadcast(DataManagementService.L_DRINKING);
+            }
+        });
+        nothingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Disable this button
+                v.setEnabled(false);
+
+                // Enable other buttons
+                drinkButton.setEnabled(true);
+                eatingButton.setEnabled(true);
+
+                sendLabelBroadcast(DataManagementService.L_NOTHING);
+            }
+        });
+
+        swallowButton.setOnClickListener(new View.OnClickListener() {
+            private boolean isSwallowing = false;
+            private int previousState = 0;
+
+            Drawable originalBackground;
+
+            @Override
+            public void onClick(View v) {
+                if (isSwallowing) {
+                    // Return background to original state
+                    v.setBackground(originalBackground);
+
+                    // Reenable the buttons
+                    eatingButton.setEnabled(previousState != DataManagementService.L_EATING);
+                    drinkButton.setEnabled(previousState != DataManagementService.L_DRINKING);
+                    nothingButton.setEnabled(previousState != DataManagementService.L_NOTHING);
+
+                    // Send new label and go to not swallowing
+                    sendLabelBroadcast(previousState);
+                    isSwallowing = false;
+                } else {
+                    // Switch the background, saving the original
+                    originalBackground = v.getBackground();
+                    Drawable newBackground = originalBackground;
+                    newBackground.setColorFilter(Color.CYAN, PorterDuff.Mode.ADD);
+                    v.setBackground(newBackground);
+
+                    // Remember the last label
+                    if (!eatingButton.isEnabled()) {previousState = DataManagementService.L_EATING;}
+                    else if (!drinkButton.isEnabled()) {previousState = DataManagementService.L_DRINKING;}
+                    else if (!nothingButton.isEnabled()) {previousState = DataManagementService.L_NOTHING;}
+
+                    // Disable the other buttons
+                    eatingButton.setEnabled(false);
+                    drinkButton.setEnabled(false);
+                    nothingButton.setEnabled(false);
+
+                    // Broadcast the new label and save the state
+                    sendLabelBroadcast(DataManagementService.L_SWALLOW);
+                    isSwallowing = true;
+                }
+
+            }
+        });
+
+    }
+
+    private void sendLabelBroadcast(int label) {
+        Intent i = new Intent(BandDataService.ACTION_LABEL);
+        i.putExtra(BandDataService.LABEL_EXTRA, label);
+        this.sendBroadcast(i);
     }
 
     @Override

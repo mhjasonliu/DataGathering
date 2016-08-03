@@ -67,6 +67,9 @@ public class BandDataService extends Service {
     private BroadcastReceiver userIDReceiver;
     public static final String ACTION_USER_ID = "User_ID";
     public static final String USER_ID_EXTRA = "User_ID_Extra";
+    private BroadcastReceiver labelReceiver;
+    public static final String ACTION_LABEL = "Label broadcast";
+    public static final String LABEL_EXTRA = "Label";
 
 
     // Data managers
@@ -97,7 +100,7 @@ public class BandDataService extends Service {
 
         startForeground(NOTIFICATION_ID, b.build());
 
-        // Deal with user id stuff
+        // Set receivers
         if (userIDReceiver == null) {
             userIDReceiver = new BroadcastReceiver() {
                 @Override
@@ -113,6 +116,19 @@ public class BandDataService extends Service {
         if (!id.equals("")) {
             DataManager.userID = id;
         }
+
+        if (labelReceiver == null) {
+            labelReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    DataManager.label = intent.getIntExtra(LABEL_EXTRA, 0);
+                    PreferenceManager.getDefaultSharedPreferences(getBaseContext())
+                            .edit().putInt(Preferences.LABEL, DataManager.label).apply();
+                }
+            };
+            getBaseContext().registerReceiver(labelReceiver, new IntentFilter(ACTION_LABEL));
+        }
+        DataManager.label = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getInt(Preferences.LABEL, 0);
 
 
         SharedPreferences prefs = getSharedPreferences(Preferences.NAME, MODE_PRIVATE);
@@ -226,8 +242,11 @@ public class BandDataService extends Service {
             e.printStackTrace();
         }
 
+        // Unregister receivers
         getBaseContext().unregisterReceiver(userIDReceiver);
         userIDReceiver = null;
+        getBaseContext().unregisterReceiver(labelReceiver);
+        labelReceiver = null;
 
         super.onDestroy();
     }
