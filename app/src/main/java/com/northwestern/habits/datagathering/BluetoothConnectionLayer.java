@@ -65,7 +65,7 @@ public class BluetoothConnectionLayer {
      * The phone's bluetooth adapter
      * used for communicating with bluetooth devices
      */
-    protected static BluetoothAdapter getAdapter() {
+    public static BluetoothAdapter getAdapter() {
         return BluetoothAdapter.getDefaultAdapter();
     }
 

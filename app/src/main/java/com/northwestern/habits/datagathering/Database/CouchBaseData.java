@@ -1,8 +1,6 @@
 package com.northwestern.habits.datagathering.Database;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
@@ -12,7 +10,6 @@ import com.couchbase.lite.Manager;
 import com.couchbase.lite.android.AndroidContext;
 import com.couchbase.lite.replicator.Replication;
 import com.northwestern.habits.datagathering.BluetoothConnectionLayer;
-import com.northwestern.habits.datagathering.Preferences;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -65,21 +62,10 @@ public class CouchBaseData {
 
     }
 
+    @Deprecated
     public static Document getCurrentDocument(Context c) throws CouchbaseLiteException, IOException {
-        ((Document) null).delete();
-        c = c.getApplicationContext();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
-        String id = prefs.getString(Preferences.CURRENT_DOCUMENT, "");
-        if (id.equals("")) {
-            return getNewDocument(c);
-        } else {
-            if (currentDocument == null) {
-                database = getDatabase(c);
-            } else {
-                Log.v("CBD", "Accessed old document " + id);
-            }
-            return database.getDocument(id);
-        }
+        throw new UnsupportedOperationException("This should be a call to getNewDocument as of the " +
+                "new replication method");
     }
 
     private static Manager getManager(Context c) throws IOException {
