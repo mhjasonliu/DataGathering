@@ -128,25 +128,25 @@ public class BandDataService extends Service {
             };
             getBaseContext().registerReceiver(labelReceiver, new IntentFilter(ACTION_LABEL));
         }
-        DataManager.label = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getInt(Preferences.LABEL, 0);
+        DataManager.label = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getInt(Preferences.LABEL, 0);
 
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Update the managers' contexts
-        accManager.context = getBaseContext();
-        altManager.context = getBaseContext();
-        ambManager.context = getBaseContext();
-        barometerManager.context = getBaseContext();
-        calManager.context = getBaseContext();
-        conManager.context = getBaseContext();
-        distManager.context = getBaseContext();
-        gsrManager.context = getBaseContext();
-        gyroManager.context = getBaseContext();
-        heartManager.context = getBaseContext();
-        pedoManager.context = getBaseContext();
-        skinTempManager.context = getBaseContext();
-        uvManager.context = getBaseContext();
+        accManager.context = getApplicationContext();
+        altManager.context = getApplicationContext();
+        ambManager.context = getApplicationContext();
+        barometerManager.context = getApplicationContext();
+        calManager.context = getApplicationContext();
+        conManager.context = getApplicationContext();
+        distManager.context = getApplicationContext();
+        gsrManager.context = getApplicationContext();
+        gyroManager.context = getApplicationContext();
+        heartManager.context = getApplicationContext();
+        pedoManager.context = getApplicationContext();
+        skinTempManager.context = getApplicationContext();
+        uvManager.context = getApplicationContext();
 
         // Check for registered bands
         Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
@@ -155,10 +155,13 @@ public class BandDataService extends Service {
         if (!isReconnecting) {
             Log.v(TAG, "Reconnecting streams");
             isReconnecting = true;
+            Log.v(TAG, "Bandmacs: " + bandMacs);
             for (String mac :
                     bandMacs) {
                 // Look for streams for this device
                 Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(mac), new HashSet<String>());
+                Log.v(TAG, "MAC: " + mac);
+                Log.v(TAG, "Streams: " +streams);
                 BandInfo band = infoFromMac(mac);
                 for (String stream :
                         streams) {
@@ -209,6 +212,7 @@ public class BandDataService extends Service {
                             genericSubscriptionFactory(PEDOMETER_REQ_EXTRA, band);
                             break;
                         case Preferences.SKIN_TEMP:
+                            Log.v(TAG, "Subing to skin temp " + band.getMacAddress());
                             genericSubscriptionFactory(SKIN_TEMP_REQ_EXTRA, band);
                             break;
                         case Preferences.UV:
@@ -252,7 +256,6 @@ public class BandDataService extends Service {
     }
 
     private void genericUnsubscribeFactory(String request, BandInfo band) {
-        Log.v(TAG, "Stopping stream " + request);
         // Check for existance of stream
         if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
             if (bandStreams.get(band).size() == 1) {
@@ -261,6 +264,16 @@ public class BandDataService extends Service {
             } else {
                 // Other streams open, remove from list
                 bandStreams.get(band).remove(request);
+            }
+
+            // Remove stream from preferences
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+            Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
+            if (streams.contains(request)) {
+                Log.v(TAG, "Removing stream " + request);
+                streams.remove(request);
+                Log.v(TAG, "Streams after removing " + request + ": " + streams);
+                prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
             }
 
             // Unsubscribe from the appropriate stream
@@ -350,6 +363,15 @@ public class BandDataService extends Service {
         } else if (!bandStreams.get(band).contains(request)) {
             // Add sensor to the list in the stream map
             bandStreams.get(band).add(request);
+        }
+
+        // Remove stream from preferences
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
+        if (!streams.contains(request)) {
+            Log.v(TAG, "Removing stream " + request);
+            streams.add(request);
+            prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
         }
 
         // Request the appropriate stream
@@ -556,7 +578,7 @@ public class BandDataService extends Service {
         }
 
         // Failed to find the bandInfo matching the MAC address, create one and store
-        Log.e(TAG, "Failed to find the MAC address");
+        Log.e(TAG, "Failed to find the MAC address " + mac);
         return null;
     }
 

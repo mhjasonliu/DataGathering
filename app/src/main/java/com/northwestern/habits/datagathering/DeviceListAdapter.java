@@ -524,6 +524,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                             Log.e(TAG, "Button text not recognized");
                     }
                     e.putStringSet(devKey, sensors);
+                    Log.v(TAG, "New sensor set: " + sensors);
                     e.apply();
 
                     requestBundle.putBoolean(BandDataService.STOP_STREAM_EXTRA, !isChecked);
