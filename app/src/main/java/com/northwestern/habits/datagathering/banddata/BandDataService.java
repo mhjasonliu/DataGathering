@@ -73,19 +73,19 @@ public class BandDataService extends Service {
 
 
     // Data managers
-    AccelerometerManager accManager;// = new AccelerometerManager("", null, getApplicationContext());
-    AltimeterManager altManager;// = new AltimeterManager("", null, getApplicationContext());
-    AmbientManager ambManager;// = new AmbientManager("", null, getApplicationContext());
-    BarometerManager barometerManager;// = new BarometerManager("", null, getApplicationContext());
-    CaloriesManager calManager;// = new CaloriesManager("", null, getApplicationContext());
-    ContactManager conManager;// = new ContactManager("", null, getApplicationContext());
-    DistanceManager distManager;// = new DistanceManager("", null, getApplicationContext());
-    GsrManager gsrManager;// = new GsrManager("", null, getApplicationContext());
-    GyroscopeManager gyroManager;// = new GyroscopeManager("", null, getApplicationContext());
-    HeartRateManager heartManager;// = new HeartRateManager("", null, getApplicationContext());
-    PedometerManager pedoManager;// = new PedometerManager("", null, getApplicationContext());
-    SkinTempManager skinTempManager;// = new SkinTempManager("", null, getApplicationContext());
-    UvManager uvManager;// = new UvManager("", null, this);
+    AccelerometerManager accManager = new AccelerometerManager(getBaseContext());
+    AltimeterManager altManager = new AltimeterManager(getBaseContext());
+    AmbientManager ambManager = new AmbientManager(getBaseContext());
+    BarometerManager barometerManager = new BarometerManager(getBaseContext());
+    CaloriesManager calManager = new CaloriesManager(getBaseContext());
+    ContactManager conManager = new ContactManager(getBaseContext());
+    DistanceManager distManager = new DistanceManager(getBaseContext());
+    GsrManager gsrManager = new GsrManager(getBaseContext());
+    GyroscopeManager gyroManager = new GyroscopeManager(getBaseContext());
+    HeartRateManager heartManager = new HeartRateManager(getBaseContext());
+    PedometerManager pedoManager = new PedometerManager(getBaseContext());
+    SkinTempManager skinTempManager = new SkinTempManager(getBaseContext());
+    UvManager uvManager = new UvManager(getBaseContext());
 
     boolean isStarted = false;
     private boolean isReconnecting = false;
@@ -133,23 +133,23 @@ public class BandDataService extends Service {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
+        // Update the managers' contexts
+        accManager.context = getBaseContext();
+        altManager.context = getBaseContext();
+        ambManager.context = getBaseContext();
+        barometerManager.context = getBaseContext();
+        calManager.context = getBaseContext();
+        conManager.context = getBaseContext();
+        distManager.context = getBaseContext();
+        gsrManager.context = getBaseContext();
+        gyroManager.context = getBaseContext();
+        heartManager.context = getBaseContext();
+        pedoManager.context = getBaseContext();
+        skinTempManager.context = getBaseContext();
+        uvManager.context = getBaseContext();
+
         // Check for registered bands
         Set<String> bandMacs = prefs.getStringSet(Preferences.REGISTERED_DEVICES, new HashSet<String>());
-
-        Context appContext = getApplicationContext();
-        accManager = new AccelerometerManager(appContext);
-        altManager = new AltimeterManager(appContext);
-        ambManager = new AmbientManager(appContext);
-        barometerManager = new BarometerManager(appContext);
-        calManager = new CaloriesManager(appContext);
-        conManager = new ContactManager(appContext);
-        distManager = new DistanceManager(appContext);
-        gsrManager = new GsrManager(appContext);
-        gyroManager = new GyroscopeManager(appContext);
-        heartManager = new HeartRateManager(appContext);
-        pedoManager = new PedometerManager(appContext);
-        skinTempManager = new SkinTempManager(appContext);
-        uvManager = new UvManager(appContext);
 
         // Lock thread while reconnecting
         if (!isReconnecting) {
@@ -230,8 +230,8 @@ public class BandDataService extends Service {
         for (BandInfo info :
                 bandStreams.keySet()) {
             // For every band that is streaming now
-            for (String stream:
-                 bandStreams.get(info)) {
+            for (String stream :
+                    bandStreams.get(info)) {
                 genericUnsubscribeFactory(stream, info);
             }
         }
