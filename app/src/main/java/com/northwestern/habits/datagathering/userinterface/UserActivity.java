@@ -56,6 +56,11 @@ public class UserActivity extends AppCompatActivity {
             updateReceiver.registered = true;
         }
 
+        TextView t = ((TextView) findViewById(R.id.db_status_Text));
+        if (t != null) {
+            t.setText(DbUpdateReceiver.STATUS_UNKNOWN);
+        }
+
         // Deal with the buttons
         final Button eatingButton = (Button) findViewById(R.id.button_eating);
         final Button drinkButton = (Button) findViewById(R.id.button_drinking);
@@ -110,7 +115,7 @@ public class UserActivity extends AppCompatActivity {
 
         swallowButton.setOnClickListener(new View.OnClickListener() {
             private boolean isSwallowing = false;
-            private int previousState = 0;
+            private int previousState = DataManagementService.L_EATING;
 
             Drawable originalBackground;
 
@@ -178,7 +183,7 @@ public class UserActivity extends AppCompatActivity {
     private void sendLabelBroadcast(int label) {
         // Store label in preferences
         PreferenceManager.getDefaultSharedPreferences(this)
-                .edit().putInt(DataManagementService.USER_ID, label);
+                .edit().putInt(Preferences.LABEL, label).apply();
         Intent i = new Intent(BandDataService.ACTION_LABEL);
         i.putExtra(BandDataService.LABEL_EXTRA, label);
         this.sendBroadcast(i);

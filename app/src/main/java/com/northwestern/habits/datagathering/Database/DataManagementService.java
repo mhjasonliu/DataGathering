@@ -283,21 +283,27 @@ public class DataManagementService extends Service {
                                 }
                             }
 
+                        }
+
+                        // Restart rep if needed
+                        if (event.getTransition() != null &&
+                                event.getTransition().getDestination() == ReplicationState.STOPPED) {
                             try {
                                 // Sleep to prevent overuse of the battery
                                 Thread.sleep(30000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            startOneShotRep();
+
                             // Start a new rep if plugged in and charging
                             if (MyReceiver.isCharging(getBaseContext()) &&
                                     MyReceiver.isWifiConnected(getBaseContext())) {
+                                startOneShotRep();
                             } else {
                                 // Not starting new rep -> unknown status
                                 Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                                 i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                        UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                                        UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
                                 sendBroadcast(i);
                             }
                         }
