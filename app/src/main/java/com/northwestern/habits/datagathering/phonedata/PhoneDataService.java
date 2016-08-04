@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.northwestern.habits.datagathering.DataStorageContract;
-
 import java.util.HashMap;
 
 public class PhoneDataService extends Service {
@@ -57,8 +55,6 @@ public class PhoneDataService extends Service {
         Log.v(TAG, "Started the service.");
 
         Log.v(TAG, "Retrieving database");
-        if (dbHelper == null)
-            dbHelper = new DataStorageContract.BluetoothDbHelper(getApplicationContext());
 
         // Get the band info, client, and data required
         Bundle extras = intent.getExtras();

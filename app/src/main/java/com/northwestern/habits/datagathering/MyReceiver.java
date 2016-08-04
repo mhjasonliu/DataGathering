@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.util.Log;
 
+import com.northwestern.habits.datagathering.Database.DataManagementService;
 import com.northwestern.habits.datagathering.userinterface.SplashActivity;
 
 /**

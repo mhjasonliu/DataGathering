@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.Database;
 
 import android.Manifest;
 import android.app.Service;
@@ -23,6 +23,8 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
+import com.northwestern.habits.datagathering.MyReceiver;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import org.json.JSONArray;

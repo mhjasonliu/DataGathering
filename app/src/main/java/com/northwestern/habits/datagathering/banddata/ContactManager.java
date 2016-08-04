@@ -13,8 +13,8 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandContactEvent;
 import com.microsoft.band.sensors.BandContactEventListener;
-import com.northwestern.habits.datagathering.CouchBaseData;
-import com.northwestern.habits.datagathering.DataManagementService;
+import com.northwestern.habits.datagathering.Database.CouchBaseData;
+import com.northwestern.habits.datagathering.Database.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
-import com.northwestern.habits.datagathering.DataManagementService;
+import com.northwestern.habits.datagathering.Database.DataManagementService;
 import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.banddata.BandDataService;

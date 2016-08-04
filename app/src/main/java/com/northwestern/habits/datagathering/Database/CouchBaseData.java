@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.Database;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -11,6 +11,8 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.android.AndroidContext;
 import com.couchbase.lite.replicator.Replication;
+import com.northwestern.habits.datagathering.BluetoothConnectionLayer;
+import com.northwestern.habits.datagathering.Preferences;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
