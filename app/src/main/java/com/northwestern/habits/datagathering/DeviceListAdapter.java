@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -112,15 +113,25 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     private AdapterView.OnItemSelectedListener gyroSpinnerListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(context);
+            DeviceListItem d = (DeviceListItem) parent.getTag();
+
+            String preferenceKey = Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO);
+            String savedFrequency = p.getString(preferenceKey, "");
+            String selectedFrequency = ((TextView) view).getText().toString();
+
+            if (!Objects.equals(savedFrequency, "")) {
+                listenForSelected = !Objects.equals(savedFrequency, selectedFrequency);
+            }
+
+
             if (listenForSelected) {
                 ((Spinner) ((View) parent.getParent())
                         .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
                 sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
-                SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor e = p.edit();
-                DeviceListItem d = (DeviceListItem) parent.getTag();
                 Log.e(TAG, ((TextView) view).getText().toString());
-                e.putString(Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO), ((TextView) view).getText().toString());
+                e.putString(Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO), selectedFrequency);
                 e.apply();
             }
         }
@@ -253,7 +264,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                                         "streaming at the same frequency as the gyroscope.")
                                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                     @Override
-                                    public void onClick(DialogInterface dialog, int which) {}})
+                                    public void onClick(DialogInterface dialog, int which) {
+                                    }
+                                })
                                 .create().show();
                         ((CheckBox) v).setChecked(!((CheckBox) v).isChecked()); // Keep it how it was
                     }
@@ -332,7 +345,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 String type = Preferences.GYRO;
 //                if (box.getId() == R.id.acc_frequency_spinner) {
 //                    type = Preferences.ACCEL;
-                /*} else */if (box.getId() == R.id.gyro_frequency_spinner) {
+                /*} else */
+                if (box.getId() == R.id.gyro_frequency_spinner) {
                     type = Preferences.GYRO;
                 }
                 String frequency = preferences.getString(Preferences.getFrequencyKey(device.getMAC(),
@@ -359,6 +373,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             box.setTag(device);
         }
     }
+
     private boolean listenForSelected;
 
     private Messenger messenger;
