@@ -23,6 +23,7 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
+import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +42,7 @@ import java.util.Objects;
 /**
  * The purpose of this service is to:
  * 1) manage connections and 2) fulfill streaming requests
- * <p/>
+ * <p>
  * 1) Manage connections
  * Accomplished by maintaining a
  */
@@ -72,7 +73,6 @@ public class DataManagementService extends Service {
     public static final int L_EATING = 1;
     public static final int L_DRINKING = 2;
     public static final int L_SWALLOW = 3;
-
 
 
     private static final String TAG = "DataManagementService";
@@ -123,6 +123,11 @@ public class DataManagementService extends Service {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+
+                Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                        UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                sendBroadcast(i);
                 startOneShotRep();
                 break;
             case ACTION_STOP_BACKUP:
@@ -135,6 +140,11 @@ public class DataManagementService extends Service {
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
+
+                    Intent broadcastIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    broadcastIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
+                    sendBroadcast(broadcastIntent);
                     for (Replication r :
                             db.getActiveReplications()) {
                         r.stop();
@@ -142,9 +152,9 @@ public class DataManagementService extends Service {
                 } catch (CouchbaseLiteException | IOException e) {
                     e.printStackTrace();
                 }
-
+                break;
             default:
-                Log.e(TAG, "Nonexistant action requested");
+                Log.e(TAG, "Non-existant action requested " + intent.getAction());
         }
 
         return START_NOT_STICKY;
@@ -184,34 +194,76 @@ public class DataManagementService extends Service {
                         @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
                         boolean errorDidOccur = event.getError() != null;
                         boolean changesNotZero = event.getCompletedChangeCount() != 0;
-                        boolean isTransitioningToStopped = false;
+                        boolean isTransitioningToStopping = false;
                         try {
-                            isTransitioningToStopped =
-                                    event.getTransition().getDestination() == ReplicationState.STOPPED;
+                            isTransitioningToStopping =
+                                    event.getTransition().getDestination() == ReplicationState.STOPPING;
                         } catch (NullPointerException ignored) {
                         }
 
+
+                        // For broadcasts
+                        if (event.getTransition() != null) {
+                            switch (event.getTransition().getDestination()) {
+                                case RUNNING:
+                                    // Rep starting, broadcast syncing
+                                    // No error and not stopping... broadcast syncing
+                                    Intent syncingIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                                    syncingIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                                    sendBroadcast(syncingIntent);
+                                    break;
+                                case STOPPING:
+                                    if (errorDidOccur) {
+                                        // Broadcast error occurring
+                                        Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                                        errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                                                UserActivity.DbUpdateReceiver.STATUS_DB_ERROR);
+                                        sendBroadcast(errorIntent);
+                                        Log.e(TAG, "Error reported");
+                                    } else if (changesNotZero) {
+                                        // Data was sent, still syncing so do nothing
+                                    } else {
+                                        // Data was not sent and no error occurred, we are up to date
+                                        Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                                        i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                                                UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                                        sendBroadcast(i);
+                                        Log.e(TAG, "Complete sync reported");
+                                    }
+                                    break;
+                            }
+                        }
+
+
                         // Allow another replication to be created
-                        if (isTransitioningToStopped) {
+                        if (isTransitioningToStopping) {
                             isReplicating = false;
                         }
 
-                        if (errorDidOccur) {
-                            // Handle error
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    //noinspection ThrowableResultOfMethodCallIgnored
-                                    Toast.makeText(getBaseContext(),
-                                            "Error occurred while replicating " +
-                                                    event.getError(), Toast.LENGTH_SHORT).show();
-                                    //noinspection ThrowableResultOfMethodCallIgnored
-                                    event.getError().printStackTrace();
-                                }
-                            });
-                        } else if (isTransitioningToStopped) {
-                            // Replication completed
+                        if (isTransitioningToStopping) {
 
+                            if (errorDidOccur) {
+                                // Broadcast to user activity
+
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        //noinspection ThrowableResultOfMethodCallIgnored
+                                        Toast.makeText(getBaseContext(),
+                                                "Error occurred while replicating " +
+                                                        event.getError(), Toast.LENGTH_SHORT).show();
+                                        //noinspection ThrowableResultOfMethodCallIgnored
+                                        event.getError().printStackTrace();
+                                    }
+                                });
+                            }
+
+                            if (!changesNotZero) {
+                                // Zero changes, sync complete
+                            }
+
+                            // Replication completed
                             if (didCompleteAll && changesNotZero) {
                                 // Successful IFF complete and a replication went through
                                 Log.v(TAG, "Successful backup of " + event.getCompletedChangeCount()
@@ -226,20 +278,25 @@ public class DataManagementService extends Service {
                                     } catch (CouchbaseLiteException e) {
                                         e.printStackTrace();
                                     }
-
                                 }
                             }
 
+                            try {
+                                // Sleep to prevent overuse of the battery
+                                Thread.sleep(30000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            startOneShotRep();
                             // Start a new rep if plugged in and charging
                             if (MyReceiver.isCharging(getBaseContext()) &&
                                     MyReceiver.isWifiConnected(getBaseContext())) {
-                                try {
-                                    // Sleep to prevent overuse of the battery
-                                    Thread.sleep(30000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                startOneShotRep();
+                            } else {
+                                // Not starting new rep -> unknown status
+                                Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                                i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                                        UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                                sendBroadcast(i);
                             }
                         }
                     }

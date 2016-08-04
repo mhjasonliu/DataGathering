@@ -250,6 +250,9 @@ public class GyroscopeManager extends DataManager {
                 datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
                 datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
 
+//                Log.v(TAG, "TIME: " + Long.toString(event.getTimestamp()));
+//                Log.v(TAG, "Date time format: " + getDateTime(event));
+
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
 

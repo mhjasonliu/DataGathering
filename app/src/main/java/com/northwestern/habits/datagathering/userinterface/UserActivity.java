@@ -1,16 +1,15 @@
 package com.northwestern.habits.datagathering.userinterface;
 
-import android.Manifest;
-import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -21,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.DataManagementService;
@@ -31,6 +31,7 @@ import com.northwestern.habits.datagathering.banddata.BandDataService;
 public class UserActivity extends AppCompatActivity {
 
     private static final String TAG = "UserActivity";
+    private DbUpdateReceiver updateReceiver = new DbUpdateReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +51,10 @@ public class UserActivity extends AppCompatActivity {
             navigationView.setNavigationItemSelectedListener(new CustomDrawerListener(this, drawer));
         }
 
+        if (!updateReceiver.registered) {
+            registerReceiver(updateReceiver, new IntentFilter(DbUpdateReceiver.ACTION_DB_STATUS));
+            updateReceiver.registered = true;
+        }
 
         // Deal with the buttons
         final Button eatingButton = (Button) findViewById(R.id.button_eating);
@@ -182,10 +187,48 @@ public class UserActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        assert drawer != null;
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+        }
+    }
+
+    public class DbUpdateReceiver extends BroadcastReceiver {
+        public boolean registered = false;
+        public static final String ACTION_DB_STATUS = "db status";
+        public static final String STATUS_EXTRA = "status";
+
+        /**
+         * String to be passed as extra indicating that replications are not running
+         */
+        public static final String STATUS_UNKNOWN = "Unknown... Plug in and connect to wifi";
+        /**
+         * String to be passed as extra indicating that:
+         * - A sync is in progress
+         * OR
+         * - the last sync pushed data
+         */
+        public static final String STATUS_SYNCING = "Syncing...";
+        /**
+         * String to be passed as extra indicating that The last sync ended made no update
+         */
+        public static final String STATUS_SYNCED = "Sync complete";
+        /**
+         * String to be passed as extra indicating that the replication encountered an error during
+         * the last sync
+         */
+        public static final String STATUS_DB_ERROR = "DATABASE ERROR DETECTED";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            TextView statusText = ((TextView) UserActivity.this.findViewById(R.id.db_status_Text));
+            if (statusText != null) {
+                statusText.setText(
+                        intent.getStringExtra(STATUS_EXTRA)
+                );
+            }
         }
     }
 
@@ -211,19 +254,12 @@ public class UserActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
-    private static boolean storagePermitted(Activity activity) {
-
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-
-                ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-
-            return true;
-
-        ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-
-        return false;
-
+    @Override
+    protected void onDestroy() {
+        if (updateReceiver.registered) {
+            unregisterReceiver(updateReceiver);
+            updateReceiver.registered = false;
+        }
+        super.onDestroy();
     }
-
 }
