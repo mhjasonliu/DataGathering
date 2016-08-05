@@ -1,7 +1,6 @@
 package com.northwestern.habits.datagathering.userinterface.fragments;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.northwestern.habits.datagathering.Preferences;
@@ -43,7 +43,7 @@ public class UserIDFragment extends Fragment {
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
-     * <p>
+     * <p/>
      * //     * @param param1 Parameter 1.
      * //     * @param param2 Parameter 2.
      *
@@ -81,11 +81,11 @@ public class UserIDFragment extends Fragment {
 
         final List<View> visibleList = new ArrayList<>();
         visibleList.add(rootView.findViewById(R.id.request_id_progress));
-        visibleList.add(rootView.findViewById(R.id.requesting_id_text));
 
         final List<View> enableList = new ArrayList<>();
         enableList.add(requestButton);
         enableList.add(skipButton);
+
 
         requestButton.setOnClickListener(
                 new View.OnClickListener() {
@@ -97,8 +97,7 @@ public class UserIDFragment extends Fragment {
         );
 
         skipButton.setOnClickListener(
-                new View.OnClickListener()
-                {
+                new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         advanceScroll();
@@ -112,6 +111,9 @@ public class UserIDFragment extends Fragment {
         if (notContainsID) {
             skipButton.setEnabled(false);
             scrollLockRequest(true);
+        } else {
+            ((TextView) rootView.findViewById(R.id.text_user_id)).append(prefs.getString(Preferences.USER_ID, ""));
+            rootView.findViewById(R.id.text_user_id).setVisibility(View.VISIBLE);
         }
 
         return rootView;
@@ -162,7 +164,7 @@ public class UserIDFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
+     * <p/>
      * See the Android Training lesson <a href=
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
@@ -188,7 +190,6 @@ public class UserIDFragment extends Fragment {
         scrollLockRequest(false);
 
 
-        final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
         android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
         final EditText input = new EditText(getContext());
         builder
@@ -220,6 +221,10 @@ public class UserIDFragment extends Fragment {
                             for (View view : enableViews) {
                                 view.setEnabled(true);
                             }
+
+                            TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
+                            v.setText("User Id is: " + value);
+
                             InputMethodManager imm = (InputMethodManager) getContext()
                                     .getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.hideSoftInputFromWindow(input.getWindowToken(), 0);

@@ -50,11 +50,11 @@
             android:visibility="invisible" />
 
         <TextView
-            android:id="@+id/requesting_id_text"
+            android:id="@+id/text_user_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="Requesting new subject ID..."
+            android:text="User Id is: "
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:visibility="invisible" />
     </LinearLayout>
