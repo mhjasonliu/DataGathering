@@ -14,8 +14,8 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
-import com.northwestern.habits.datagathering.Database.CouchBaseData;
-import com.northwestern.habits.datagathering.Database.DataManagementService;
+import com.northwestern.habits.datagathering.Databasetmp.CouchBaseData;
+import com.northwestern.habits.datagathering.Databasetmp.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;

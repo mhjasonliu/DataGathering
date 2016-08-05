@@ -15,8 +15,8 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.InvalidBandVersionException;
 import com.microsoft.band.sensors.BandPedometerEvent;
 import com.microsoft.band.sensors.BandPedometerEventListener;
-import com.northwestern.habits.datagathering.Database.CouchBaseData;
-import com.northwestern.habits.datagathering.Database.DataManagementService;
+import com.northwestern.habits.datagathering.Databasetmp.CouchBaseData;
+import com.northwestern.habits.datagathering.Databasetmp.DataManagementService;
 
 import java.io.IOException;
 import java.util.HashMap;

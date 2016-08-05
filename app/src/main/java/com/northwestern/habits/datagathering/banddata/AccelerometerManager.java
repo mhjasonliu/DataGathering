@@ -17,8 +17,8 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandGyroscopeEvent;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
-import com.northwestern.habits.datagathering.Database.CouchBaseData;
-import com.northwestern.habits.datagathering.Database.DataManagementService;
+import com.northwestern.habits.datagathering.Databasetmp.CouchBaseData;
+import com.northwestern.habits.datagathering.Databasetmp.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.io.IOException;
