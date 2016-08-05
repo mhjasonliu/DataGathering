@@ -39,7 +39,6 @@
             android:exported="true"
             android:process=":NecklaceData" >
         </service>
-
         <service
             android:name=".phonedata.PhoneDataService"
             android:enabled="true"
@@ -85,19 +84,25 @@
             android:name=".database.DataManagementService"
             android:enabled="true"
             android:exported="true"
-            android:process=":service_data_management">
+            android:process=":service_data_management" >
         </service>
 
-        <receiver android:name="com.northwestern.habits.datagathering.MyReceiver">
+        <receiver android:name=".MyReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
-                <action android:name="android.net.wifi.supplicant.CONNECTION_CHANGE"/>
+                <action android:name="android.net.wifi.supplicant.CONNECTION_CHANGE" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".userinterface.TileActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" >
+                </action>
+            </intent-filter>
+        </activity>
     </application>
-
-
 
 </manifest>
