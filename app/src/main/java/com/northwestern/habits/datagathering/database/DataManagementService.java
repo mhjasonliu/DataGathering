@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering.Databasetmp;
+package com.northwestern.habits.datagathering.database;
 
 import android.Manifest;
 import android.app.Service;

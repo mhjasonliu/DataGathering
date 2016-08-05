@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering.Databasetmp;
+package com.northwestern.habits.datagathering.database;
 
 import android.content.Context;
 import android.util.Log;
