@@ -48,8 +48,8 @@ public class DataSeries {
     public Map<String, Object> pack() {
         Map<String, Object> m = new HashMap<>();
 
-        m.put(FIRST_ENTRY, Long.toString(firstEntry));
-        m.put(LAST_ENTRY, Long.toString(lastEntry));
+        m.put(FIRST_ENTRY, firstEntry);
+        m.put(LAST_ENTRY, lastEntry);
         m.put(TYPE, type);
         m.put(DATA, dataArray);
         m.put(DATA_KEYS, dataArray.get(0).keySet());
