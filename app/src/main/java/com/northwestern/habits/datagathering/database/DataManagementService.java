@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
@@ -27,19 +26,13 @@ import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * The purpose of this service is to:
@@ -70,6 +63,11 @@ public class DataManagementService extends Service {
     public static final String T_DEVICE = "Device_Type";
     public static final String DEVICE_MAC = "Device_Mac";
     public static final String USER_ID = "User_ID";
+    public static final String FIRST_ENTRY = "First_Entry";
+    public static final String TYPE = "Type";
+    public static final String LAST_ENTRY = "Last_Entry";
+    public static final String DATA = "data_series";
+    public static final String DATA_KEYS = "Data_Keys";
 
     public static final int L_NOTHING = 0;
     public static final int L_EATING = 1;
@@ -111,11 +109,11 @@ public class DataManagementService extends Service {
             case ACTION_WRITE_CSVS:
                 String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                         .getString(Preferences.CURRENT_DOCUMENT, "csvs");
-                try {
-                    exportToCsv(folderName, getApplicationContext());
-                } catch (CouchbaseLiteException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    exportToCsv(folderName, getApplicationContext());
+//                } catch (CouchbaseLiteException e) {
+//                    e.printStackTrace();
+//                }
                 break;
             case ACTION_BACKUP:
                 mHandler.post(new Runnable() {
@@ -276,7 +274,11 @@ public class DataManagementService extends Service {
                                 for (String id : ids) {
                                     try {
                                         // Purge so deletion does not replicate to server
-                                        db.getDocument(id).purge();
+                                        Document d = db.getDocument(id);
+                                        exportToCsv(d, getBaseContext());
+                                        d.purge();
+                                    } catch (IOException e) {
+                                        // Don't purge
                                     } catch (CouchbaseLiteException e) {
                                         e.printStackTrace();
                                     }
@@ -287,7 +289,13 @@ public class DataManagementService extends Service {
 
                         // Restart rep if needed
                         if (event.getTransition() != null &&
-                                event.getTransition().getDestination() == ReplicationState.STOPPED) {
+                                event.getTransition().
+
+                                        getDestination()
+
+                                        == ReplicationState.STOPPED)
+
+                        {
                             try {
                                 // Sleep to prevent overuse of the battery
                                 Thread.sleep(30000);
@@ -319,8 +327,16 @@ public class DataManagementService extends Service {
         }
     }
 
-    public static void exportToCsv(String fName, Context c) throws CouchbaseLiteException {
+    public static void exportToCsv(Document document, Context c) throws IOException {
         // Export all data to a csv
+
+        // Make csv name
+        Map<String, Object> docProps = document.getProperties();
+        String fName = (String) docProps.get(USER_ID);
+        fName += "_" + docProps.get(TYPE) + "_";
+        fName += docProps.get(FIRST_ENTRY);
+        fName += "_thru_";
+        fName += docProps.get(LAST_ENTRY);
 
         if (ContextCompat.checkSelfPermission(c, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             Log.v("CBD", "permission granted");
@@ -328,90 +344,72 @@ public class DataManagementService extends Service {
             Log.e("CBD", "permission denied");
         }
 
-        String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" + fName;
+        String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/";
         File folder = new File(PATH);
         if (!folder.exists()) {
             //noinspection ResultOfMethodCallIgnored
             folder.mkdirs();
-            Log.v("CBD", "");
         }
 
-        // Get the current document and create a new one
-//        Document d = CouchBaseData.getCurrentDocument(c);
-//        CouchBaseData.resetCurrentDocument(c);
-        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
-        p.getString(Preferences.CURRENT_DOCUMENT, "");
-        Document d;
-        try {
-            d = CouchBaseData.getCurrentDocument(c);
-
-            Map<String, Object> properties = d.getUserProperties();
-            for (String property :
-                    properties.keySet()) {
-                Object value = properties.get(property);
-
-                if (value instanceof String) {
-                    try {
-                        JSONArray array = new JSONArray((String) value);
-
-                        JSONObject o = (JSONObject) array.get(0);
-                        StringBuilder header = new StringBuilder();
-                        Iterator keys = o.keys();
-                        List<String> jsonKeys = new LinkedList<>();
-                        while (keys.hasNext()) {
-                            String key = (String) keys.next();
-                            header.append(key);
-                            jsonKeys.add(key);
-                            header.append(",");
-
-                        }
-                        header.replace(header.length() - 1, header.length(), "\n");
-                        Log.v("CBD", header.toString());
-                        String fileName = folder.toString() + "/" + property + ".csv";
-
-                        File file = new File(fileName);
-
-                        // If file does not exists, then create it
-                        if (!file.exists()) {
-                            try {
-                                //noinspection ResultOfMethodCallIgnored
-                                file.createNewFile();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
-                            // Post data to the csv
-                            FileWriter fw;
-                            fw = new FileWriter(file.getPath(), true);
-                            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                            intent.setData(Uri.fromFile(file));
-                            c.sendBroadcast(intent);
-                            fw.append(header.toString());
-
-                            // Loop through items in the JSONArray and append their fields
-                            for (int i = 0; i < array.length(); i++) {
-                                JSONObject object = (JSONObject) array.get(i);
-                                for (String key :
-                                        jsonKeys) {
-                                    fw.append(object.getString(key));
-                                    if (!Objects.equals(key, jsonKeys.get(jsonKeys.size() - 1))) {
-                                        fw.append(",");
-                                    }
-                                }
-                                fw.append("\n");
-                            }
-                            fw.close();
-                        }
+        File csv = new File(PATH, fName);
+        if (!csv.exists()) {
+            try {
+                // Make the file
+                if (!csv.createNewFile()) {
+                    throw new IOException();
+                }
+                FileWriter csvWriter = new FileWriter(csv.getPath(), true);
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(Uri.fromFile(csv));
+                c.sendBroadcast(intent);
 
 
-                    } catch (JSONException | IOException e) {
-                        e.printStackTrace();
+                List<Map<String, Object>> dataSeries = (List<Map<String, Object>>) docProps.get(DATA);
+                List<String> properties = (List<String>) docProps.get(DATA_KEYS);
+
+                for (int i = 0; i < properties.size(); i++) {
+                    csvWriter.append(properties.get(i));
+                    if (i == properties.size()) {
+                        csvWriter.append(",");
+                    } else {
+                        csvWriter.append("\n");
                     }
                 }
-            }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+                // Write the file
+                for (Map<String, Object> dataPoint:
+                     dataSeries) {
+
+                    for (int i = 0; i < properties.size(); i++) {
+                        Object datum = dataPoint.get(properties.get(i));
+
+                        if (datum instanceof String) {
+                            csvWriter.append(datum.toString());
+                        } else if (datum instanceof Double) {
+                            csvWriter.append(Double.toString((Double) datum));
+                        } else if (datum instanceof Integer) {
+                            csvWriter.append(Integer.toString((Integer) datum));
+                        } else if (datum instanceof Long) {
+                            csvWriter.append(Long.toString((Long) datum));
+                        } else {
+                            Log.e(TAG, "Unhandled case");
+                            csvWriter.append(datum.toString());
+                        }
+
+
+                        if (i == properties.size()) {
+                            csvWriter.append(",");
+                        } else {
+                            csvWriter.append("\n");
+                        }
+                    }
+                }
+
+                csvWriter.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

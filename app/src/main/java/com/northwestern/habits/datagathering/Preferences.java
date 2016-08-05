@@ -10,6 +10,7 @@ public class Preferences {
     // Preference fields
     public static final String USER_ID = "userID";
     public static final String PASSWORD = "password";
+    @Deprecated
     public static final String CURRENT_DOCUMENT = "documentID";
     public static final String LABEL = "";
 

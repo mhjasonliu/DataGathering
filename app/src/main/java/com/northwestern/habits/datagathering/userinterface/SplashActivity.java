@@ -7,10 +7,10 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
-import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
+import com.northwestern.habits.datagathering.database.DataManagementService;
 
 public class SplashActivity extends Activity {
 
@@ -48,5 +48,4 @@ public class SplashActivity extends Activity {
             context.startService(i);
         }
     }
-
 }

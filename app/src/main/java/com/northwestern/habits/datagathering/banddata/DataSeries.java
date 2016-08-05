@@ -1,5 +1,7 @@
 package com.northwestern.habits.datagathering.banddata;
 
+import com.northwestern.habits.datagathering.database.DataManagementService;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,12 +18,6 @@ public class DataSeries {
     private long firstEntry;
     private long lastEntry;
     private String type;
-
-    private final String FIRST_ENTRY = "First_Entry";
-    private final String TYPE = "Type";
-    private final String LAST_ENTRY = "Last_Entry";
-    private final String DATA = "data_series";
-    private final String DATA_KEYS = "Data_Keys";
 
     public DataSeries(String type, int capacity) {
         super();
@@ -48,11 +44,11 @@ public class DataSeries {
     public Map<String, Object> pack() {
         Map<String, Object> m = new HashMap<>();
 
-        m.put(FIRST_ENTRY, firstEntry);
-        m.put(LAST_ENTRY, lastEntry);
-        m.put(TYPE, type);
-        m.put(DATA, dataArray);
-        m.put(DATA_KEYS, dataArray.get(0).keySet());
+        m.put(DataManagementService.FIRST_ENTRY, firstEntry);
+        m.put(DataManagementService.LAST_ENTRY, lastEntry);
+        m.put(DataManagementService.TYPE, type);
+        m.put(DataManagementService.DATA, dataArray);
+        m.put(DataManagementService.DATA_KEYS, dataArray.get(0).keySet());
 
         return m;
     }
