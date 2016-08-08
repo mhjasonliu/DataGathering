@@ -10,7 +10,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -20,16 +19,19 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
+import com.couchbase.lite.UnsavedRevision;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
 import com.northwestern.habits.datagathering.MyReceiver;
-import com.northwestern.habits.datagathering.Preferences;
+import com.northwestern.habits.datagathering.banddata.DataSeries;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -107,8 +109,9 @@ public class DataManagementService extends Service {
 
         switch (intent.getAction()) {
             case ACTION_WRITE_CSVS:
-                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                        .getString(Preferences.CURRENT_DOCUMENT, "csvs");
+//                testWriteCSV(getBaseContext());
+//                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+//                        .getString(Preferences.CURRENT_DOCUMENT, "csvs");
 //                try {
 //                    exportToCsv(folderName, getApplicationContext());
 //                } catch (CouchbaseLiteException e) {
@@ -347,8 +350,11 @@ public class DataManagementService extends Service {
         String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/";
         File folder = new File(PATH);
         if (!folder.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            folder.mkdirs();
+            Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
+        }
+
+        if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())){
+            Log.e(TAG, "ASdf");
         }
 
         File csv = new File(PATH, fName);
@@ -370,9 +376,9 @@ public class DataManagementService extends Service {
                 for (int i = 0; i < properties.size(); i++) {
                     csvWriter.append(properties.get(i));
                     if (i == properties.size()) {
-                        csvWriter.append(",");
-                    } else {
                         csvWriter.append("\n");
+                    } else {
+                        csvWriter.append(",");
                     }
                 }
 
@@ -398,18 +404,51 @@ public class DataManagementService extends Service {
 
 
                         if (i == properties.size()) {
-                            csvWriter.append(",");
-                        } else {
                             csvWriter.append("\n");
+                        } else {
+                            csvWriter.append(",");
                         }
                     }
                 }
-
+                csvWriter.flush();
                 csvWriter.close();
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void testWriteCSV(Context context) {
+        try {
+            Document d = new Document(CouchBaseData.getDatabase(context), "Test");
+
+            d.update(new Document.DocumentUpdater() {
+                @Override
+                public boolean update(UnsavedRevision newRevision) {
+                    DataSeries series = new DataSeries("TestType", 100);
+                    int i = 0;
+                    while (!series.isFull()) {
+                        Map m = new HashMap();
+                        m.put("Test1", i);
+                        m.put("Test2", 2*i);
+                        m.put("Test3", 3*i);
+
+                        series.putDataPoint(m, Calendar.getInstance().getTimeInMillis());
+                    }
+                    newRevision.setUserProperties(series.pack());
+                    return true;
+                }
+            });
+
+            exportToCsv(d, context);
+
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }
