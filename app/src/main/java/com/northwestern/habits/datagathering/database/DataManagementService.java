@@ -6,11 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.v4.content.ContextCompat;
+import android.text.format.Time;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -109,7 +111,7 @@ public class DataManagementService extends Service {
 
         switch (intent.getAction()) {
             case ACTION_WRITE_CSVS:
-//                testWriteCSV(getBaseContext());
+                testWriteCSV(getBaseContext());
 //                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
 //                        .getString(Preferences.CURRENT_DOCUMENT, "csvs");
 //                try {
@@ -339,7 +341,7 @@ public class DataManagementService extends Service {
         fName += "_" + docProps.get(TYPE) + "_";
         fName += docProps.get(FIRST_ENTRY);
         fName += "_thru_";
-        fName += docProps.get(LAST_ENTRY);
+        fName += docProps.get(LAST_ENTRY) + ".csv";
 
         if (ContextCompat.checkSelfPermission(c, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             Log.v("CBD", "permission granted");
@@ -375,7 +377,7 @@ public class DataManagementService extends Service {
 
                 for (int i = 0; i < properties.size(); i++) {
                     csvWriter.append(properties.get(i));
-                    if (i == properties.size()) {
+                    if (i == properties.size() -1) {
                         csvWriter.append("\n");
                     } else {
                         csvWriter.append(",");
@@ -403,7 +405,7 @@ public class DataManagementService extends Service {
                         }
 
 
-                        if (i == properties.size()) {
+                        if (i == properties.size() -1) {
                             csvWriter.append("\n");
                         } else {
                             csvWriter.append(",");
@@ -431,24 +433,44 @@ public class DataManagementService extends Service {
                     while (!series.isFull()) {
                         Map m = new HashMap();
                         m.put("Test1", i);
-                        m.put("Test2", 2*i);
-                        m.put("Test3", 3*i);
+                        m.put("Test2", 2 * i);
+                        m.put("Test3", 3 * i);
 
                         series.putDataPoint(m, Calendar.getInstance().getTimeInMillis());
+                        i++;
                     }
                     newRevision.setUserProperties(series.pack());
                     return true;
                 }
             });
 
-            exportToCsv(d, context);
+//            exportToCsv(d, context);
 
         } catch (CouchbaseLiteException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    private class CsvTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        public CsvTask(Context c) {
+            context = c;
+        }
 
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            while (true) {
+                testWriteCSV(context);
+
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

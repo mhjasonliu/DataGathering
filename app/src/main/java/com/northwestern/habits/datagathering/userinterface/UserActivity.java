@@ -99,10 +99,10 @@ public class UserActivity extends AppCompatActivity {
                 sendLabelBroadcast(DataManagementService.L_DRINKING);
 
                 // Send test csv
-                Intent i = new Intent(UserActivity.this, DataManagementService.class);
-                AdvancedSettingsActivity.verifyStoragePermissions(UserActivity.this);
-                i.setAction(DataManagementService.ACTION_WRITE_CSVS);
-                startService(i);
+//                Intent i = new Intent(UserActivity.this, DataManagementService.class);
+//                AdvancedSettingsActivity.verifyStoragePermissions(UserActivity.this);
+//                i.setAction(DataManagementService.ACTION_WRITE_CSVS);
+//                startService(i);
             }
         });
         nothingButton.setOnClickListener(new View.OnClickListener() {
