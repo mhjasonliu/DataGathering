@@ -445,7 +445,7 @@ public class DataManagementService extends Service {
                 csvWriter.flush();
                 csvWriter.close();
 
-            } catch (IOException e) {
+            } catch (IOException | NullPointerException e) {
                 e.printStackTrace();
             }
         }
