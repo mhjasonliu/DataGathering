@@ -102,7 +102,19 @@ public class GyroscopeManager extends DataManager {
                                 // Get the sample rate
                                 SampleRate rate = frequencies.get(info);
                                 if (rate == null) {
+                                    Log.e(TAG, "Default rate used");
                                     rate = SampleRate.MS128;
+                                }
+
+                                switch (rate) {
+                                    case MS128:
+                                        Log.v(TAG, "8Hz");
+                                        break;
+                                    case MS32:
+                                        Log.v(TAG, "31Hz");
+                                        break;
+                                    case MS16:
+                                        Log.v(TAG, "62Hz");
                                 }
 
                                 // Register the listener
