@@ -34,6 +34,8 @@ import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
+import java.util.concurrent.TimeUnit;
+
 public class UserActivity extends AppCompatActivity {
 
     private static final String TAG = "UserActivity";
@@ -308,7 +310,7 @@ public class UserActivity extends AppCompatActivity {
         @Override
         public void run() {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(TimeUnit.HOURS.toMillis(1));
                 if (!Thread.interrupted()) {
                     Uri alarmsound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                     Notification.Builder mBuilder =
@@ -317,8 +319,8 @@ public class UserActivity extends AppCompatActivity {
                                     .setContentTitle("Forgot to turn off your label?")
                                     .setStyle(new Notification.BigTextStyle().bigText(
                                             "An hour ago you labeled that you were " +
-                                            "eating or drinking. Please make sure you mark " +
-                                            "when you are done!"))
+                                                    "eating or drinking. Please make sure you mark " +
+                                                    "when you are done!"))
                                     .setVibrate(new long[]{0, 500})
                                     .setSound(alarmsound);
                     Intent resultIntent = new Intent(UserActivity.this, UserActivity.class);
