@@ -75,12 +75,10 @@ public class DataSeries {
         private final String TAG = "ExportCSV_TAsk";
         private Context context;
         private String userID;
-        private String type;
 
         public ExportCSVTask(Context c, String uID, String t) {
             context = c;
             userID = uID;
-            type = t;
         }
 
         @Override
@@ -92,9 +90,8 @@ public class DataSeries {
             fName += "_thru_";
             fName += lastEntry + ".csv";
 
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Log.v("CBD", "permission granted");
-            } else {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
                 Log.e("CBD", "permission denied");
             }
 
@@ -102,10 +99,6 @@ public class DataSeries {
             File folder = new File(PATH);
             if (!folder.exists()) {
                 Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
-            }
-
-            if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-                Log.e(TAG, "ASdf");
             }
 
             File csv = new File(PATH, fName);
@@ -122,7 +115,7 @@ public class DataSeries {
 
 
                     List<Map> dataSeries = dataArray;
-                    List<String> properties = (List<String>) dataArray.get(0).keySet();
+                    List<String> properties = new LinkedList(dataArray.get(0).keySet());
 
                     for (int i = 0; i < properties.size(); i++) {
                         csvWriter.append(properties.get(i));
@@ -148,11 +141,12 @@ public class DataSeries {
                                 csvWriter.append(Integer.toString((Integer) datum));
                             } else if (datum instanceof Long) {
                                 csvWriter.append(Long.toString((Long) datum));
+                            } else if (datum instanceof Float) {
+                                csvWriter.append(Float.toString((Float) datum));
                             } else {
-                                Log.e(TAG, "Unhandled case");
+                                Log.e(TAG, "Unhandled case " + datum.getClass());
                                 csvWriter.append(datum.toString());
                             }
-
 
                             if (i == properties.size() - 1) {
                                 csvWriter.append("\n");
@@ -168,6 +162,7 @@ public class DataSeries {
                     e.printStackTrace();
                 }
             }
+
             return null;
         }
     }
