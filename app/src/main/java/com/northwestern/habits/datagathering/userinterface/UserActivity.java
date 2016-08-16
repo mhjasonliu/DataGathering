@@ -1,5 +1,9 @@
 package com.northwestern.habits.datagathering.userinterface;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +11,8 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
@@ -14,6 +20,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -23,15 +30,17 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.CustomDrawerListener;
-import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
+import com.northwestern.habits.datagathering.database.DataManagementService;
 
 public class UserActivity extends AppCompatActivity {
 
     private static final String TAG = "UserActivity";
     private DbUpdateReceiver updateReceiver = new DbUpdateReceiver();
+
+    private Notification eatingNotification = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +93,11 @@ public class UserActivity extends AppCompatActivity {
                 nothingButton.setEnabled(true);
 
                 sendLabelBroadcast(DataManagementService.L_EATING);
+
+                if (mDelayedNotification == null) {
+                    mDelayedNotification = new DelayedNotificationThread();
+                    mDelayedNotification.start();
+                }
             }
         });
         drinkButton.setOnClickListener(new View.OnClickListener() {
@@ -98,11 +112,10 @@ public class UserActivity extends AppCompatActivity {
 
                 sendLabelBroadcast(DataManagementService.L_DRINKING);
 
-                // Send test csv
-//                Intent i = new Intent(UserActivity.this, DataManagementService.class);
-//                AdvancedSettingsActivity.verifyStoragePermissions(UserActivity.this);
-//                i.setAction(DataManagementService.ACTION_WRITE_CSVS);
-//                startService(i);
+                if (mDelayedNotification == null) {
+                    mDelayedNotification = new DelayedNotificationThread();
+                    mDelayedNotification.start();
+                }
             }
         });
         nothingButton.setOnClickListener(new View.OnClickListener() {
@@ -116,6 +129,10 @@ public class UserActivity extends AppCompatActivity {
                 eatingButton.setEnabled(true);
 
                 sendLabelBroadcast(DataManagementService.L_NOTHING);
+
+                if (mDelayedNotification != null) {
+                    mDelayedNotification.interrupt();
+                }
             }
         });
 
@@ -147,9 +164,13 @@ public class UserActivity extends AppCompatActivity {
                     v.setBackground(newBackground);
 
                     // Remember the last label
-                    if (!eatingButton.isEnabled()) {previousState = DataManagementService.L_EATING;}
-                    else if (!drinkButton.isEnabled()) {previousState = DataManagementService.L_DRINKING;}
-                    else if (!nothingButton.isEnabled()) {previousState = DataManagementService.L_NOTHING;}
+                    if (!eatingButton.isEnabled()) {
+                        previousState = DataManagementService.L_EATING;
+                    } else if (!drinkButton.isEnabled()) {
+                        previousState = DataManagementService.L_DRINKING;
+                    } else if (!nothingButton.isEnabled()) {
+                        previousState = DataManagementService.L_NOTHING;
+                    }
 
                     // Disable the other buttons
                     eatingButton.setEnabled(false);
@@ -168,7 +189,9 @@ public class UserActivity extends AppCompatActivity {
         // Set enabled status
         int label = PreferenceManager.getDefaultSharedPreferences(this)
                 .getInt(Preferences.LABEL, DataManagementService.L_NOTHING);
-        switch (label) {
+        switch (label)
+
+        {
             case DataManagementService.L_EATING:
                 eatingButton.callOnClick();
                 break;
@@ -272,5 +295,50 @@ public class UserActivity extends AppCompatActivity {
             updateReceiver.registered = false;
         }
         super.onDestroy();
+    }
+
+    private DelayedNotificationThread mDelayedNotification = null;
+
+    private class DelayedNotificationThread extends Thread {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(5000);
+                if (!Thread.interrupted()) {
+                    Uri alarmsound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    NotificationCompat.Builder mBuilder =
+                            (NotificationCompat.Builder) new NotificationCompat.Builder(UserActivity.this)
+                                    .setSmallIcon(android.R.drawable.btn_star)
+                                    .setContentTitle("My notification")
+                                    .setContentText("Hello World!")
+                                    .setVibrate(new long[]{0, 500})
+                                    .setSound(alarmsound);
+                    Intent resultIntent = new Intent(UserActivity.this, UserActivity.class);
+
+                    // The stack builder object will contain an artificial back stack for the
+                    // started Activity.
+                    // This ensures that navigating backward from the Activity leads out of
+                    // your application to the Home screen.
+                    TaskStackBuilder stackBuilder = TaskStackBuilder.create(UserActivity.this);
+                    // Adds the back stack for the Intent (but not the Intent itself)
+                    stackBuilder.addParentStack(UserActivity.class);
+                    // Adds the Intent that starts the Activity to the top of the stack
+                    stackBuilder.addNextIntent(resultIntent);
+                    PendingIntent resultPendingIntent =
+                            stackBuilder.getPendingIntent(
+                                    0,
+                                    PendingIntent.FLAG_UPDATE_CURRENT
+                            );
+                    mBuilder.setContentIntent(resultPendingIntent);
+                    NotificationManager mNotificationManager =
+                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    // mId allows you to update the notification later on.
+                    mNotificationManager.notify(1, mBuilder.build());
+                }
+            } catch (InterruptedException ignored) {
+            }
+            mDelayedNotification = null;
+            this.interrupt();
+        }
     }
 }
