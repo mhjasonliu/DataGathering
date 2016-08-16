@@ -133,6 +133,11 @@ public class UserActivity extends AppCompatActivity {
                 if (mDelayedNotification != null) {
                     mDelayedNotification.interrupt();
                 }
+
+                // Dismiss the notification if it exists
+                NotificationManager notificationManager = (NotificationManager) getBaseContext()
+                        .getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.cancel(LABEL_NOTIFICATION_ID);
             }
         });
 
@@ -298,6 +303,7 @@ public class UserActivity extends AppCompatActivity {
     }
 
     private DelayedNotificationThread mDelayedNotification = null;
+    private final int LABEL_NOTIFICATION_ID = 123;
 
     private class DelayedNotificationThread extends Thread {
         @Override
@@ -309,8 +315,10 @@ public class UserActivity extends AppCompatActivity {
                     NotificationCompat.Builder mBuilder =
                             (NotificationCompat.Builder) new NotificationCompat.Builder(UserActivity.this)
                                     .setSmallIcon(android.R.drawable.btn_star)
-                                    .setContentTitle("My notification")
-                                    .setContentText("Hello World!")
+                                    .setContentTitle("Forgot to turn off your label?")
+                                    .setContentText("An hour ago you labeled that you were " +
+                                            "eating or drinking. Please make sure you mark " +
+                                            "when you are done!")
                                     .setVibrate(new long[]{0, 500})
                                     .setSound(alarmsound);
                     Intent resultIntent = new Intent(UserActivity.this, UserActivity.class);
@@ -333,7 +341,7 @@ public class UserActivity extends AppCompatActivity {
                     NotificationManager mNotificationManager =
                             (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     // mId allows you to update the notification later on.
-                    mNotificationManager.notify(1, mBuilder.build());
+                    mNotificationManager.notify(LABEL_NOTIFICATION_ID, mBuilder.build());
                 }
             } catch (InterruptedException ignored) {
             }
