@@ -10,12 +10,10 @@ import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
-import com.couchbase.lite.Document;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
-import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.IOException;
@@ -152,6 +150,7 @@ public class DataManagementService extends Service {
 
 
     private boolean isReplicating = false;
+    private Replication push;
 
     private void startOneShotRep() {
         // Only start a replication if another is not running
@@ -159,11 +158,12 @@ public class DataManagementService extends Service {
             isReplicating = true;
 
             try {
+                // Get all the documents from the database
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
                 q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
-
                 QueryEnumerator result = q.run();
+
                 // Pack the docIDs into a list
                 final List<String> ids = new LinkedList<>();
                 while (result.hasNext()) {
@@ -172,247 +172,93 @@ public class DataManagementService extends Service {
 
                 // Do a one-shot replication
                 URL url = new URL(CouchBaseData.URL_STRING);
-                Replication push = new Replication(db,
+                push = new Replication(db,
                         url,
                         Replication.Direction.PUSH);
 
                 push.setContinuous(false);
                 push.setDocIds(ids);
-                push.addChangeListener(new Replication.ChangeListener() {
-                    @Override
-                    public void changed(final Replication.ChangeEvent event) {
-                        Log.v(TAG, event.toString());
-                        boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
-                        @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-                        boolean errorDidOccur = event.getError() != null;
-                        boolean changesNotZero = event.getCompletedChangeCount() != 0;
-                        boolean isTransitioningToStopping = false;
-                        try {
-                            isTransitioningToStopping =
-                                    event.getTransition().getDestination() == ReplicationState.STOPPING;
-                        } catch (NullPointerException ignored) {
-                        }
-
-
-                        // For broadcasts
-                        if (event.getTransition() != null) {
-                            switch (event.getTransition().getDestination()) {
-                                case RUNNING:
-                                    // Rep starting, broadcast syncing
-                                    // No error and not stopping... broadcast syncing
-                                    Intent syncingIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                    syncingIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
-                                    sendBroadcast(syncingIntent);
-                                    break;
-                                case STOPPING:
-                                    if (errorDidOccur) {
-                                        // Broadcast error occurring
-                                        Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                        errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                                UserActivity.DbUpdateReceiver.STATUS_DB_ERROR);
-                                        sendBroadcast(errorIntent);
-                                        Log.e(TAG, "Error reported");
-                                    } else if (changesNotZero) {
-                                        // Data was sent, still syncing so do nothing
-                                    } else {
-                                        // Data was not sent and no error occurred, we are up to date
-                                        Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                        i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                                UserActivity.DbUpdateReceiver.STATUS_SYNCED);
-                                        sendBroadcast(i);
-                                        Log.e(TAG, "Complete sync reported");
-                                    }
-                                    break;
-                            }
-                        }
-
-
-                        // Allow another replication to be created
-                        if (isTransitioningToStopping) {
-                            isReplicating = false;
-                        }
-
-                        if (isTransitioningToStopping) {
-
-                            if (errorDidOccur) {
-                                // Broadcast to user activity
-
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        // noinspection ThrowableResultOfMethodCallIgnored
-                                        Toast.makeText(getBaseContext(),
-                                                "Error occurred while replicating " +
-                                                        event.getError(), Toast.LENGTH_SHORT).show();
-                                        // noinspection ThrowableResultOfMethodCallIgnored
-                                        event.getError().printStackTrace();
-                                    }
-                                });
-                            }
-
-                            if (!changesNotZero) {
-                                // Zero changes, sync complete
-                            }
-
-                            // Replication completed
-                            if (didCompleteAll && changesNotZero) {
-                                // Successful IFF complete and a replication went through
-                                Log.v(TAG, "Successful backup of " + event.getCompletedChangeCount()
-                                        + " docs.");
-                                Log.v(TAG, "Deleting docs");
-
-                                // Delete old documents
-                                for (String id : ids) {
-                                    try {
-                                         // Purge so deletion does not replicate to server
-                                        Document d = db.getDocument(id);
-                                        // exportToCsv(d, getBaseContext());
-                                        d.purge();
-//                                    } catch (IOException e) {
-                                        // Don't purge
-                                    } catch (CouchbaseLiteException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-
-                        }
-
-                        // Restart rep if needed
-                        if (event.getTransition() != null &&
-                                event.getTransition().
-
-                                        getDestination()
-
-                                        == ReplicationState.STOPPED)
-
-                        {
-                            try {
-                                // Sleep to prevent overuse of the battery
-                                Thread.sleep(30000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                            // Start a new rep if plugged in and charging
-                            if (MyReceiver.isCharging(getBaseContext()) &&
-                                    MyReceiver.isWifiConnected(getBaseContext())) {
-//                                startOneShotRep();
-                            } else {
-//                                 Not starting new rep -> unknown status
-                                Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                        UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
-                                sendBroadcast(i);
-                            }
-                        }
-                    }
-                });
+                push.addChangeListener(changeListener);
 
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
             }
 
-            isReplicating = false;
-            if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext())) {
-                // Start over again
-                startOneShotRep();
-            } else {
-                Intent i = new Intent();
-                i.setAction(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                i.setAction(UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
-                sendBroadcast(i);
-            }
+//            isReplicating = false;
+//            if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext())) {
+            //Start over again
+//                startOneShotRep();
+//            } else {
+//                Intent i = new Intent();
+//                i.setAction(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+//                i.setAction(UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
+//                sendBroadcast(i);
+//            }
         }
     }
 
-//    public static void exportToCsv(Document document, Context c) throws IOException {
-//        // Export all data to a csv
-//
-//        // Make csv name
-//        Map<String, Object> docProps = document.getProperties();
-//        String fName = (String) docProps.get(USER_ID);
-//        fName += "_" + docProps.get(TYPE) + "_";
-//        fName += docProps.get(FIRST_ENTRY);
-//        fName += "_thru_";
-//        fName += docProps.get(LAST_ENTRY) + ".csv";
-//
-//        if (ContextCompat.checkSelfPermission(c, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-//            Log.v("CBD", "permission granted");
-//        } else {
-//            Log.e("CBD", "permission denied");
-//        }
-//
-//        String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/";
-//        File folder = new File(PATH);
-//        if (!folder.exists()) {
-//            Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
-//        }
-//
-//        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-//            Log.e(TAG, "ASdf");
-//        }
-//
-//        File csv = new File(PATH, fName);
-//        if (!csv.exists()) {
-//            try {
-//                // Make the file
-//                if (!csv.createNewFile()) {
-//                    throw new IOException();
-//                }
-//                FileWriter csvWriter = new FileWriter(csv.getPath(), true);
-//                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//                intent.setData(Uri.fromFile(csv));
-//                c.sendBroadcast(intent);
-//
-//
-//                List<Map<String, Object>> dataSeries = (List<Map<String, Object>>) docProps.get(DATA);
-//                List<String> properties = (List<String>) docProps.get(DATA_KEYS);
-//
-//                for (int i = 0; i < properties.size(); i++) {
-//                    csvWriter.append(properties.get(i));
-//                    if (i == properties.size() - 1) {
-//                        csvWriter.append("\n");
-//                    } else {
-//                        csvWriter.append(",");
-//                    }
-//                }
-//
-//                // Write the file
-//                for (Map<String, Object> dataPoint :
-//                        dataSeries) {
-//
-//                    for (int i = 0; i < properties.size(); i++) {
-//                        Object datum = dataPoint.get(properties.get(i));
-//
-//                        if (datum instanceof String) {
-//                            csvWriter.append(datum.toString());
-//                        } else if (datum instanceof Double) {
-//                            csvWriter.append(Double.toString((Double) datum));
-//                        } else if (datum instanceof Integer) {
-//                            csvWriter.append(Integer.toString((Integer) datum));
-//                        } else if (datum instanceof Long) {
-//                            csvWriter.append(Long.toString((Long) datum));
-//                        } else {
-//                            Log.e(TAG, "Unhandled case");
-//                            csvWriter.append(datum.toString());
-//                        }
-//
-//
-//                        if (i == properties.size() - 1) {
-//                            csvWriter.append("\n");
-//                        } else {
-//                            csvWriter.append(",");
-//                        }
-//                    }
-//                }
-//                csvWriter.flush();
-//                csvWriter.close();
-//
-//            } catch (IOException | NullPointerException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+    private void restartOneShot() {
+        //TODO
+    }
+
+    Replication.ChangeListener changeListener = new Replication.ChangeListener() {
+        @Override
+        public void changed(Replication.ChangeEvent event) {
+            Log.v(TAG, event.toString());
+            boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
+            @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+            boolean errorDidOccur = event.getError() != null;
+            boolean changesAreZero = event.getCompletedChangeCount() == 0;
+            boolean isTransitioningToStopping = false;
+            try {
+                isTransitioningToStopping =
+                        event.getTransition().getDestination() == ReplicationState.STOPPING;
+            } catch (NullPointerException ignored) {
+            }
+
+
+            if (errorDidOccur) {
+                // Broadcast error
+                Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                        UserActivity.DbUpdateReceiver.STATUS_DB_ERROR);
+                sendBroadcast(errorIntent);
+                Log.e(TAG, "Error reported");
+                if (isTransitioningToStopping) {
+                    // Restart?
+                    restartOneShot();
+                } else {
+                    // Stop replication
+                    push.stop();
+                }
+
+
+            } else if (isTransitioningToStopping) {
+                // STOPPING WITHOUT ERROR
+                if (didCompleteAll && !changesAreZero) {
+                    // Broadcast synced
+                    Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                } else {
+                    // Broadcast syncing
+                    Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                }
+
+                // Restart?
+                restartOneShot();
+
+
+            } else if (event.getChangeCount() > 0) {
+                // NOT STOPPING && NO ERROR
+                // Broadcast syncing
+                Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                        UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+            }
+
+        }
+    };
 }
