@@ -208,6 +208,9 @@ public class DistanceManager extends DataManager {
                                 return true;
                             }
                         });
+
+                        // Write to csv
+                        dataBuffer.exportCSV(context, userID, T_BAND2);
                         dataBuffer = new DataSeries(DataManagementService.T_Distance, BUFFER_SIZE);
                     } catch (CouchbaseLiteException | IOException e) {
                         e.printStackTrace();
