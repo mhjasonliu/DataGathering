@@ -72,6 +72,13 @@
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
                 android:text="Nothing" />
+
+            <Button
+                android:id="@+id/button_swallow"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="Note to self"/>
         </LinearLayout>
 
         <LinearLayout
@@ -81,12 +88,6 @@
             android:orientation="horizontal">
 
 
-            <Button
-                android:id="@+id/button_swallow"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:text="Swallow"
-                android:visibility="gone"/>
 
         </LinearLayout>
     </LinearLayout>
