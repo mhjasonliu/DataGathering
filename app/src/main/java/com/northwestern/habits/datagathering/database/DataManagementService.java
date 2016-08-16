@@ -154,9 +154,10 @@ public class DataManagementService extends Service {
     private boolean isReplicating = false;
 
     private void startOneShotRep() {
-        Log.e(TAG, "ERROR: startrepcalled");
         // Only start a replication if another is not running
         if (!isReplicating) {
+            isReplicating = true;
+
             try {
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
@@ -308,41 +309,15 @@ public class DataManagementService extends Service {
                         }
                     }
                 });
-                isReplicating = true;
-
-                // Write each document to csv
-                if (result.getCount() > 0) {
-                    Intent i = new Intent();
-                    i.setAction(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                    i.setAction(UserActivity.DbUpdateReceiver.STATUS_SYNCING);
-                    sendBroadcast(i);
-                } else {
-                    Intent i = new Intent();
-                    i.setAction(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                    i.setAction(UserActivity.DbUpdateReceiver.STATUS_SYNCED);
-                    sendBroadcast(i);
-                }
-                while (result.hasNext()) {
-                    Document d = result.next().getDocument();
-//                    exportToCsv(d, getBaseContext());
-                    d.purge();
-                }
-
-                // Wait for 15 seconds and update again
-                Thread.sleep(30000);
-//                push.start();
-
 
             } catch (CouchbaseLiteException | IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
             isReplicating = false;
             if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext())) {
                 // Start over again
-//                startOneShotRep();
+                startOneShotRep();
             } else {
                 Intent i = new Intent();
                 i.setAction(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
