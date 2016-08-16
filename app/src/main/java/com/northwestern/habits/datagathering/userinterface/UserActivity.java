@@ -20,7 +20,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -312,13 +311,14 @@ public class UserActivity extends AppCompatActivity {
                 Thread.sleep(5000);
                 if (!Thread.interrupted()) {
                     Uri alarmsound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                    NotificationCompat.Builder mBuilder =
-                            (NotificationCompat.Builder) new NotificationCompat.Builder(UserActivity.this)
-                                    .setSmallIcon(android.R.drawable.btn_star)
+                    Notification.Builder mBuilder =
+                            new Notification.Builder(UserActivity.this)
+                                    .setSmallIcon(android.R.drawable.button_onoff_indicator_on)
                                     .setContentTitle("Forgot to turn off your label?")
-                                    .setContentText("An hour ago you labeled that you were " +
+                                    .setStyle(new Notification.BigTextStyle().bigText(
+                                            "An hour ago you labeled that you were " +
                                             "eating or drinking. Please make sure you mark " +
-                                            "when you are done!")
+                                            "when you are done!"))
                                     .setVibrate(new long[]{0, 500})
                                     .setSound(alarmsound);
                     Intent resultIntent = new Intent(UserActivity.this, UserActivity.class);
