@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.CustomDrawerListener;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
@@ -58,7 +59,11 @@ public class UserActivity extends AppCompatActivity {
 
         TextView t = ((TextView) findViewById(R.id.db_status_Text));
         if (t != null) {
-            t.setText(DbUpdateReceiver.STATUS_UNKNOWN);
+            if (MyReceiver.isCharging(this) && MyReceiver.isWifiConnected(this)) {
+                t.setText(DbUpdateReceiver.STATUS_SYNCING);
+            } else {
+                t.setText(DbUpdateReceiver.STATUS_UNKNOWN);
+            }
         }
 
         // Deal with the buttons

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The purpose of this service is to:
@@ -116,7 +117,7 @@ public class DataManagementService extends Service {
                 i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 sendBroadcast(i);
-//                startOneShotRep();
+                startOneShotRep();
                 break;
             case ACTION_STOP_BACKUP:
                 try {
@@ -179,26 +180,22 @@ public class DataManagementService extends Service {
                 push.setContinuous(false);
                 push.setDocIds(ids);
                 push.addChangeListener(changeListener);
+                push.start();
 
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
             }
-
-//            isReplicating = false;
-//            if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext())) {
-            //Start over again
-//                startOneShotRep();
-//            } else {
-//                Intent i = new Intent();
-//                i.setAction(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-//                i.setAction(UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
-//                sendBroadcast(i);
-//            }
         }
     }
 
     private void restartOneShot() {
-        //TODO
+        isReplicating = false;
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        startOneShotRep();
     }
 
     Replication.ChangeListener changeListener = new Replication.ChangeListener() {
@@ -208,11 +205,11 @@ public class DataManagementService extends Service {
             boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
             @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
             boolean errorDidOccur = event.getError() != null;
-            boolean changesAreZero = event.getCompletedChangeCount() == 0;
-            boolean isTransitioningToStopping = false;
+            boolean changesAreZero = event.getChangeCount() == 0;
+            boolean isTransitioningToStopped = false;
             try {
-                isTransitioningToStopping =
-                        event.getTransition().getDestination() == ReplicationState.STOPPING;
+                isTransitioningToStopped =
+                        event.getTransition().getDestination() == ReplicationState.STOPPED;
             } catch (NullPointerException ignored) {
             }
 
@@ -224,7 +221,7 @@ public class DataManagementService extends Service {
                         UserActivity.DbUpdateReceiver.STATUS_DB_ERROR);
                 sendBroadcast(errorIntent);
                 Log.e(TAG, "Error reported");
-                if (isTransitioningToStopping) {
+                if (isTransitioningToStopped) {
                     // Restart?
                     restartOneShot();
                 } else {
@@ -233,18 +230,49 @@ public class DataManagementService extends Service {
                 }
 
 
-            } else if (isTransitioningToStopping) {
+            } else if (isTransitioningToStopped) {
                 // STOPPING WITHOUT ERROR
+                Log.v(TAG, "Stopped");
                 if (didCompleteAll && !changesAreZero) {
                     // Broadcast synced
-                    Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                    errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                            UserActivity.DbUpdateReceiver.STATUS_SYNCED);
-                } else {
-                    // Broadcast syncing
-                    Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                    errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                    sendBroadcast(i);
+                    Log.v(TAG, "Broadcasted syncing after successful sync");
+                    // Delete old documents
+                    List<String> pushed = push.getDocIds();
+                    try {
+                        Database db = CouchBaseData.getDatabase(getBaseContext());
+                        for (String id :
+                                pushed) {
+                            // Purge the doc
+                            db.getDocument(id).purge();
+                        }
+                        Log.v(TAG, "Deleted " + Integer.toString(pushed.size()) + " documents");
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } else if (changesAreZero) {
+                    // Zero changes and stopped -> synced
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                    sendBroadcast(i);
+                    Log.v(TAG, "Broadcasted synced");
+
+                } else {
+                        // Broadcast syncing
+                        Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                        i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                                UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                        sendBroadcast(i);
+                        Log.v(TAG, "Broadcasted syncing by default 1");
+                        Log.v(TAG, "Did complete all is " + didCompleteAll);
+                        Log.v(TAG, "Changes are zero is " + changesAreZero);
                 }
 
                 // Restart?
@@ -254,9 +282,11 @@ public class DataManagementService extends Service {
             } else if (event.getChangeCount() > 0) {
                 // NOT STOPPING && NO ERROR
                 // Broadcast syncing
-                Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                sendBroadcast(i);
+                Log.v(TAG, "Broadcasted syncing by default 2");
             }
 
         }

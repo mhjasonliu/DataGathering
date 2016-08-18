@@ -10,11 +10,13 @@ import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import com.microsoft.band.sensors.HeartRateQuality;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -143,6 +145,8 @@ public class DataSeries {
                                 csvWriter.append(Long.toString((Long) datum));
                             } else if (datum instanceof Float) {
                                 csvWriter.append(Float.toString((Float) datum));
+                            } else if (datum instanceof HeartRateQuality) {
+                                csvWriter.append(datum.toString());
                             } else {
                                 Log.e(TAG, "Unhandled case " + datum.getClass());
                                 csvWriter.append(datum.toString());
@@ -158,7 +162,7 @@ public class DataSeries {
                     csvWriter.flush();
                     csvWriter.close();
 
-                } catch (IOException | NullPointerException e) {
+                } catch (IOException | NullPointerException | ConcurrentModificationException e) {
                     e.printStackTrace();
                 }
             }
