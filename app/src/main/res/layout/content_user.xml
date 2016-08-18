@@ -72,14 +72,14 @@
                 android:layout_height="0dp"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
-                android:text="Nothing" />
+                android:text="Done" />
 
             <Button
                 android:id="@+id/button_swallow"
                 android:layout_width="fill_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="Note to self"/>
+                android:text="Forgot to label"/>
         </LinearLayout>
 
         <LinearLayout
