@@ -250,12 +250,15 @@ public class AccelerometerManager extends DataManager {
 
 
                     if (dataBuffer.isFull()) {
+                        final DataSeries myBuffer = dataBuffer;
+                        dataBuffer = new DataSeries(DataManagementService.T_Gyroscope, BUFFER_SIZE);
+
                         try {
                             CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
                                 @Override
                                 public boolean update(UnsavedRevision newRevision) {
                                     Map<String, Object> properties = newRevision.getUserProperties();
-                                    properties.putAll(dataBuffer.pack());
+                                    properties.putAll(myBuffer.pack());
                                     properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
                                     properties.put(DataManagementService.T_DEVICE, T_BAND2);
                                     properties.put(DataManagementService.USER_ID, userID);
@@ -266,8 +269,7 @@ public class AccelerometerManager extends DataManager {
                             });
 
                             // Write to csv
-                            dataBuffer.exportCSV(context, userID, T_BAND2);
-                            dataBuffer = new DataSeries(DataManagementService.T_ACCEL, BUFFER_SIZE);
+                            myBuffer.exportCSV(context, userID, T_BAND2);
                         } catch (CouchbaseLiteException | IOException e) {
                             e.printStackTrace();
                         }
