@@ -16,7 +16,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="This is a place holder layout. Please swipe in from the left and go to advanced settings to connect to a band" />
+        android:text="This is a place holder layout. Please swipe in from the left and go to advanced settings to connect to a band"
+        android:visibility="gone"/>
 
     <LinearLayout
         android:paddingTop="@dimen/activity_vertical_margin"
@@ -29,13 +30,15 @@
             android:layout_height="wrap_content"
             android:gravity="right"
             android:layout_weight="1"
-            android:text="Database status:  " />
+            android:text="Database status:  "
+            android:visibility="gone"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/db_status_Text"
-            android:text=""/>
+            android:text=""
+            android:visibility="gone"/>
     </LinearLayout>
 
     <LinearLayout
@@ -47,42 +50,45 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <Button
                 android:id="@+id/button_eating"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
+                android:layout_height="0dp"
+                android:layout_width="fill_parent"
                 android:layout_weight="1"
-                android:text="Eating" />
+                android:text="Eating or drinking" />
 
             <Button
                 android:id="@+id/button_drinking"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
+                android:layout_height="0dp"
+                android:layout_width="fill_parent"
                 android:layout_weight="1"
-                android:text="Drinking" />
+                android:text="Drinking"
+                android:visibility="gone"/>
 
             <Button
                 android:id="@+id/button_nothing"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
+                android:layout_height="0dp"
+                android:layout_width="fill_parent"
                 android:layout_weight="1"
                 android:text="Nothing" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal">
-
 
             <Button
                 android:id="@+id/button_swallow"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:text="Swallow" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="Note to self"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+
 
         </LinearLayout>
     </LinearLayout>

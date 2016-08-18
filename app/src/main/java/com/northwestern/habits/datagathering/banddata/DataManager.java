@@ -245,10 +245,7 @@ public abstract class DataManager implements EventListener {
 
                     if (timeout != 0
                             && interval > TIMEOUT_INTERVAL) {
-                        // Timeout occurred, un-subscribe the current listener
-//                        unSubscribe(this_info);
                         Log.d(TAG, STREAM_TYPE + " timeout detected");
-                        Log.e(TAG, "interval: " + interval);
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -263,10 +260,9 @@ public abstract class DataManager implements EventListener {
                             e.printStackTrace();
                         }
                         // Subscribe again
-//                        subscribe(this_info);
-                        if (DataManager.this instanceof GyroscopeManager) {
-                            ((GyroscopeManager) DataManager.this).restartSubscription(this_info);
-                        }
+                        unSubscribe(this_info);
+                        subscribe(this_info);
+
                         final int innerCount = ++restartCount;
                         final String restartText = "Restarting " +
                                 STREAM_TYPE + " for the " + Integer.toString(innerCount) +
