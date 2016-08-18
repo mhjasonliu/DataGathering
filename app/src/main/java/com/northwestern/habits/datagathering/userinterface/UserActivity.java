@@ -235,7 +235,7 @@ public class UserActivity extends AppCompatActivity {
          * String to be passed as extra indicating that the replication encountered an error during
          * the last sync
          */
-        public static final String STATUS_DB_ERROR = "DATABASE ERROR DETECTED";
+        public static final String STATUS_DB_ERROR = "SERVER ISSUE DETECTED";
 
         @Override
         public void onReceive(Context context, Intent intent) {

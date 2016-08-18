@@ -199,9 +199,13 @@ public class DataManagementService extends Service {
     }
 
     Replication.ChangeListener changeListener = new Replication.ChangeListener() {
+        private boolean isBlockingBroadcastsForError = false;
+
         @Override
         public void changed(Replication.ChangeEvent event) {
+            Log.v(TAG, "******");
             Log.v(TAG, event.toString());
+            Log.v(TAG, "******");
             boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
             @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
             boolean errorDidOccur = event.getError() != null;
@@ -211,8 +215,8 @@ public class DataManagementService extends Service {
                 isTransitioningToStopped =
                         event.getTransition().getDestination() == ReplicationState.STOPPED;
             } catch (NullPointerException ignored) {
+                isBlockingBroadcastsForError = errorDidOccur;
             }
-
 
             if (errorDidOccur) {
                 // Broadcast error
@@ -238,7 +242,7 @@ public class DataManagementService extends Service {
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
-                    sendBroadcast(i);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
                     Log.v(TAG, "Broadcasted syncing after successful sync");
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
@@ -261,18 +265,18 @@ public class DataManagementService extends Service {
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCED);
-                    sendBroadcast(i);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
                     Log.v(TAG, "Broadcasted synced");
 
                 } else {
-                        // Broadcast syncing
-                        Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                        i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                UserActivity.DbUpdateReceiver.STATUS_SYNCING);
-                        sendBroadcast(i);
-                        Log.v(TAG, "Broadcasted syncing by default 1");
-                        Log.v(TAG, "Did complete all is " + didCompleteAll);
-                        Log.v(TAG, "Changes are zero is " + changesAreZero);
+                    // Broadcast syncing
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    Log.v(TAG, "Broadcasted syncing by default 1");
+                    Log.v(TAG, "Did complete all is " + didCompleteAll);
+                    Log.v(TAG, "Changes are zero is " + changesAreZero);
                 }
 
                 // Restart?
@@ -285,7 +289,7 @@ public class DataManagementService extends Service {
                 Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                 i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
-                sendBroadcast(i);
+                if (!isBlockingBroadcastsForError) sendBroadcast(i);
                 Log.v(TAG, "Broadcasted syncing by default 2");
             }
 
