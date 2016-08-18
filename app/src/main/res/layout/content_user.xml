@@ -30,15 +30,15 @@
             android:layout_height="wrap_content"
             android:gravity="right"
             android:layout_weight="1"
-            android:text="Database status:  "
-            android:visibility="gone"/>
+            android:text="Server status:  "
+            android:visibility="visible"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/db_status_Text"
             android:text=""
-            android:visibility="gone"/>
+            android:visibility="visible"/>
     </LinearLayout>
 
     <LinearLayout
