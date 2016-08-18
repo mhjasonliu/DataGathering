@@ -97,7 +97,7 @@ public class DataSeries {
                 Log.e("CBD", "permission denied");
             }
 
-            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/";
+            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" + type + "/";
             File folder = new File(PATH);
             if (!folder.exists()) {
                 Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
