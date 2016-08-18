@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -231,6 +232,7 @@ public class PasswordFragment extends Fragment {
     private View.OnFocusChangeListener editTextFocusListener = new View.OnFocusChangeListener() {
         @Override
         public void onFocusChange(View v, boolean hasFocus) {
+            Log.v(TAG, "focus change started");
             InputMethodManager mgr = (InputMethodManager) (v.getContext()
                     .getSystemService(Context.INPUT_METHOD_SERVICE));
 
@@ -241,6 +243,7 @@ public class PasswordFragment extends Fragment {
                 // Enable the keyboard
                 mgr.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT);
             }
+            Log.v(TAG, "focus change ended");
         }
     };
 

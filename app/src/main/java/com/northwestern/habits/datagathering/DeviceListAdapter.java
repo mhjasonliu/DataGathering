@@ -218,7 +218,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-
+        Log.v(TAG, "getting child views");
         DeviceListItem device = _listDataHeader.get(groupPosition);
         DeviceListItem.DeviceType type = device.getType();
 
