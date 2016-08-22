@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
@@ -23,6 +24,7 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
+import com.microsoft.band.notifications.MessageFlags;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
@@ -36,6 +38,7 @@ import com.microsoft.band.tiles.pages.TextButton;
 import com.microsoft.band.tiles.pages.TextButtonData;
 import com.northwestern.habits.datagathering.R;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -151,6 +154,31 @@ public class TileActivity extends Activity {
         }
     }
 
+    private class SendMessageTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+
+                if (getConnectedBandClient()) {
+                    client.getNotificationManager().sendMessage(tileId, "Message title",
+                            "This is the message body!", new Date(), MessageFlags.SHOW_DIALOG).await();
+                }
+
+            } catch (BandException | InterruptedException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Toast.makeText(getBaseContext(), "Message sent to band", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
     private void appendToUI(final String string) {
         this.runOnUiThread(new Runnable() {
             @Override
@@ -179,7 +207,7 @@ public class TileActivity extends Activity {
         options.inScaled = false;
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
-        Bitmap tileIcon = BitmapFactory.decodeResource(getBaseContext().getResources(), R.drawable`.hamburger, options);
+        Bitmap tileIcon = BitmapFactory.decodeResource(getBaseContext().getResources(), R.drawable.hamburger, options);
 
         BandTile tile = new BandTile.Builder(tileId, "Button Tile", tileIcon)
                 .setPageLayouts(createButtonLayout())
@@ -192,6 +220,10 @@ public class TileActivity extends Activity {
             appendToUI("Unable to add button tile to the band.\n");
             return false;
         }
+    }
+
+    public void sendMessage(View view) {
+        new SendMessageTask().execute();
     }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {

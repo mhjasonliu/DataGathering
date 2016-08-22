@@ -18,9 +18,17 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Button"
+        android:text="Add Tile"
         android:id="@+id/btnStart"
         android:layout_below="@+id/txtStatus"
         android:layout_alignParentStart="true"
         android:layout_marginTop="53dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send Alert"
+        android:id="@+id/btnAlert"
+        android:layout_below="@id/btnStart"
+        android:onClick="sendMessage" />
 </RelativeLayout>
