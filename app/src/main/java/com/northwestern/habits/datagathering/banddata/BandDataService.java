@@ -369,7 +369,7 @@ public class BandDataService extends Service {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
         if (!streams.contains(request)) {
-            Log.v(TAG, "Removing stream " + request);
+            Log.v(TAG, "Adding stream " + request);
             streams.add(request);
             prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
         }

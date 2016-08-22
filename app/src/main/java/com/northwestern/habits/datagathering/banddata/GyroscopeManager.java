@@ -106,38 +106,34 @@ public class GyroscopeManager extends DataManager {
                                     rate = SampleRate.MS128;
                                 }
 
-                                switch (rate) {
-                                    case MS128:
-                                        Log.v(TAG, "8Hz");
-                                        break;
-                                    case MS32:
-                                        Log.v(TAG, "31Hz");
-                                        break;
-                                    case MS16:
-                                        Log.v(TAG, "62Hz");
-                                }
+                                if (!listeners.containsKey(info)) {
+                                    // Register the listener
+                                    Log.v(TAG, "Subscribing to gyro");
+                                    Log.v(TAG, String.valueOf(listeners));
+                                    client.getSensorManager().registerGyroscopeEventListener(
+                                            aListener, rate);
 
-                                // Register the listener
-                                client.getSensorManager().registerGyroscopeEventListener(
-                                        aListener, rate);
+                                    // Save the listener and client
+                                    listeners.put(info, aListener);
+                                    clients.put(info, client);
 
-                                // Save the listener and client
-                                listeners.put(info, aListener);
-                                clients.put(info, client);
+                                    // Toast saying connection successful
+                                    toastStreaming(STREAM_TYPE);
+                                    // Dismiss notification if necessary
+                                    notifySuccess(info);
 
-                                // Toast saying connection successful
-                                toastStreaming(STREAM_TYPE);
-                                // Dismiss notification if necessary
-                                notifySuccess(info);
-
-                                // Restart the timeout checker
-                                if (timeoutThread.getState() != State.NEW
-                                        && timeoutThread.getState() != State.RUNNABLE) {
-                                    timeoutThread.makeThreadTerminate();
-                                    timeoutThread = new TimeoutHandler();
-                                    timeoutThread.start();
-                                } else if (timeoutThread.getState() == State.NEW) {
-                                    timeoutThread.start();
+                                    // Restart the timeout checker
+                                    if (timeoutThread.getState() != State.NEW
+                                            && timeoutThread.getState() != State.RUNNABLE) {
+                                        timeoutThread.makeThreadTerminate();
+                                        timeoutThread = new TimeoutHandler();
+                                        timeoutThread.start();
+                                    } else if (timeoutThread.getState() == State.NEW) {
+                                        timeoutThread.start();
+                                    }
+                                } else {
+                                    Log.w(TAG, "Warning: subscribe called for already subscribed " +
+                                            "sensor. Call unsubscribe first.");
                                 }
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -213,6 +209,7 @@ public class GyroscopeManager extends DataManager {
 
                         // Unregister the client
                         try {
+                            Log.v(TAG, "unSubscribing to gyro");
                             client.getSensorManager().unregisterGyroscopeEventListener(
                                     (BandGyroscopeEventListener) listeners.get(info)
                             );
