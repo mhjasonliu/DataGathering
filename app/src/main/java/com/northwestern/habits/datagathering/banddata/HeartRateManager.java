@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class HeartRateManager extends DataManager {
     public HeartRateManager(Context context) {
-        super("HeartRateManager", context, 10);
+        super("HeartRateManager", context, 100);
         STREAM_TYPE = "heartRate";
         dataBuffer = new DataSeries(DataManagementService.T_Heart_Rate, BUFFER_SIZE);
     }
