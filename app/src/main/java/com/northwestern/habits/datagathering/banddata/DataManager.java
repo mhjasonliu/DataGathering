@@ -253,6 +253,7 @@ public abstract class DataManager implements EventListener {
                                         " timeout detected...", Toast.LENGTH_SHORT).show();
                             }
                         });
+                        unSubscribe(this_info);
 
                         try {
                             Thread.sleep(TIMEOUT_INTERVAL);
@@ -260,7 +261,6 @@ public abstract class DataManager implements EventListener {
                             e.printStackTrace();
                         }
                         // Subscribe again
-                        unSubscribe(this_info);
                         subscribe(this_info);
 
                         final int innerCount = ++restartCount;
