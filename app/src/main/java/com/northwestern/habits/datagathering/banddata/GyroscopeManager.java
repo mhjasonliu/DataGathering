@@ -6,9 +6,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Document;
-import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -17,11 +14,9 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandGyroscopeEvent;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
-import com.northwestern.habits.datagathering.database.CouchBaseData;
-import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
+import com.northwestern.habits.datagathering.database.DataManagementService;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,18 +29,29 @@ public class GyroscopeManager extends DataManager {
     private int restartCount = 1;
 
     protected void setFrequency(String f, BandInfo bandinfo) {
+        boolean rateChanged = false;
+        Log.v(TAG, "Setting frequency to " + f);
+
         switch (f) {
             case "8Hz":
+                rateChanged = frequencies.get(bandinfo) != SampleRate.MS128;
                 frequencies.put(bandinfo, SampleRate.MS128);
                 break;
             case "31Hz":
+                rateChanged = frequencies.get(bandinfo) != SampleRate.MS32;
                 frequencies.put(bandinfo, SampleRate.MS32);
                 break;
             case "62Hz":
+                rateChanged = frequencies.get(bandinfo) != SampleRate.MS16;
                 frequencies.put(bandinfo, SampleRate.MS16);
                 break;
             default:
                 frequencies.put(bandinfo, SampleRate.MS128);
+        }
+
+        if (clients.containsKey(bandinfo) && rateChanged) {
+            Log.v(TAG, "Resubscribing for frequency change");
+            restartSubscription(bandinfo);
         }
 
         // Record frequency change
@@ -72,8 +78,7 @@ public class GyroscopeManager extends DataManager {
     }
 
     protected void restartSubscription(BandInfo info) {
-        new UnsubscribeThread(info).run();
-        new SubscriptionThread(info).run();
+        new RestartSubscriptionThread(info).start();
     }
 
     /* *********************************** THREADS *************************************** */
@@ -102,30 +107,38 @@ public class GyroscopeManager extends DataManager {
                                 // Get the sample rate
                                 SampleRate rate = frequencies.get(info);
                                 if (rate == null) {
+                                    Log.e(TAG, "Default rate used");
                                     rate = SampleRate.MS128;
                                 }
 
-                                // Register the listener
-                                client.getSensorManager().registerGyroscopeEventListener(
-                                        aListener, rate);
+                                if (!listeners.containsKey(info)) {
+                                    // Register the listener
+                                    Log.v(TAG, "Subscribing to gyro");
+                                    Log.v(TAG, String.valueOf(listeners));
+                                    client.getSensorManager().registerGyroscopeEventListener(
+                                            aListener, rate);
 
-                                // Save the listener and client
-                                listeners.put(info, aListener);
-                                clients.put(info, client);
+                                    // Save the listener and client
+                                    listeners.put(info, aListener);
+                                    clients.put(info, client);
 
-                                // Toast saying connection successful
-                                toastStreaming(STREAM_TYPE);
-                                // Dismiss notification if necessary
-                                notifySuccess(info);
+                                    // Toast saying connection successful
+                                    toastStreaming(STREAM_TYPE);
+                                    // Dismiss notification if necessary
+                                    notifySuccess(info);
 
-                                // Restart the timeout checker
-                                if (timeoutThread.getState() != State.NEW
-                                        && timeoutThread.getState() != State.RUNNABLE) {
-                                    timeoutThread.makeThreadTerminate();
-                                    timeoutThread = new TimeoutHandler();
-                                    timeoutThread.start();
-                                } else if (timeoutThread.getState() == State.NEW) {
-                                    timeoutThread.start();
+                                    // Restart the timeout checker
+                                    if (timeoutThread.getState() != State.NEW
+                                            && timeoutThread.getState() != State.RUNNABLE) {
+                                        timeoutThread.makeThreadTerminate();
+                                        timeoutThread = new TimeoutHandler();
+                                        timeoutThread.start();
+                                    } else if (timeoutThread.getState() == State.NEW) {
+                                        timeoutThread.start();
+                                    }
+                                } else {
+                                    Log.w(TAG, "Warning: subscribe called for already subscribed " +
+                                            "sensor. Call unsubscribe first.");
                                 }
                             } else {
                                 Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and " +
@@ -201,6 +214,7 @@ public class GyroscopeManager extends DataManager {
 
                         // Unregister the client
                         try {
+                            Log.v(TAG, "unSubscribing to gyro");
                             client.getSensorManager().unregisterGyroscopeEventListener(
                                     (BandGyroscopeEventListener) listeners.get(info)
                             );
@@ -223,6 +237,25 @@ public class GyroscopeManager extends DataManager {
         public void run() {
             r.run();
         }
+    }
+
+    private class RestartSubscriptionThread extends Thread {
+        private Runnable r;
+
+        public RestartSubscriptionThread(final BandInfo info) {
+            super();
+
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    new UnsubscribeThread(info).run();
+                    new SubscriptionThread(info).run();
+                }
+            };
+        }
+
+        @Override
+        public void run() {r.run();}
     }
 
 
@@ -250,32 +283,9 @@ public class GyroscopeManager extends DataManager {
                 datapoint.put("Angular_Velocity_y", event.getAngularVelocityY());
                 datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
 
-//                Log.v(TAG, "TIME: " + Long.toString(event.getTimestamp()));
-//                Log.v(TAG, "Date time format: " + getDateTime(event));
-
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());
-
-
-                if (dataBuffer.isFull()) {
-                    try {
-                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
-                            @Override
-                            public boolean update(UnsavedRevision newRevision) {
-                                Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.putAll(dataBuffer.pack());
-                                properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
-                                properties.put(DataManagementService.T_DEVICE, T_BAND2);
-                                properties.put(DataManagementService.USER_ID, userID);
-
-                                newRevision.setUserProperties(properties);
-                                return true;
-                            }
-                        });
-                        dataBuffer = new DataSeries(DataManagementService.T_Gyroscope, BUFFER_SIZE);
-                    } catch (CouchbaseLiteException | IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                if (dataBuffer.isFull())
+                    writeData(context, info, DataManagementService.T_Gyroscope);
             }
         }
     }

@@ -11,13 +11,19 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandSensorEvent;
+import com.northwestern.habits.datagathering.database.CouchBaseData;
+import com.northwestern.habits.datagathering.database.DataManagementService;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -60,7 +66,7 @@ public abstract class DataManager implements EventListener {
     protected static int label = 0;
 
     protected DataSeries dataBuffer;
-    protected int BUFFER_SIZE = 1;
+    protected int BUFFER_SIZE = 100;
 
     protected static boolean toastingFailure;
 
@@ -245,10 +251,7 @@ public abstract class DataManager implements EventListener {
 
                     if (timeout != 0
                             && interval > TIMEOUT_INTERVAL) {
-                        // Timeout occurred, un-subscribe the current listener
-//                        unSubscribe(this_info);
                         Log.d(TAG, STREAM_TYPE + " timeout detected");
-                        Log.e(TAG, "interval: " + interval);
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -256,17 +259,16 @@ public abstract class DataManager implements EventListener {
                                         " timeout detected...", Toast.LENGTH_SHORT).show();
                             }
                         });
+                        unSubscribe(this_info);
 
                         try {
-                            Thread.sleep(TIMEOUT_INTERVAL);
+                            Thread.sleep(TIMEOUT_INTERVAL/2);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         // Subscribe again
-//                        subscribe(this_info);
-                        if (DataManager.this instanceof GyroscopeManager) {
-                            ((GyroscopeManager) DataManager.this).restartSubscription(this_info);
-                        }
+                        subscribe(this_info);
+
                         final int innerCount = ++restartCount;
                         final String restartText = "Restarting " +
                                 STREAM_TYPE + " for the " + Integer.toString(innerCount) +
@@ -296,6 +298,34 @@ public abstract class DataManager implements EventListener {
     protected class CustomListener implements EventListener {
         protected long lastDataSample;
         protected BandInfo info;
+    }
+
+
+
+    protected void writeData(Context context, final BandInfo info, String type) {
+        final DataSeries myBuffer = dataBuffer;
+        dataBuffer = new DataSeries(type, BUFFER_SIZE);
+
+        try {
+            CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
+                @Override
+                public boolean update(UnsavedRevision newRevision) {
+                    Map<String, Object> properties = newRevision.getUserProperties();
+                    properties.putAll(myBuffer.pack());
+                    properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
+                    properties.put(DataManagementService.T_DEVICE, T_BAND2);
+                    properties.put(DataManagementService.USER_ID, userID);
+
+                    newRevision.setUserProperties(properties);
+                    return true;
+                }
+            });
+
+            // Write to csv
+            myBuffer.exportCSV(context, userID, T_BAND2);
+        } catch (CouchbaseLiteException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

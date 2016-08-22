@@ -369,7 +369,7 @@ public class BandDataService extends Service {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
         if (!streams.contains(request)) {
-            Log.v(TAG, "Removing stream " + request);
+            Log.v(TAG, "Adding stream " + request);
             streams.add(request);
             prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
         }
@@ -554,17 +554,6 @@ public class BandDataService extends Service {
     private void setGyroFrequency(String f, BandInfo bandInfo) {
         // Change the manager's stored frequency
         gyroManager.setFrequency(f, bandInfo);
-
-        // Unsubscribe and resubscribe if necessary
-        if (bandStreams.containsKey(bandInfo) && bandStreams.get(bandInfo).contains(GYRO_REQ_EXTRA)) {
-            gyroManager.unSubscribe(bandInfo);
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            gyroManager.subscribe(bandInfo);
-        }
     }
 
     private BandInfo infoFromMac(String mac) {

@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -115,25 +114,25 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(context);
             DeviceListItem d = (DeviceListItem) parent.getTag();
-
-            String preferenceKey = Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO);
-            String savedFrequency = p.getString(preferenceKey, "");
+//
+//            String preferenceKey = Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO);
+//            String savedFrequency = p.getString(preferenceKey, "");
             String selectedFrequency = ((TextView) view).getText().toString();
-
-            if (!Objects.equals(savedFrequency, "")) {
-                listenForSelected = !Objects.equals(savedFrequency, selectedFrequency);
-            }
-
-
-            if (listenForSelected) {
+//
+//            if (!Objects.equals(savedFrequency, "")) {
+//                listenForSelected = !Objects.equals(savedFrequency, selectedFrequency);
+//            }
+//
+//
+//            if (listenForSelected) {
                 ((Spinner) ((View) parent.getParent())
                         .findViewById(R.id.acc_frequency_spinner)).setSelection(position);
                 sendFrequencyMesasge(parent, view, BandDataService.GYRO_REQ_EXTRA);
                 SharedPreferences.Editor e = p.edit();
-                Log.e(TAG, ((TextView) view).getText().toString());
+//                Log.e(TAG, ((TextView) view).getText().toString());
                 e.putString(Preferences.getFrequencyKey(d.getMAC(), Preferences.GYRO), selectedFrequency);
                 e.apply();
-            }
+//            }
         }
 
         @Override
@@ -219,7 +218,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-
+        Log.v(TAG, "getting child views");
         DeviceListItem device = _listDataHeader.get(groupPosition);
         DeviceListItem.DeviceType type = device.getType();
 

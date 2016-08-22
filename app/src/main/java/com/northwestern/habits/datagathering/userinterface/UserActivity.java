@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.CustomDrawerListener;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
@@ -58,7 +59,11 @@ public class UserActivity extends AppCompatActivity {
 
         TextView t = ((TextView) findViewById(R.id.db_status_Text));
         if (t != null) {
-            t.setText(DbUpdateReceiver.STATUS_UNKNOWN);
+            if (MyReceiver.isCharging(this) && MyReceiver.isWifiConnected(this)) {
+                t.setText(DbUpdateReceiver.STATUS_SYNCING);
+            } else {
+                t.setText(DbUpdateReceiver.STATUS_UNKNOWN);
+            }
         }
 
         // Deal with the buttons
@@ -97,6 +102,12 @@ public class UserActivity extends AppCompatActivity {
                 nothingButton.setEnabled(true);
 
                 sendLabelBroadcast(DataManagementService.L_DRINKING);
+
+                // Send test csv
+//                Intent i = new Intent(UserActivity.this, DataManagementService.class);
+//                AdvancedSettingsActivity.verifyStoragePermissions(UserActivity.this);
+//                i.setAction(DataManagementService.ACTION_WRITE_CSVS);
+//                startService(i);
             }
         });
         nothingButton.setOnClickListener(new View.OnClickListener() {
@@ -224,7 +235,7 @@ public class UserActivity extends AppCompatActivity {
          * String to be passed as extra indicating that the replication encountered an error during
          * the last sync
          */
-        public static final String STATUS_DB_ERROR = "DATABASE ERROR DETECTED";
+        public static final String STATUS_DB_ERROR = "SERVER ISSUE DETECTED";
 
         @Override
         public void onReceive(Context context, Intent intent) {

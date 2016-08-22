@@ -1,43 +1,31 @@
 package com.northwestern.habits.datagathering.database;
 
-import android.Manifest;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.preference.PreferenceManager;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
-import com.couchbase.lite.Document;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
-import com.northwestern.habits.datagathering.MyReceiver;
-import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The purpose of this service is to:
  * 1) manage connections and 2) fulfill streaming requests
- * <p>
+ * <p/>
  * 1) Manage connections
  * Accomplished by maintaining a
  */
@@ -107,8 +95,9 @@ public class DataManagementService extends Service {
 
         switch (intent.getAction()) {
             case ACTION_WRITE_CSVS:
-                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                        .getString(Preferences.CURRENT_DOCUMENT, "csvs");
+//                testWriteCSV(getBaseContext());
+//                String folderName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+//                        .getString(Preferences.CURRENT_DOCUMENT, "csvs");
 //                try {
 //                    exportToCsv(folderName, getApplicationContext());
 //                } catch (CouchbaseLiteException e) {
@@ -162,16 +151,20 @@ public class DataManagementService extends Service {
 
 
     private boolean isReplicating = false;
+    private Replication push;
 
     private void startOneShotRep() {
         // Only start a replication if another is not running
         if (!isReplicating) {
+            isReplicating = true;
+
             try {
+                // Get all the documents from the database
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
                 q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
-
                 QueryEnumerator result = q.run();
+
                 // Pack the docIDs into a list
                 final List<String> ids = new LinkedList<>();
                 while (result.hasNext()) {
@@ -180,146 +173,14 @@ public class DataManagementService extends Service {
 
                 // Do a one-shot replication
                 URL url = new URL(CouchBaseData.URL_STRING);
-                Replication push = new Replication(db,
+                push = new Replication(db,
                         url,
                         Replication.Direction.PUSH);
 
                 push.setContinuous(false);
                 push.setDocIds(ids);
-                push.addChangeListener(new Replication.ChangeListener() {
-                    @Override
-                    public void changed(final Replication.ChangeEvent event) {
-                        Log.v(TAG, event.toString());
-                        boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
-                        @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-                        boolean errorDidOccur = event.getError() != null;
-                        boolean changesNotZero = event.getCompletedChangeCount() != 0;
-                        boolean isTransitioningToStopping = false;
-                        try {
-                            isTransitioningToStopping =
-                                    event.getTransition().getDestination() == ReplicationState.STOPPING;
-                        } catch (NullPointerException ignored) {
-                        }
-
-
-                        // For broadcasts
-                        if (event.getTransition() != null) {
-                            switch (event.getTransition().getDestination()) {
-                                case RUNNING:
-                                    // Rep starting, broadcast syncing
-                                    // No error and not stopping... broadcast syncing
-                                    Intent syncingIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                    syncingIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
-                                    sendBroadcast(syncingIntent);
-                                    break;
-                                case STOPPING:
-                                    if (errorDidOccur) {
-                                        // Broadcast error occurring
-                                        Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                        errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                                UserActivity.DbUpdateReceiver.STATUS_DB_ERROR);
-                                        sendBroadcast(errorIntent);
-                                        Log.e(TAG, "Error reported");
-                                    } else if (changesNotZero) {
-                                        // Data was sent, still syncing so do nothing
-                                    } else {
-                                        // Data was not sent and no error occurred, we are up to date
-                                        Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                        i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                                UserActivity.DbUpdateReceiver.STATUS_SYNCED);
-                                        sendBroadcast(i);
-                                        Log.e(TAG, "Complete sync reported");
-                                    }
-                                    break;
-                            }
-                        }
-
-
-                        // Allow another replication to be created
-                        if (isTransitioningToStopping) {
-                            isReplicating = false;
-                        }
-
-                        if (isTransitioningToStopping) {
-
-                            if (errorDidOccur) {
-                                // Broadcast to user activity
-
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        //noinspection ThrowableResultOfMethodCallIgnored
-                                        Toast.makeText(getBaseContext(),
-                                                "Error occurred while replicating " +
-                                                        event.getError(), Toast.LENGTH_SHORT).show();
-                                        //noinspection ThrowableResultOfMethodCallIgnored
-                                        event.getError().printStackTrace();
-                                    }
-                                });
-                            }
-
-                            if (!changesNotZero) {
-                                // Zero changes, sync complete
-                            }
-
-                            // Replication completed
-                            if (didCompleteAll && changesNotZero) {
-                                // Successful IFF complete and a replication went through
-                                Log.v(TAG, "Successful backup of " + event.getCompletedChangeCount()
-                                        + " docs.");
-                                Log.v(TAG, "Deleting docs");
-
-                                // Delete old documents
-                                for (String id : ids) {
-                                    try {
-                                        // Purge so deletion does not replicate to server
-                                        Document d = db.getDocument(id);
-                                        exportToCsv(d, getBaseContext());
-                                        d.purge();
-                                    } catch (IOException e) {
-                                        // Don't purge
-                                    } catch (CouchbaseLiteException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-
-                        }
-
-                        // Restart rep if needed
-                        if (event.getTransition() != null &&
-                                event.getTransition().
-
-                                        getDestination()
-
-                                        == ReplicationState.STOPPED)
-
-                        {
-                            try {
-                                // Sleep to prevent overuse of the battery
-                                Thread.sleep(30000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                            // Start a new rep if plugged in and charging
-                            if (MyReceiver.isCharging(getBaseContext()) &&
-                                    MyReceiver.isWifiConnected(getBaseContext())) {
-                                startOneShotRep();
-                            } else {
-                                // Not starting new rep -> unknown status
-                                Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
-                                i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                                        UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
-                                sendBroadcast(i);
-                            }
-                        }
-                    }
-                });
-                isReplicating = true;
+                push.addChangeListener(changeListener);
                 push.start();
-
 
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
@@ -327,89 +188,111 @@ public class DataManagementService extends Service {
         }
     }
 
-    public static void exportToCsv(Document document, Context c) throws IOException {
-        // Export all data to a csv
-
-        // Make csv name
-        Map<String, Object> docProps = document.getProperties();
-        String fName = (String) docProps.get(USER_ID);
-        fName += "_" + docProps.get(TYPE) + "_";
-        fName += docProps.get(FIRST_ENTRY);
-        fName += "_thru_";
-        fName += docProps.get(LAST_ENTRY);
-
-        if (ContextCompat.checkSelfPermission(c, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            Log.v("CBD", "permission granted");
-        } else {
-            Log.e("CBD", "permission denied");
+    private void restartOneShot() {
+        isReplicating = false;
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-        String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/";
-        File folder = new File(PATH);
-        if (!folder.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            folder.mkdirs();
-        }
-
-        File csv = new File(PATH, fName);
-        if (!csv.exists()) {
-            try {
-                // Make the file
-                if (!csv.createNewFile()) {
-                    throw new IOException();
-                }
-                FileWriter csvWriter = new FileWriter(csv.getPath(), true);
-                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                intent.setData(Uri.fromFile(csv));
-                c.sendBroadcast(intent);
-
-
-                List<Map<String, Object>> dataSeries = (List<Map<String, Object>>) docProps.get(DATA);
-                List<String> properties = (List<String>) docProps.get(DATA_KEYS);
-
-                for (int i = 0; i < properties.size(); i++) {
-                    csvWriter.append(properties.get(i));
-                    if (i == properties.size()) {
-                        csvWriter.append(",");
-                    } else {
-                        csvWriter.append("\n");
-                    }
-                }
-
-                // Write the file
-                for (Map<String, Object> dataPoint:
-                     dataSeries) {
-
-                    for (int i = 0; i < properties.size(); i++) {
-                        Object datum = dataPoint.get(properties.get(i));
-
-                        if (datum instanceof String) {
-                            csvWriter.append(datum.toString());
-                        } else if (datum instanceof Double) {
-                            csvWriter.append(Double.toString((Double) datum));
-                        } else if (datum instanceof Integer) {
-                            csvWriter.append(Integer.toString((Integer) datum));
-                        } else if (datum instanceof Long) {
-                            csvWriter.append(Long.toString((Long) datum));
-                        } else {
-                            Log.e(TAG, "Unhandled case");
-                            csvWriter.append(datum.toString());
-                        }
-
-
-                        if (i == properties.size()) {
-                            csvWriter.append(",");
-                        } else {
-                            csvWriter.append("\n");
-                        }
-                    }
-                }
-
-                csvWriter.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        startOneShotRep();
     }
+
+    Replication.ChangeListener changeListener = new Replication.ChangeListener() {
+        private boolean isBlockingBroadcastsForError = false;
+
+        @Override
+        public void changed(Replication.ChangeEvent event) {
+            Log.v(TAG, "******");
+            Log.v(TAG, event.toString());
+            Log.v(TAG, "******");
+            boolean didCompleteAll = event.getChangeCount() == event.getCompletedChangeCount();
+            @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+            boolean errorDidOccur = event.getError() != null;
+            boolean changesAreZero = event.getChangeCount() == 0;
+            boolean isTransitioningToStopped = false;
+            try {
+                isTransitioningToStopped =
+                        event.getTransition().getDestination() == ReplicationState.STOPPED;
+            } catch (NullPointerException ignored) {
+                isBlockingBroadcastsForError = errorDidOccur;
+            }
+
+            if (errorDidOccur) {
+                // Broadcast error
+                Intent errorIntent = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                errorIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                        UserActivity.DbUpdateReceiver.STATUS_DB_ERROR);
+                sendBroadcast(errorIntent);
+                Log.e(TAG, "Error reported");
+                if (isTransitioningToStopped) {
+                    // Restart?
+                    restartOneShot();
+                } else {
+                    // Stop replication
+                    push.stop();
+                }
+
+
+            } else if (isTransitioningToStopped) {
+                // STOPPING WITHOUT ERROR
+                Log.v(TAG, "Stopped");
+                if (didCompleteAll && !changesAreZero) {
+                    // Broadcast synced
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    Log.v(TAG, "Broadcasted syncing after successful sync");
+                    // Delete old documents
+                    List<String> pushed = push.getDocIds();
+                    try {
+                        Database db = CouchBaseData.getDatabase(getBaseContext());
+                        for (String id :
+                                pushed) {
+                            // Purge the doc
+                            db.getDocument(id).purge();
+                        }
+                        Log.v(TAG, "Deleted " + Integer.toString(pushed.size()) + " documents");
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } else if (changesAreZero) {
+                    // Zero changes and stopped -> synced
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    Log.v(TAG, "Broadcasted synced");
+
+                } else {
+                    // Broadcast syncing
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    Log.v(TAG, "Broadcasted syncing by default 1");
+                    Log.v(TAG, "Did complete all is " + didCompleteAll);
+                    Log.v(TAG, "Changes are zero is " + changesAreZero);
+                }
+
+                // Restart?
+                restartOneShot();
+
+
+            } else if (event.getChangeCount() > 0) {
+                // NOT STOPPING && NO ERROR
+                // Broadcast syncing
+                Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                        UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                Log.v(TAG, "Broadcasted syncing by default 2");
+            }
+
+        }
+    };
 }
