@@ -29,18 +29,29 @@ public class GyroscopeManager extends DataManager {
     private int restartCount = 1;
 
     protected void setFrequency(String f, BandInfo bandinfo) {
+        boolean rateChanged = false;
+        Log.v(TAG, "Setting frequency to " + f);
+
         switch (f) {
             case "8Hz":
+                rateChanged = frequencies.get(bandinfo) != SampleRate.MS128;
                 frequencies.put(bandinfo, SampleRate.MS128);
                 break;
             case "31Hz":
+                rateChanged = frequencies.get(bandinfo) != SampleRate.MS32;
                 frequencies.put(bandinfo, SampleRate.MS32);
                 break;
             case "62Hz":
+                rateChanged = frequencies.get(bandinfo) != SampleRate.MS16;
                 frequencies.put(bandinfo, SampleRate.MS16);
                 break;
             default:
                 frequencies.put(bandinfo, SampleRate.MS128);
+        }
+
+        if (clients.containsKey(bandinfo) && rateChanged) {
+            Log.v(TAG, "Resubscribing for frequency change");
+            restartSubscription(bandinfo);
         }
 
         // Record frequency change
@@ -67,8 +78,7 @@ public class GyroscopeManager extends DataManager {
     }
 
     protected void restartSubscription(BandInfo info) {
-        new UnsubscribeThread(info).run();
-        new SubscriptionThread(info).run();
+        new RestartSubscriptionThread(info).start();
     }
 
     /* *********************************** THREADS *************************************** */
@@ -227,6 +237,25 @@ public class GyroscopeManager extends DataManager {
         public void run() {
             r.run();
         }
+    }
+
+    private class RestartSubscriptionThread extends Thread {
+        private Runnable r;
+
+        public RestartSubscriptionThread(final BandInfo info) {
+            super();
+
+            r = new Runnable() {
+                @Override
+                public void run() {
+                    new UnsubscribeThread(info).run();
+                    new SubscriptionThread(info).run();
+                }
+            };
+        }
+
+        @Override
+        public void run() {r.run();}
     }
 
 
