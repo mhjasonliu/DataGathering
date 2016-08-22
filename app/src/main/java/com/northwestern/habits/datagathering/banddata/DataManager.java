@@ -66,7 +66,7 @@ public abstract class DataManager implements EventListener {
     protected static int label = 0;
 
     protected DataSeries dataBuffer;
-    protected int BUFFER_SIZE = 1;
+    protected int BUFFER_SIZE = 100;
 
     protected static boolean toastingFailure;
 
@@ -302,9 +302,9 @@ public abstract class DataManager implements EventListener {
 
 
 
-    protected void writeData(Context context, final BandInfo info) {
+    protected void writeData(Context context, final BandInfo info, String type) {
         final DataSeries myBuffer = dataBuffer;
-        dataBuffer = new DataSeries(DataManagementService.T_Gyroscope, BUFFER_SIZE);
+        dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
         try {
             CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {

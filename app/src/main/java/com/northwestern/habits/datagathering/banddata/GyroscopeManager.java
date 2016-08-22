@@ -285,7 +285,7 @@ public class GyroscopeManager extends DataManager {
 
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());
                 if (dataBuffer.isFull())
-                    writeData(context, info);
+                    writeData(context, info, DataManagementService.T_Gyroscope);
             }
         }
     }

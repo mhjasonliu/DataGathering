@@ -194,7 +194,7 @@ public class AmbientManager extends DataManager {
 
 
                 if (dataBuffer.isFull())
-                    writeData(context, info);
+                    writeData(context, info, DataManagementService.T_Ambient);
             }
         }
     }

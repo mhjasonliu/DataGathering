@@ -186,7 +186,7 @@ public class CaloriesManager extends DataManager {
 
 
                 if (dataBuffer.isFull())
-                    writeData(context, info);
+                    writeData(context, info, DataManagementService.T_Calories);
             }
         }
     }

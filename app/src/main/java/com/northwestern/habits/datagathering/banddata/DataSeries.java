@@ -68,6 +68,10 @@ public class DataSeries {
         return m;
     }
 
+    public int getCount() {
+        return dataArray.size();
+    }
+
     public void exportCSV(Context c, String userID, String type) {
         new ExportCSVTask(c, userID, type).doInBackground(null);
     }
@@ -131,7 +135,6 @@ public class DataSeries {
                     // Write the file
                     for (Map<String, Object> dataPoint :
                             dataSeries) {
-
                         for (int i = 0; i < properties.size(); i++) {
                             try {
                                 Object datum = dataPoint.get(properties.get(i));
@@ -152,7 +155,6 @@ public class DataSeries {
                                     Log.e(TAG, "Unhandled case " + datum.getClass());
                                     csvWriter.append(datum.toString());
                                 }
-
                                 if (i == properties.size() - 1) {
                                     csvWriter.append("\n");
                                 } else {
