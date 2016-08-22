@@ -256,7 +256,7 @@ public abstract class DataManager implements EventListener {
                         unSubscribe(this_info);
 
                         try {
-                            Thread.sleep(TIMEOUT_INTERVAL);
+                            Thread.sleep(TIMEOUT_INTERVAL/2);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
