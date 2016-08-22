@@ -27,8 +27,18 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Send Alert"
+        android:text="Send Message"
         android:id="@+id/btnAlert"
         android:layout_below="@id/btnStart"
         android:onClick="sendMessage" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send Dialog"
+        android:id="@+id/btnDialog"
+        android:layout_toRightOf="@id/btnAlert"
+        android:onClick="sendDialog"/>
+
+
 </RelativeLayout>

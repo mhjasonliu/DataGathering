@@ -114,6 +114,80 @@ public class TileActivity extends Activity {
         }
     };
 
+    private void appendToUI(final String string) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                txtStatus.append(string);
+            }
+        });
+    }
+
+    /* *************************** DIALOG STUFF *************************** */
+
+    public void sendDialog(View view) {
+        new SendDialogTask().execute();
+    }
+
+    private class SendDialogTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient()) {
+                    client.getNotificationManager().showDialog(tileId, "Dialog", "This is a dialog!").await();
+                }
+            } catch (BandException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+    }
+
+    /* *************************** MESSAGE STUFF *************************** */
+    public void sendMessage(View view) {
+        new SendMessageTask().execute();
+    }
+
+    private class SendMessageTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+
+                if (getConnectedBandClient()) {
+                    client.getNotificationManager().sendMessage(tileId, "Message title",
+                            "This is the message body!", new Date(), MessageFlags.SHOW_DIALOG).await();
+                }
+
+            } catch (BandException | InterruptedException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Toast.makeText(getBaseContext(), "Message sent to band", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
+
+
+    /* *************************** TILE STUFF *************************** */
+
+    private boolean doesTileExist(List<BandTile> tiles, UUID tileId) {
+        for (BandTile tile:tiles) {
+            if (tile.getTileId().equals(tileId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private class appTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
@@ -154,49 +228,6 @@ public class TileActivity extends Activity {
         }
     }
 
-    private class SendMessageTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            try {
-
-                if (getConnectedBandClient()) {
-                    client.getNotificationManager().sendMessage(tileId, "Message title",
-                            "This is the message body!", new Date(), MessageFlags.SHOW_DIALOG).await();
-                }
-
-            } catch (BandException | InterruptedException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            Toast.makeText(getBaseContext(), "Message sent to band", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
-    private void appendToUI(final String string) {
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                txtStatus.append(string);
-            }
-        });
-    }
-
-    private boolean doesTileExist(List<BandTile> tiles, UUID tileId) {
-        for (BandTile tile:tiles) {
-            if (tile.getTileId().equals(tileId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean addTile() throws Exception {
         if (doesTileExist(client.getTileManager().getTiles().await(), tileId)) {
             return true;
@@ -222,8 +253,20 @@ public class TileActivity extends Activity {
         }
     }
 
-    public void sendMessage(View view) {
-        new SendMessageTask().execute();
+    private PageLayout createButtonLayout() {
+        return new PageLayout(
+                new FlowPanel(15, 0, 260, 105, FlowPanelOrientation.VERTICAL)
+                        .addElements(new FilledButton(0, 5, 210, 45).setMargins(0, 5, 0 ,0).setId(12).setBackgroundColor(Color.RED))
+                        .addElements(new TextButton(0, 0, 210, 45).setMargins(0, 5, 0 ,0).setId(21).setPressedColor(Color.BLUE))
+        );
+    }
+
+    private void updatePages() throws BandIOException {
+        client.getTileManager().setPages(tileId,
+                new PageData(pageId1, 0)
+                        .update(new FilledButtonData(12, Color.YELLOW))
+                        .update(new TextButtonData(21, "Text Button")));
+        appendToUI("Send button page data to tile page \n\n");
     }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {
@@ -240,21 +283,15 @@ public class TileActivity extends Activity {
         return bitmap;
     }
 
-    private PageLayout createButtonLayout() {
-        return new PageLayout(
-                new FlowPanel(15, 0, 260, 105, FlowPanelOrientation.VERTICAL)
-                        .addElements(new FilledButton(0, 5, 210, 45).setMargins(0, 5, 0 ,0).setId(12).setBackgroundColor(Color.RED))
-                        .addElements(new TextButton(0, 0, 210, 45).setMargins(0, 5, 0 ,0).setId(21).setPressedColor(Color.BLUE))
-        );
-    }
 
-    private void updatePages() throws BandIOException {
-        client.getTileManager().setPages(tileId,
-                new PageData(pageId1, 0)
-                        .update(new FilledButtonData(12, Color.YELLOW))
-                        .update(new TextButtonData(21, "Text Button")));
-        appendToUI("Send button page data to tile page \n\n");
-    }
+
+
+
+
+
+
+
+    /* *************************** GENERIC BAND STUFF *************************** */
 
     private boolean getConnectedBandClient() throws InterruptedException, BandException {
         if (client == null) {
