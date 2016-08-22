@@ -3,9 +3,6 @@ package com.northwestern.habits.datagathering.banddata;
 import android.content.Context;
 import android.util.Log;
 
-import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Document;
-import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
@@ -13,10 +10,8 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandAltimeterEvent;
 import com.microsoft.band.sensors.BandAltimeterEventListener;
-import com.northwestern.habits.datagathering.database.CouchBaseData;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -208,31 +203,8 @@ public class AltimeterManager extends DataManager {
 
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());
 
-                if (dataBuffer.isFull()) {
-                    final DataSeries myBuffer = dataBuffer;
-                    dataBuffer = new DataSeries(DataManagementService.T_Gyroscope, BUFFER_SIZE);
-
-                    try {
-                        CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
-                            @Override
-                            public boolean update(UnsavedRevision newRevision) {
-                                Map<String, Object> properties = newRevision.getUserProperties();
-                                properties.putAll(myBuffer.pack());
-                                properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
-                                properties.put(DataManagementService.T_DEVICE, T_BAND2);
-                                properties.put(DataManagementService.USER_ID, userID);
-
-                                newRevision.setUserProperties(properties);
-                                return true;
-                            }
-                        });
-
-                        // Write to csv
-                        myBuffer.exportCSV(context, userID, T_BAND2);
-                    } catch (CouchbaseLiteException | IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                if (dataBuffer.isFull())
+                    writeData(context, info, DataManagementService.T_Altimeter);
             }
 
         }

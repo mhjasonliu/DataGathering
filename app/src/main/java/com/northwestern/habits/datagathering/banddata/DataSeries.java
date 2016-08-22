@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by William on 8/2/2016.
+ * Created by William on 8/2/2016
  */
 public class DataSeries {
 
@@ -68,6 +68,10 @@ public class DataSeries {
         return m;
     }
 
+    public int getCount() {
+        return dataArray.size();
+    }
+
     public void exportCSV(Context c, String userID, String type) {
         new ExportCSVTask(c, userID, type).doInBackground(null);
     }
@@ -94,7 +98,7 @@ public class DataSeries {
 
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
-                Log.e("CBD", "permission denied");
+                Log.e(TAG, "permission denied");
             }
 
             String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" + type + "/";
@@ -131,38 +135,41 @@ public class DataSeries {
                     // Write the file
                     for (Map<String, Object> dataPoint :
                             dataSeries) {
-
                         for (int i = 0; i < properties.size(); i++) {
-                            Object datum = dataPoint.get(properties.get(i));
+                            try {
+                                Object datum = dataPoint.get(properties.get(i));
 
-                            if (datum instanceof String) {
-                                csvWriter.append(datum.toString());
-                            } else if (datum instanceof Double) {
-                                csvWriter.append(Double.toString((Double) datum));
-                            } else if (datum instanceof Integer) {
-                                csvWriter.append(Integer.toString((Integer) datum));
-                            } else if (datum instanceof Long) {
-                                csvWriter.append(Long.toString((Long) datum));
-                            } else if (datum instanceof Float) {
-                                csvWriter.append(Float.toString((Float) datum));
-                            } else if (datum instanceof HeartRateQuality) {
-                                csvWriter.append(datum.toString());
-                            } else {
-                                Log.e(TAG, "Unhandled case " + datum.getClass());
-                                csvWriter.append(datum.toString());
-                            }
-
-                            if (i == properties.size() - 1) {
-                                csvWriter.append("\n");
-                            } else {
-                                csvWriter.append(",");
+                                if (datum instanceof String) {
+                                    csvWriter.append(datum.toString());
+                                } else if (datum instanceof Double) {
+                                    csvWriter.append(Double.toString((Double) datum));
+                                } else if (datum instanceof Integer) {
+                                    csvWriter.append(Integer.toString((Integer) datum));
+                                } else if (datum instanceof Long) {
+                                    csvWriter.append(Long.toString((Long) datum));
+                                } else if (datum instanceof Float) {
+                                    csvWriter.append(Float.toString((Float) datum));
+                                } else if (datum instanceof HeartRateQuality) {
+                                    csvWriter.append(datum.toString());
+                                } else {
+                                    Log.e(TAG, "Unhandled case " + datum.getClass());
+                                    csvWriter.append(datum.toString());
+                                }
+                                if (i == properties.size() - 1) {
+                                    csvWriter.append("\n");
+                                } else {
+                                    csvWriter.append(",");
+                                }
+                            } catch (NullPointerException e) {
+                                Log.e(TAG, "Row was null");
+                                e.printStackTrace();
                             }
                         }
                     }
                     csvWriter.flush();
                     csvWriter.close();
 
-                } catch (IOException | NullPointerException | ConcurrentModificationException e) {
+                } catch (IOException | ConcurrentModificationException e) {
                     e.printStackTrace();
                 }
             }
@@ -170,5 +177,4 @@ public class DataSeries {
             return null;
         }
     }
-
 }
