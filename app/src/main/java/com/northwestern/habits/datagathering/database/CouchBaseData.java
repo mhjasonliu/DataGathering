@@ -48,7 +48,7 @@ public class CouchBaseData {
 
         try {
             currentDocument = getDatabase(c).getDocument(
-                    BluetoothConnectionLayer.getAdapter().getAddress() + "_" + Calendar.getInstance().getTime());
+                    BluetoothConnectionLayer.getAdapter().getAddress() + "_" + Calendar.getInstance().getTimeInMillis());
         } catch (IOException e) {
             e.printStackTrace();
         }
