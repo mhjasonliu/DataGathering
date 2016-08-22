@@ -162,6 +162,7 @@ public class DataManagementService extends Service {
                 // Get all the documents from the database
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
+                q.setLimit(100);
                 q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
                 QueryEnumerator result = q.run();
 

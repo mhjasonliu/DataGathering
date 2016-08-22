@@ -25,6 +25,7 @@ import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.notifications.MessageFlags;
+import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
@@ -35,7 +36,6 @@ import com.microsoft.band.tiles.pages.FlowPanelOrientation;
 import com.microsoft.band.tiles.pages.PageData;
 import com.microsoft.band.tiles.pages.PageLayout;
 import com.microsoft.band.tiles.pages.TextButton;
-import com.microsoft.band.tiles.pages.TextButtonData;
 import com.northwestern.habits.datagathering.R;
 
 import java.util.Date;
@@ -106,7 +106,12 @@ public class TileActivity extends Activity {
                 appendToUI("Tile open event received\n" + tileOpenData.toString()+ "\n\n");
             } else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
                 TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-                appendToUI("Button event received\n" + buttonData.toString()+ "\n\n");
+                appendToUI("Updating pages");
+                try {
+                    updatePages();
+                } catch (BandIOException e) {
+                    e.printStackTrace();
+                }
             } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
                 TileEvent tileCloseData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
                 appendToUI("Tile close event received\n" + tileCloseData.toString()+ "\n\n");
@@ -134,7 +139,10 @@ public class TileActivity extends Activity {
         protected Void doInBackground(Void... params) {
             try {
                 if (getConnectedBandClient()) {
-                    client.getNotificationManager().showDialog(tileId, "Dialog", "This is a dialog!").await();
+//                    client.getNotificationManager().showDialog(tileId, "Dialog", "This is a dialog!").await();
+                    while (true) {
+                        client.getNotificationManager().vibrate(VibrationType.NOTIFICATION_ALARM).await();
+                    }
                 }
             } catch (BandException | InterruptedException e) {
                 e.printStackTrace();
@@ -230,7 +238,7 @@ public class TileActivity extends Activity {
 
     private boolean addTile() throws Exception {
         if (doesTileExist(client.getTileManager().getTiles().await(), tileId)) {
-            return true;
+            client.getTileManager().removeTile(tileId);
         }
 
 		/* Set the options */
@@ -256,17 +264,29 @@ public class TileActivity extends Activity {
     private PageLayout createButtonLayout() {
         return new PageLayout(
                 new FlowPanel(15, 0, 260, 105, FlowPanelOrientation.VERTICAL)
-                        .addElements(new FilledButton(0, 5, 210, 45).setMargins(0, 5, 0 ,0).setId(12).setBackgroundColor(Color.RED))
-                        .addElements(new TextButton(0, 0, 210, 45).setMargins(0, 5, 0 ,0).setId(21).setPressedColor(Color.BLUE))
+                        .addElements(new FilledButton(0, 5, 210, 45).setMargins(0, 5, 0, 0).setId(12).setBackgroundColor(Color.RED))
+                        .addElements(new TextButton(0, 0, 210, 45).setMargins(0, 5, 0, 0).setId(21).setPressedColor(Color.BLUE))
+                        .addElements(new TextButton(0, 15, 210, 45).setMargins(0, 5, 0, 0).setId(22).setPressedColor(Color.GREEN))
+                        .addElements(new TextButton(0, 10, 210, 45).setMargins(0, 5, 0, 0).setId(23).setPressedColor(Color.YELLOW))
         );
     }
 
+    private int filledButtonId = 12;
+    private boolean isFilledButtonChecked = false;
+
     private void updatePages() throws BandIOException {
+        int color = Color.BLACK;
+        isFilledButtonChecked = !isFilledButtonChecked;
+
+        if (isFilledButtonChecked) {
+            color = Color.BLUE;
+        } else {
+            color = Color.BLACK;
+        }
+
         client.getTileManager().setPages(tileId,
                 new PageData(pageId1, 0)
-                        .update(new FilledButtonData(12, Color.YELLOW))
-                        .update(new TextButtonData(21, "Text Button")));
-        appendToUI("Send button page data to tile page \n\n");
+                        .update(new FilledButtonData(filledButtonId, color)));
     }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {
