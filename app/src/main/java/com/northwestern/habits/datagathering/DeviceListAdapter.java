@@ -184,7 +184,7 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         super.onGroupExpanded(groupPosition);
         DeviceListItem i = _listDataHeader.get(groupPosition);
         if (i.getType() == DeviceListItem.DeviceType.BAND) {
-            new TileManager(context).sendTile((Activity) context, _listDataHeader.get(groupPosition).getMAC());
+            new TileManager().sendTile((Activity) context, _listDataHeader.get(groupPosition).getMAC());
         }
     }
 

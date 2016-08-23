@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -41,18 +40,13 @@ import java.util.UUID;
 /**
  * Created by William on 8/23/2016
  */
-public class TileManager {
+public class TileManager extends BroadcastReceiver {
     private String activity = "Nothing";
     private final String TAG = "TileManager";
     /** Maps tile to a band */
     private HashMap<UUID, BandInfo> bands = new HashMap<>();
 
-    public TileManager(Context context) {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(TileEvent.ACTION_TILE_OPENED);
-        filter.addAction(TileEvent.ACTION_TILE_BUTTON_PRESSED);
-        filter.addAction(TileEvent.ACTION_TILE_CLOSED);
-        context.registerReceiver(messageReceiver, filter);
+    public TileManager() {
     }
 
     public void sendTile(Activity a, String macAddress) {
@@ -66,32 +60,6 @@ public class TileManager {
         }
 
     }
-    public void close(Context context) {
-        context.unregisterReceiver(messageReceiver);
-    }
-
-    private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
-            } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
-            }
-
-            /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
-            else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
-                TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-                try {
-                    UUID tid = buttonData.getTileID();
-                    if (onButtonClicked(buttonData.getElementID()) &&
-                            bands.containsKey(tid)) {
-                        updatePages(getConnectedBandClient(bands.get(tid), context), tid);
-                    }
-                } catch (InterruptedException | BandException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    };
 
     private boolean onButtonClicked(int clickedID) throws BandIOException {
         String prev = activity;
@@ -119,7 +87,7 @@ public class TileManager {
 
     private boolean addTile(BandInfo info, Activity activity) throws Exception {
         BandClient client = getConnectedBandClient(info, activity);
-        UUID tileId = null;
+        UUID tileId = generateUUID(info.getMacAddress());
         if (bands.containsValue(info)) {
             for (UUID key :
                     bands.keySet()) {
@@ -180,6 +148,28 @@ public class TileManager {
         return false;
     }
 
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.e(TAG, "tile event received!");
+        if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
+        } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
+        }
+
+            /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
+        else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
+            TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
+            try {
+                UUID tid = buttonData.getTileID();
+                if (onButtonClicked(buttonData.getElementID()) &&
+                        bands.containsKey(tid)) {
+                    updatePages(getConnectedBandClient(bands.get(tid), context), tid);
+                }
+            } catch (InterruptedException | BandException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private class appTask extends AsyncTask<Void, Void, Void> {
         public appTask(BandInfo i, Context c, Activity a) {
             bandinfo = i;
@@ -198,12 +188,9 @@ public class TileManager {
                 if (client != null) {
                     Log.v(TAG, "Band is connected.\n");
                     if (addTile(bandinfo, activity)) {
-                        for (UUID key :
-                                bands.keySet()) {
-                            if (bands.get(key) == bandinfo) {
-                                updatePages(client, key);
-                                break;
-                            }
+                        UUID key = generateUUID(bandinfo.getMacAddress());
+                        if (bands.get(key) == bandinfo) {
+                            updatePages(client, key);
                         }
                     }
                 } else {
@@ -237,6 +224,12 @@ public class TileManager {
         }
     }
 
+    private final String ID_BASE = "cc0D508F-70A3-47D4-BBA3-";
+    private UUID generateUUID(String mac) {
+        mac.replace(":", "");
+        return UUID.fromString(ID_BASE + mac);
+    }
+
     /* *************************** TILE LAYOUT CREATORS *************************** */
     private final int BTN_EATING = 31;
     private final int BTN_DRINKING = 32;
@@ -267,7 +260,7 @@ public class TileManager {
     /* *************************** GENERIC BAND STUFF *************************** */
 
     private BandClient getConnectedBandClient(BandInfo info, Context context) throws InterruptedException, BandException {
-        BandClient client = null;
+        BandClient client;
         client = BandClientManager.getInstance().create(context, info);
         if (ConnectionState.CONNECTED == client.connect().await()) {
             return client;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.northwestern.habits.datagathering" >
+    package="com.northwestern.habits.datagathering">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -18,45 +18,39 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
-        <activity android:name=".ManageConnectionActivity" >
-        </activity>
+        android:theme="@style/AppTheme">
+        <activity android:name=".ManageConnectionActivity"></activity>
 
         <service
             android:name=".banddata.BandDataService"
             android:enabled="true"
             android:exported="false"
             android:label="Band Data Service"
-            android:process=":BandData" >
-        </service>
+            android:process=":BandData"></service>
 
-        <activity android:name=".NecklaceManagementActivity" >
-        </activity>
+        <activity android:name=".NecklaceManagementActivity"></activity>
 
         <service
             android:name=".necklacedata.NecklaceDataService"
             android:enabled="true"
             android:exported="true"
-            android:process=":NecklaceData" >
-        </service>
+            android:process=":NecklaceData"></service>
         <service
             android:name=".phonedata.PhoneDataService"
             android:enabled="true"
             android:exported="true"
-            android:process=":PhoneData" >
-            android:process=":NecklaceData" >
-        </service>
+            android:process=":PhoneData">
+            android:process=":NecklaceData" ></service>
 
         <activity
             android:name=".userinterface.UserActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar" >
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".CrashActivity"
             android:textAppearance="@android:style/TextAppearance.Large"
             android:theme="@android:style/Theme.Dialog"
-            android:windowSoftInputMode="stateHidden" >
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="com.northwestern.habits.datagathering.SEND_LOG" />
 
@@ -66,13 +60,12 @@
         <activity
             android:name=".userinterface.AdvancedSettingsActivity"
             android:label="@string/title_activity_advanced_settings"
-            android:windowSoftInputMode="adjustResize" >
-        </activity>
+            android:windowSoftInputMode="adjustResize"></activity>
         <activity
             android:name=".userinterface.SplashActivity"
             android:label="@string/app_name"
             android:noHistory="true"
-            android:theme="@style/SplashTheme" >
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -84,10 +77,9 @@
             android:name=".database.DataManagementService"
             android:enabled="true"
             android:exported="true"
-            android:process=":service_data_management" >
-        </service>
+            android:process=":service_data_management"></service>
 
-        <receiver android:name=".MyReceiver" >
+        <receiver android:name=".MyReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
@@ -96,11 +88,20 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".userinterface.TileActivity"
+        <receiver android:name=".banddata.TileManager"
+            android:process=":BandData">
+            <intent-filter>
+                <action android:name="com.microsoft.band.action.ACTION_TILE_OPENED" />
+                <action android:name="com.microsoft.band.action.ACTION_TILE_BUTTON_PRESSED" />
+                <action android:name="com.microsoft.band.action.ACTION_TILE_CLOSED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".userinterface.TileActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" >
-                </action>
+                <action android:name="android.intent.action.MAIN"></action>
             </intent-filter>
         </activity>
     </application>
