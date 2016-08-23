@@ -1,5 +1,6 @@
 package com.northwestern.habits.datagathering;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -26,6 +27,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.banddata.BandDataService;
+import com.northwestern.habits.datagathering.banddata.TileManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -175,6 +177,15 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
     @Override
     public Object getGroup(int groupPosition) {
         return _listDataHeader.get(groupPosition);
+    }
+
+    @Override
+    public void onGroupExpanded(int groupPosition) {
+        super.onGroupExpanded(groupPosition);
+        DeviceListItem i = _listDataHeader.get(groupPosition);
+        if (i.getType() == DeviceListItem.DeviceType.BAND) {
+            new TileManager(context).sendTile((Activity) context, _listDataHeader.get(groupPosition).getMAC());
+        }
     }
 
     @Override
