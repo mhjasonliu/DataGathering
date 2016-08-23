@@ -30,6 +30,7 @@ import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
+import com.microsoft.band.tiles.pages.FlowPanel;
 import com.microsoft.band.tiles.pages.FlowPanelOrientation;
 import com.microsoft.band.tiles.pages.PageData;
 import com.microsoft.band.tiles.pages.PageLayout;
@@ -43,6 +44,7 @@ import com.northwestern.habits.datagathering.R;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class TileActivity extends Activity {
@@ -52,6 +54,7 @@ public class TileActivity extends Activity {
 
     private static final UUID tileId = UUID.fromString("cc0D508F-70A3-47D4-BBA3-812BADB1F8Aa");
     private static final UUID pageId1 = UUID.fromString("b1234567-89ab-cdef-0123-456789abcd00");
+    private static final UUID pageId2 = UUID.fromString("b1234567-89ab-cdef-0123-456789abcd01");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,8 +114,11 @@ public class TileActivity extends Activity {
             /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
             else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
                 TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-                appendToUI("button is " + isActiveBullet + " ");
-                onButtonClicked(buttonData.getElementID());
+                try {
+                    onButtonClicked(buttonData.getElementID());
+                } catch (BandIOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     };
@@ -186,7 +192,7 @@ public class TileActivity extends Activity {
     /* *************************** TILE STUFF *************************** */
 
     private boolean doesTileExist(List<BandTile> tiles, UUID tileId) {
-        for (BandTile tile:tiles) {
+        for (BandTile tile : tiles) {
             if (tile.getTileId().equals(tileId)) {
                 return true;
             }
@@ -207,7 +213,7 @@ public class TileActivity extends Activity {
                     appendToUI("Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
                 }
             } catch (BandException e) {
-                String exceptionMessage="";
+                String exceptionMessage = "";
                 switch (e.getErrorType()) {
                     case DEVICE_ERROR:
                         exceptionMessage = "Please make sure bluetooth is on and the band is in range.\n";
@@ -247,7 +253,7 @@ public class TileActivity extends Activity {
         Bitmap tileIcon = BitmapFactory.decodeResource(getBaseContext().getResources(), R.drawable.hamburger, options);
 
         BandTile tile = new BandTile.Builder(tileId, "Button Tile", tileIcon)
-                .setPageLayouts(createButtonLayout())
+                .setPageLayouts(createButtonLayout(), createTextLayout())
                 .build();
         appendToUI("Button Tile is adding ...\n");
         if (client.getTileManager().addTile(this, tile).await()) {
@@ -259,56 +265,74 @@ public class TileActivity extends Activity {
         }
     }
 
+
+    private final int LAYOUT_TEXT = 11;
+    private final int TXT_TITLE = 21;
+    private final int TXT_ACTIVITY = 22;
+
+    private PageLayout createTextLayout() {
+        return new PageLayout(
+                new FlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
+                        .addElements(new TextBlock(0, 0, 260, 45, TextBlockFont.MEDIUM).setMargins(0, 5, 0, 0)
+                                .setId(TXT_TITLE).setAutoWidthEnabled(true))
+                        .addElements(new TextBlock(0, 0, 260, 90, TextBlockFont.SMALL).setMargins(0, 5, 0, 0)
+                                .setId(TXT_ACTIVITY).setAutoWidthEnabled(true)));
+    }
+
+    private final int LAYOUT_BUTTONS = 12;
+    private final int BTN_EATING = 31;
+    private final int BTN_DRINKING = 32;
+    private final int BTN_NOTHING = 33;
+
     private PageLayout createButtonLayout() {
         return new PageLayout(
-                new ScrollFlowPanel(15, 0, 260, 105, FlowPanelOrientation.HORIZONTAL)
-                        .addElements(new TextBlock(0, 0, 20, 45, TextBlockFont.MEDIUM)
-                                .setMargins(5, 0, 0, 0)
-                                .setId(bulletTextId))
-                        .addElements(new TextButton(0, 0, 190, 45).setMargins(5, 0, 0, 0)
-                                .setId(textButtonId).setPressedColor(Color.BLUE))
+                new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
+                        .addElements(new TextButton(0, 0, 260, 45).setMargins(0, 5, 0, 0)
+                                .setId(BTN_EATING).setPressedColor(Color.BLUE))
+                        .addElements(new TextButton(0, 0, 260, 45).setMargins(0, 5, 0, 0)
+                                .setId(BTN_DRINKING).setPressedColor(Color.BLUE))
+                        .addElements(new TextButton(0, 0, 260, 45).setMargins(0, 5, 0, 0)
+                                .setId(BTN_NOTHING).setPressedColor(Color.BLUE))
         );
     }
 
+    private String activity = "Nothing";
 
     private void updatePages() throws BandIOException {
         client.getTileManager().setPages(tileId,
-                new PageData(pageId1, 0)
-                        .update(new TextBlockData(bulletTextId, ""))
-                        .update(new TextButtonData(textButtonId, "Text Button")));
-        appendToUI("Send button page data to tile page \n\n");
+                new PageData(pageId2, 0)
+                        .update(new TextButtonData(BTN_EATING, "Eating"))
+                        .update(new TextButtonData(BTN_DRINKING, "Drinking"))
+                        .update(new TextButtonData(BTN_NOTHING, "Note to self")),
+                new PageData(pageId1, 1)
+                        .update(new TextBlockData(TXT_TITLE, "Current Activity"))
+                        .update(new TextBlockData(TXT_ACTIVITY, activity)));
     }
 
-
-    private final int bulletTextId = 12;
-    private final int textButtonId = 21;
-    private boolean isActiveBullet = false;
-
-    private void onButtonClicked(int clickedID) {
+    private void onButtonClicked(int clickedID) throws BandIOException {
+        String prev = activity;
         switch (clickedID) {
-            case textButtonId:
-                String text = "";
-
-                isActiveBullet = !isActiveBullet;
-                if (isActiveBullet) text = "*";
-
-                try {
-                    client.getTileManager().setPages(tileId,
-                            new PageData(pageId1, 0)
-                                    .update(new TextBlockData(bulletTextId, text))
-                                    .update(new TextButtonData(textButtonId, "Text Button")));
-                } catch (BandIOException e) {e.printStackTrace();}
-
+            case BTN_EATING:
+                activity = "Eating";
+                break;
+            case BTN_DRINKING:
+                activity = "Drinking";
+                break;
+            case BTN_NOTHING:
+                activity = "Note to self";
                 break;
             default:
                 Log.e("", "Unknown button press received");
         }
+        if (!Objects.equals(activity, prev)) {
+            updatePages();
+        }
     }
 
-    public static Bitmap drawableToBitmap (Drawable drawable) {
+    public static Bitmap drawableToBitmap(Drawable drawable) {
 
         if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable)drawable).getBitmap();
+            return ((BitmapDrawable) drawable).getBitmap();
         }
 
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -318,12 +342,6 @@ public class TileActivity extends Activity {
 
         return bitmap;
     }
-
-
-
-
-
-
 
 
 
