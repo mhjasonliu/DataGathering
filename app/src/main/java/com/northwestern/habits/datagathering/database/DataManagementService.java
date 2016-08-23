@@ -136,6 +136,7 @@ public class DataManagementService extends Service {
                     sendBroadcast(broadcastIntent);
                     for (Replication r :
                             db.getActiveReplications()) {
+                        Log.v(TAG, "Stopping rep");
                         r.stop();
                     }
                 } catch (CouchbaseLiteException | IOException e) {
@@ -162,8 +163,9 @@ public class DataManagementService extends Service {
                 // Get all the documents from the database
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
-                q.setLimit(100);
+                q.setLimit(10);
                 q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
+                q.setLimit(10);
                 QueryEnumerator result = q.run();
 
                 // Pack the docIDs into a list
@@ -181,6 +183,7 @@ public class DataManagementService extends Service {
                 push.setContinuous(false);
                 push.setDocIds(ids);
                 push.addChangeListener(changeListener);
+                Log.v(TAG, "Starting rep");
                 push.start();
 
             } catch (CouchbaseLiteException | IOException e) {
@@ -204,6 +207,7 @@ public class DataManagementService extends Service {
 
         @Override
         public void changed(Replication.ChangeEvent event) {
+            Log.v(TAG, "Size: " + Integer.toString(event.getSource().getDocIds().size()));
             Log.v(TAG, "******");
             Log.v(TAG, event.toString());
             Log.v(TAG, "******");
