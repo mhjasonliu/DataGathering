@@ -31,8 +31,8 @@ import com.microsoft.band.tiles.pages.TextBlockFont;
 import com.microsoft.band.tiles.pages.TextButton;
 import com.microsoft.band.tiles.pages.TextButtonData;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.database.DataManagementService;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,10 +41,12 @@ import java.util.UUID;
  * Created by William on 8/23/2016
  */
 public class TileManager extends BroadcastReceiver {
-    private String activity = "Nothing";
-    private final String TAG = "TileManager";
-    /** Maps tile to a band */
-    private HashMap<UUID, BandInfo> bands = new HashMap<>();
+    private static String activity = "Nothing";
+    private static final String TAG = "TileManager";
+
+    /**
+     * Maps tile to a band
+     */
 
     public TileManager() {
     }
@@ -54,28 +56,33 @@ public class TileManager extends BroadcastReceiver {
         for (BandInfo b :
                 bands) {
             if (b.getMacAddress().equals(macAddress)) {
-                new appTask(b,a,a).execute();
+                new appTask(b, a, a).execute();
                 break;
             }
         }
 
     }
 
-    private boolean onButtonClicked(int clickedID) throws BandIOException {
+    static boolean onButtonClicked(int clickedID, Context context) throws BandIOException {
         String prev = activity;
+        Intent i = new Intent(BandDataService.ACTION_LABEL);
         switch (clickedID) {
             case BTN_EATING:
                 activity = "Eating";
+                i.putExtra(BandDataService.LABEL_EXTRA, DataManagementService.L_EATING);
                 break;
             case BTN_DRINKING:
                 activity = "Drinking";
+                i.putExtra(BandDataService.LABEL_EXTRA, DataManagementService.L_DRINKING);
                 break;
             case BTN_NOTHING:
                 activity = "Note to self";
+                i.putExtra(BandDataService.LABEL_EXTRA, DataManagementService.L_NOTHING);
                 break;
             default:
                 Log.e("", "Unknown button press received");
         }
+        context.sendBroadcast(i);
         return !Objects.equals(activity, prev);
     }
 
@@ -88,22 +95,6 @@ public class TileManager extends BroadcastReceiver {
     private boolean addTile(BandInfo info, Activity activity) throws Exception {
         BandClient client = getConnectedBandClient(info, activity);
         UUID tileId = generateUUID(info.getMacAddress());
-        if (bands.containsValue(info)) {
-            for (UUID key :
-                    bands.keySet()) {
-                if (bands.get(key) == info) {
-                    tileId = key;
-                }
-            }
-
-            if (tileId == null) {
-                tileId = UUID.fromString(info.getMacAddress());
-                bands.put(tileId, info);
-            }
-        } else {
-            tileId = UUID.randomUUID();
-            bands.put(tileId, info);
-        }
 
         if (doesTileExist(client.getTileManager().getTiles().await(), tileId)) {
             client.getTileManager().removeTile(tileId);
@@ -127,7 +118,7 @@ public class TileManager extends BroadcastReceiver {
         }
     }
 
-    private void updatePages(BandClient client, UUID tileId) throws BandIOException {
+    protected static void updatePages(BandClient client, UUID tileId) throws BandIOException {
         client.getTileManager().setPages(tileId,
                 new PageData(pageId2, 0)
                         .update(new TextButtonData(BTN_EATING, "Eating"))
@@ -158,17 +149,10 @@ public class TileManager extends BroadcastReceiver {
             /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
         else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
             TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-            try {
-                UUID tid = buttonData.getTileID();
-                if (onButtonClicked(buttonData.getElementID()) &&
-                        bands.containsKey(tid)) {
-                    updatePages(getConnectedBandClient(bands.get(tid), context), tid);
-                }
-            } catch (InterruptedException | BandException e) {
-                e.printStackTrace();
-            }
+//            new HandleBroadcastTask(context, buttonData).execute();
         }
     }
+
 
     private class appTask extends AsyncTask<Void, Void, Void> {
         public appTask(BandInfo i, Context c, Activity a) {
@@ -189,12 +173,10 @@ public class TileManager extends BroadcastReceiver {
                     Log.v(TAG, "Band is connected.\n");
                     if (addTile(bandinfo, activity)) {
                         UUID key = generateUUID(bandinfo.getMacAddress());
-                        if (bands.get(key) == bandinfo) {
-                            updatePages(client, key);
-                        }
+                        updatePages(client, key);
                     }
                 } else {
-                    Log.e(TAG,"Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
+                    Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
                 }
             } catch (BandException e) {
                 String exceptionMessage = "";
@@ -215,27 +197,54 @@ public class TileManager extends BroadcastReceiver {
                         exceptionMessage = "Unknown error occured: " + e.getMessage() + "\n";
                         break;
                 }
-                Log.e(TAG,exceptionMessage);
+                e.printStackTrace();
 
             } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
+                e.printStackTrace();
             }
             return null;
         }
     }
 
     private final String ID_BASE = "cc0D508F-70A3-47D4-BBA3-";
+
     private UUID generateUUID(String mac) {
-        mac.replace(":", "");
+        mac = mac.replace(":", "");
+        Log.v(TAG, "Generated uuid with " + ID_BASE + mac);
         return UUID.fromString(ID_BASE + mac);
     }
 
+    protected static BandInfo infoFromUUID(UUID uuid) {
+        String mac = uuid.toString().substring(24);
+        mac = mac.toUpperCase();
+        Log.v(TAG, "Mac without colons: " + mac);
+        mac = mac.substring(0, 2) + ":"
+                + mac.substring(2, 4) + ":"
+                + mac.substring(4, 6) + ":"
+                + mac.substring(6, 8) + ":"
+                + mac.substring(8, 10) + ":"
+                + mac.substring(10, 12);
+        Log.v(TAG, "mac with colons: " + mac);
+
+
+        BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
+        for (BandInfo band : bands) {
+            if (band.getMacAddress().equals(mac)) {
+                return band;
+            } else {
+                Log.v(TAG, band.getMacAddress() + " does not equal " + mac);
+            }
+        }
+        Log.e(TAG, "No info found");
+        return null;
+    }
+
     /* *************************** TILE LAYOUT CREATORS *************************** */
-    private final int BTN_EATING = 31;
-    private final int BTN_DRINKING = 32;
-    private final int BTN_NOTHING = 33;
-    private final int TXT_TITLE = 21;
-    private final int TXT_ACTIVITY = 22;
+    private static final int BTN_EATING = 31;
+    private static final int BTN_DRINKING = 32;
+    private static final int BTN_NOTHING = 33;
+    private static final int TXT_TITLE = 21;
+    private static final int TXT_ACTIVITY = 22;
 
     private PageLayout createTextLayout() {
         return new PageLayout(
@@ -249,24 +258,45 @@ public class TileManager extends BroadcastReceiver {
     private PageLayout createButtonLayout() {
         return new PageLayout(
                 new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
-                        .addElements(new TextButton(0, 0, 260, 45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2*45).setMargins(0, 5, 0, 0)
                                 .setId(BTN_EATING).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 0, 260, 45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2*45).setMargins(0, 5, 0, 0)
                                 .setId(BTN_DRINKING).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 0, 260, 45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2*45).setMargins(0, 5, 0, 0)
                                 .setId(BTN_NOTHING).setPressedColor(Color.BLUE)));
     }
 
     /* *************************** GENERIC BAND STUFF *************************** */
-
-    private BandClient getConnectedBandClient(BandInfo info, Context context) throws InterruptedException, BandException {
+    protected static BandClient getConnectedBandClient(BandInfo info, Context context) throws InterruptedException, BandException {
         BandClient client;
         client = BandClientManager.getInstance().create(context, info);
         if (ConnectionState.CONNECTED == client.connect().await()) {
             return client;
-        }
-        else {
+        } else {
             throw new BandException("Could not connect to client", BandErrorType.UNKNOWN_ERROR);
         }
+    }
+}
+
+class HandleBroadcastTask extends AsyncTask<Void,Void,Void> {
+    public HandleBroadcastTask(Context c, TileButtonEvent e) {
+        context = c;
+        buttonData = e;
+    }
+    private Context context;
+    private TileButtonEvent buttonData;
+
+    @Override
+    protected Void doInBackground(Void... params) {
+        try {
+            UUID tid = buttonData.getTileID();
+            BandInfo i = TileManager.infoFromUUID(tid);
+            if (TileManager.onButtonClicked(buttonData.getElementID(), context) && i != null) {
+                TileManager.updatePages(TileManager.getConnectedBandClient(i, context), tid);
+            }
+        } catch (InterruptedException | BandException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

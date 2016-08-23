@@ -18,6 +18,8 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
+import com.microsoft.band.tiles.TileButtonEvent;
+import com.microsoft.band.tiles.TileEvent;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.lang.ref.WeakReference;
@@ -70,6 +72,7 @@ public class BandDataService extends Service {
     private BroadcastReceiver labelReceiver;
     public static final String ACTION_LABEL = "Label broadcast";
     public static final String LABEL_EXTRA = "Label";
+    private BroadcastReceiver tileEventReceiver;
 
 
     // Data managers
@@ -129,6 +132,17 @@ public class BandDataService extends Service {
             getBaseContext().registerReceiver(labelReceiver, new IntentFilter(ACTION_LABEL));
         }
         DataManager.label = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getInt(Preferences.LABEL, 0);
+
+        if (tileEventReceiver == null) {
+            tileEventReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    TileButtonEvent e = (TileButtonEvent) intent.getExtras().get(TileEvent.TILE_EVENT_DATA);
+                    new HandleBroadcastTask(getBaseContext(), e).execute();
+                }
+            };
+            registerReceiver(tileEventReceiver, new IntentFilter(TileEvent.ACTION_TILE_BUTTON_PRESSED));
+        }
 
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -251,6 +265,7 @@ public class BandDataService extends Service {
         userIDReceiver = null;
         getBaseContext().unregisterReceiver(labelReceiver);
         labelReceiver = null;
+        getBaseContext().unregisterReceiver(tileEventReceiver);
 
         super.onDestroy();
     }
