@@ -13,6 +13,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -29,13 +30,15 @@ import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
-import com.microsoft.band.tiles.pages.FilledButton;
-import com.microsoft.band.tiles.pages.FilledButtonData;
-import com.microsoft.band.tiles.pages.FlowPanel;
 import com.microsoft.band.tiles.pages.FlowPanelOrientation;
 import com.microsoft.band.tiles.pages.PageData;
 import com.microsoft.band.tiles.pages.PageLayout;
+import com.microsoft.band.tiles.pages.ScrollFlowPanel;
+import com.microsoft.band.tiles.pages.TextBlock;
+import com.microsoft.band.tiles.pages.TextBlockData;
+import com.microsoft.band.tiles.pages.TextBlockFont;
 import com.microsoft.band.tiles.pages.TextButton;
+import com.microsoft.band.tiles.pages.TextButtonData;
 import com.northwestern.habits.datagathering.R;
 
 import java.util.Date;
@@ -102,19 +105,14 @@ public class TileActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
-                TileEvent tileOpenData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-                appendToUI("Tile open event received\n" + tileOpenData.toString()+ "\n\n");
-            } else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
-                TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-                appendToUI("Updating pages");
-                try {
-                    updatePages();
-                } catch (BandIOException e) {
-                    e.printStackTrace();
-                }
             } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
-                TileEvent tileCloseData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-                appendToUI("Tile close event received\n" + tileCloseData.toString()+ "\n\n");
+            }
+
+            /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
+            else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
+                TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
+                appendToUI("button is " + isActiveBullet + " ");
+                onButtonClicked(buttonData.getElementID());
             }
         }
     };
@@ -263,30 +261,48 @@ public class TileActivity extends Activity {
 
     private PageLayout createButtonLayout() {
         return new PageLayout(
-                new FlowPanel(15, 0, 260, 105, FlowPanelOrientation.VERTICAL)
-                        .addElements(new FilledButton(0, 5, 210, 45).setMargins(0, 5, 0, 0).setId(12).setBackgroundColor(Color.RED))
-                        .addElements(new TextButton(0, 0, 210, 45).setMargins(0, 5, 0, 0).setId(21).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 15, 210, 45).setMargins(0, 5, 0, 0).setId(22).setPressedColor(Color.GREEN))
-                        .addElements(new TextButton(0, 10, 210, 45).setMargins(0, 5, 0, 0).setId(23).setPressedColor(Color.YELLOW))
+                new ScrollFlowPanel(15, 0, 260, 105, FlowPanelOrientation.HORIZONTAL)
+                        .addElements(new TextBlock(0, 0, 20, 45, TextBlockFont.MEDIUM)
+                                .setMargins(5, 0, 0, 0)
+                                .setId(bulletTextId))
+                        .addElements(new TextButton(0, 0, 190, 45).setMargins(5, 0, 0, 0)
+                                .setId(textButtonId).setPressedColor(Color.BLUE))
         );
     }
 
-    private int filledButtonId = 12;
-    private boolean isFilledButtonChecked = false;
 
     private void updatePages() throws BandIOException {
-        int color = Color.BLACK;
-        isFilledButtonChecked = !isFilledButtonChecked;
-
-        if (isFilledButtonChecked) {
-            color = Color.BLUE;
-        } else {
-            color = Color.BLACK;
-        }
-
         client.getTileManager().setPages(tileId,
                 new PageData(pageId1, 0)
-                        .update(new FilledButtonData(filledButtonId, color)));
+                        .update(new TextBlockData(bulletTextId, ""))
+                        .update(new TextButtonData(textButtonId, "Text Button")));
+        appendToUI("Send button page data to tile page \n\n");
+    }
+
+
+    private final int bulletTextId = 12;
+    private final int textButtonId = 21;
+    private boolean isActiveBullet = false;
+
+    private void onButtonClicked(int clickedID) {
+        switch (clickedID) {
+            case textButtonId:
+                String text = "";
+
+                isActiveBullet = !isActiveBullet;
+                if (isActiveBullet) text = "*";
+
+                try {
+                    client.getTileManager().setPages(tileId,
+                            new PageData(pageId1, 0)
+                                    .update(new TextBlockData(bulletTextId, text))
+                                    .update(new TextButtonData(textButtonId, "Text Button")));
+                } catch (BandIOException e) {e.printStackTrace();}
+
+                break;
+            default:
+                Log.e("", "Unknown button press received");
+        }
     }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {
