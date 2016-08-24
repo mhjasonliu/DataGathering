@@ -14,6 +14,7 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.IOException;
