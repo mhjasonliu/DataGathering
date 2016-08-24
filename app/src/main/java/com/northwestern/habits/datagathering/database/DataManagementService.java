@@ -181,12 +181,10 @@ public class DataManagementService extends Service {
                             Replication.Direction.PUSH);
                     push.setContinuous(false);
                     push.addChangeListener(changeListener);
-                } else {
                 }
 
                 push.setDocIds(ids);
                 push.start();
-                Log.v(TAG, "Number of replications " + db.getAllReplications().size());
 
 
             } catch (CouchbaseLiteException | IOException e) {
@@ -244,7 +242,6 @@ public class DataManagementService extends Service {
 
             } else if (isTransitioningToStopped) {
                 // STOPPING WITHOUT ERROR
-                Log.v(TAG, "Stopped");
                 if (didCompleteAll && !changesAreZero) {
                     // Broadcast synced
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
@@ -282,9 +279,7 @@ public class DataManagementService extends Service {
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                     if (!isBlockingBroadcastsForError) sendBroadcast(i);
-                    Log.v(TAG, "Broadcasted syncing by default 1");
-                    Log.v(TAG, "Did complete all is " + didCompleteAll);
-                    Log.v(TAG, "Changes are zero is " + changesAreZero);
+                    Log.v(TAG, "Broadcasted syncing by default");
                 }
 
                 // Restart?
@@ -298,7 +293,7 @@ public class DataManagementService extends Service {
                 i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 if (!isBlockingBroadcastsForError) sendBroadcast(i);
-                Log.v(TAG, "Broadcasted syncing by default 2");
+                Log.v(TAG, "Broadcasted syncing while in progress");
             }
 
         }
