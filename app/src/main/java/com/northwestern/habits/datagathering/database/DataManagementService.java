@@ -14,6 +14,7 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.IOException;
@@ -159,6 +160,7 @@ public class DataManagementService extends Service {
             isReplicating = true;
 
             try {
+                // Create a new rep
                 // Get all the documents from the database
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
@@ -172,15 +174,20 @@ public class DataManagementService extends Service {
                 }
 
                 // Do a one-shot replication
-                URL url = new URL(CouchBaseData.URL_STRING);
-                push = new Replication(db,
-                        url,
-                        Replication.Direction.PUSH);
+                if (push == null) {
+                    URL url = new URL(CouchBaseData.URL_STRING);
+                    push = new Replication(db,
+                            url,
+                            Replication.Direction.PUSH);
+                    push.setContinuous(false);
+                    push.addChangeListener(changeListener);
+                } else {
+                }
 
-                push.setContinuous(false);
                 push.setDocIds(ids);
-                push.addChangeListener(changeListener);
                 push.start();
+                Log.v(TAG, "Number of replications " + db.getAllReplications().size());
+
 
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
@@ -195,7 +202,8 @@ public class DataManagementService extends Service {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        startOneShotRep();
+        if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext()))
+            startOneShotRep();
     }
 
     Replication.ChangeListener changeListener = new Replication.ChangeListener() {
