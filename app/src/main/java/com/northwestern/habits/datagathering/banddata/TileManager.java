@@ -3,12 +3,15 @@ package com.northwestern.habits.datagathering.banddata;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
@@ -17,6 +20,7 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
+import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
@@ -92,29 +96,58 @@ public class TileManager extends BroadcastReceiver {
     private static final UUID pageId1 = UUID.fromString("b1234567-89ab-cdef-0123-456789abcd00");
     private static final UUID pageId2 = UUID.fromString("b1234567-89ab-cdef-0123-456789abcd01");
 
-    private boolean addTile(BandInfo info, Activity activity) throws Exception {
-        BandClient client = getConnectedBandClient(info, activity);
+    private boolean addTile(BandInfo info, final Activity activity) throws Exception {
+        final BandClient client = getConnectedBandClient(info, activity);
         UUID tileId = generateUUID(info.getMacAddress());
 
         if (doesTileExist(client.getTileManager().getTiles().await(), tileId)) {
-            client.getTileManager().removeTile(tileId);
-        }
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    new AlertDialog.Builder(activity).setTitle("Send notification to band?")
+                            .setMessage("Click ok to make this band vibrate")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    try {
+                                        client.getNotificationManager().vibrate(VibrationType.NOTIFICATION_ALARM).await();
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    } catch (BandException e) {
+                                        Toast.makeText(activity, "Could not connect to the band to send" +
+                                                " vibration", Toast.LENGTH_SHORT).show();
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    })
+                            .create().show();
+                }
+            });
+            return false;
+        } else
+
+        {
 
 		/* Set the options */
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inScaled = false;
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
-        Bitmap tileIcon = BitmapFactory.decodeResource(activity.getResources(), R.drawable.hamburger, options);
+            Bitmap tileIcon = BitmapFactory.decodeResource(activity.getResources(), R.drawable.hamburger, options);
 
-        BandTile tile = new BandTile.Builder(tileId, "Button Tile", tileIcon)
-                .setPageLayouts(createButtonLayout(), createTextLayout())
-                .build();
-        if (client.getTileManager().addTile(activity, tile).await()) {
-            return true;
-        } else {
-            Log.e(TAG, "Unable to add button tile to the band.\n");
-            return false;
+            BandTile tile = new BandTile.Builder(tileId, "Label Tile", tileIcon)
+                    .setPageLayouts(createButtonLayout(), createTextLayout())
+                    .build();
+            if (client.getTileManager().addTile(activity, tile).await()) {
+                return true;
+            } else {
+                Log.e(TAG, "Unable to add label tile to the band.\n");
+                return false;
+            }
         }
     }
 
@@ -258,16 +291,17 @@ public class TileManager extends BroadcastReceiver {
     private PageLayout createButtonLayout() {
         return new PageLayout(
                 new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
-                        .addElements(new TextButton(0, 0, 260, 2*45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
                                 .setId(BTN_EATING).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 0, 260, 2*45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
                                 .setId(BTN_DRINKING).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 0, 260, 2*45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
                                 .setId(BTN_NOTHING).setPressedColor(Color.BLUE)));
     }
 
     /* *************************** GENERIC BAND STUFF *************************** */
-    protected static BandClient getConnectedBandClient(BandInfo info, Context context) throws InterruptedException, BandException {
+    protected static BandClient getConnectedBandClient(BandInfo info, Context context) throws
+            InterruptedException, BandException {
         BandClient client;
         client = BandClientManager.getInstance().create(context, info);
         if (ConnectionState.CONNECTED == client.connect().await()) {
@@ -278,11 +312,12 @@ public class TileManager extends BroadcastReceiver {
     }
 }
 
-class HandleBroadcastTask extends AsyncTask<Void,Void,Void> {
+class HandleBroadcastTask extends AsyncTask<Void, Void, Void> {
     public HandleBroadcastTask(Context c, TileButtonEvent e) {
         context = c;
         buttonData = e;
     }
+
     private Context context;
     private TileButtonEvent buttonData;
 
