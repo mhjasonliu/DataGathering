@@ -136,7 +136,6 @@ public class DataManagementService extends Service {
                     sendBroadcast(broadcastIntent);
                     for (Replication r :
                             db.getActiveReplications()) {
-                        Log.v(TAG, "Stopping rep");
                         r.stop();
                     }
                 } catch (CouchbaseLiteException | IOException e) {
@@ -175,15 +174,16 @@ public class DataManagementService extends Service {
                 }
 
                 // Do a one-shot replication
-                URL url = new URL(CouchBaseData.URL_STRING);
-                push = new Replication(db,
-                        url,
-                        Replication.Direction.PUSH);
+                if (push == null) {
+                    URL url = new URL(CouchBaseData.URL_STRING);
+                    push = new Replication(db,
+                            url,
+                            Replication.Direction.PUSH);
+                    push.setContinuous(false);
+                    push.addChangeListener(changeListener);
+                }
 
-                push.setContinuous(false);
                 push.setDocIds(ids);
-                push.addChangeListener(changeListener);
-                Log.v(TAG, "Starting rep");
                 push.start();
 
             } catch (CouchbaseLiteException | IOException e) {
@@ -199,7 +199,8 @@ public class DataManagementService extends Service {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        startOneShotRep();
+        if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext()))
+            startOneShotRep();
     }
 
     Replication.ChangeListener changeListener = new Replication.ChangeListener() {
@@ -207,7 +208,6 @@ public class DataManagementService extends Service {
 
         @Override
         public void changed(Replication.ChangeEvent event) {
-            Log.v(TAG, "Size: " + Integer.toString(event.getSource().getDocIds().size()));
             Log.v(TAG, "******");
             Log.v(TAG, event.toString());
             Log.v(TAG, "******");
@@ -241,7 +241,6 @@ public class DataManagementService extends Service {
 
             } else if (isTransitioningToStopped) {
                 // STOPPING WITHOUT ERROR
-                Log.v(TAG, "Stopped");
                 if (didCompleteAll && !changesAreZero) {
                     // Broadcast synced
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
@@ -279,9 +278,7 @@ public class DataManagementService extends Service {
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                     if (!isBlockingBroadcastsForError) sendBroadcast(i);
-                    Log.v(TAG, "Broadcasted syncing by default 1");
-                    Log.v(TAG, "Did complete all is " + didCompleteAll);
-                    Log.v(TAG, "Changes are zero is " + changesAreZero);
+                    Log.v(TAG, "Broadcasted syncing by default");
                 }
 
                 // Restart?
@@ -295,7 +292,7 @@ public class DataManagementService extends Service {
                 i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 if (!isBlockingBroadcastsForError) sendBroadcast(i);
-                Log.v(TAG, "Broadcasted syncing by default 2");
+                Log.v(TAG, "Broadcasted syncing while in progress");
             }
 
         }
