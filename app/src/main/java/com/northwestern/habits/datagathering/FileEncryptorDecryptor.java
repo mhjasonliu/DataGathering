@@ -12,15 +12,9 @@ import javax.crypto.spec.PBEParameterSpec;
 
 public class FileEncryptorDecryptor
 {
-
-    private static String filename;
-    private static FileInputStream inFile;
-    private static FileOutputStream outFile;
-
-
-    public void encrypt(FileInputStream filename, FileOutputStream outFile,String password) throws Exception
+    public static void encrypt(FileInputStream filename, FileOutputStream outFile,String password) throws Exception
     {
-        inFile = filename;
+        FileInputStream inFile = filename;
 
         // Use PBEKeySpec to create a key based on a password.
         // The password is passed as a character array
@@ -75,9 +69,9 @@ public class FileEncryptorDecryptor
 
     }
 
-    public void decrypt(FileInputStream filename, FileOutputStream outFile,String password) throws Exception
+    public static void decrypt(FileInputStream filename, FileOutputStream outFile,String password) throws Exception
     {
-        inFile = filename;
+        FileInputStream inFile = filename;
 
         PBEKeySpec keySpec = new PBEKeySpec(password.toCharArray());
         SecretKeyFactory keyFactory =
