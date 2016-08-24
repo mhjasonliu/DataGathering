@@ -11,9 +11,12 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.microsoft.band.sensors.HeartRateQuality;
+import com.northwestern.habits.datagathering.FileEncryptorDecryptor;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ConcurrentModificationException;
@@ -169,12 +172,46 @@ public class DataSeries {
                     csvWriter.flush();
                     csvWriter.close();
 
+                    encryptCsv(PATH, fName);
                 } catch (IOException | ConcurrentModificationException e) {
                     e.printStackTrace();
                 }
             }
 
             return null;
+        }
+    }
+
+    private void encryptCsv(String csvPath, String csvName) {
+        FileInputStream in = null;
+        FileOutputStream out = null;
+        try {
+            in = new FileInputStream(csvPath + "/" + csvName);
+            out = new FileOutputStream(csvPath + "/" + csvName + "ENC");
+            FileEncryptorDecryptor.encrypt(in,
+                    out, "HABITSPASSWORD");
+
+            new File(csvPath + "/" + csvName).delete();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (out != null){
+                try {
+                    out.flush();
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 package com.northwestern.habits.datagathering;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Random;
