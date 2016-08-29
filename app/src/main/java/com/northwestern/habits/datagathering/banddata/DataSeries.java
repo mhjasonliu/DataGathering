@@ -129,7 +129,7 @@ public class DataSeries {
                     for (int i = 0; i < properties.size(); i++) {
                         csvWriter.append(properties.get(i));
                         if (i == properties.size() - 1) {
-                            csvWriter.append("\n");
+                            csvWriter.append(";");
                         } else {
                             csvWriter.append(",");
                         }
@@ -159,7 +159,7 @@ public class DataSeries {
                                     csvWriter.append(datum.toString());
                                 }
                                 if (i == properties.size() - 1) {
-                                    csvWriter.append("\n");
+                                    csvWriter.append(";");
                                 } else {
                                     csvWriter.append(",");
                                 }
@@ -191,7 +191,7 @@ public class DataSeries {
             FileEncryptorDecryptor.encrypt(in,
                     out, "HABITSPASSWORD");
 
-            new File(csvPath + "/" + csvName).delete();
+//            new File(csvPath + "/" + csvName).delete();
 
 
         } catch (Exception e) {

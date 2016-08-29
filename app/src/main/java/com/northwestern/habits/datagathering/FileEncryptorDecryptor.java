@@ -13,9 +13,8 @@ import javax.crypto.spec.PBEParameterSpec;
 
 public class FileEncryptorDecryptor
 {
-    public static void encrypt(FileInputStream filename, FileOutputStream outFile,String password) throws Exception
+    public static void encrypt(FileInputStream inFile, FileOutputStream outFile,String password) throws Exception
     {
-        FileInputStream inFile = filename;
 
         // Use PBEKeySpec to create a key based on a password.
         // The password is passed as a character array
