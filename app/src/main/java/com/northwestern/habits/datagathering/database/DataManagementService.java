@@ -14,6 +14,7 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
@@ -70,6 +71,7 @@ public class DataManagementService extends Service {
      * Constructor
      */
     public DataManagementService() {
+        Thread.setDefaultUncaughtExceptionHandler(DataGatheringApplication.getInstance());
     }
 
     @Override
@@ -163,9 +165,9 @@ public class DataManagementService extends Service {
                 // Get all the documents from the database
                 final Database db = CouchBaseData.getDatabase(this);
                 Query q = db.createAllDocumentsQuery();
-                q.setLimit(10);
+                q.setLimit(100);
                 q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
-                q.setLimit(10);
+                q.setLimit(100);
                 QueryEnumerator result = q.run();
 
                 // Pack the docIDs into a list
@@ -294,8 +296,32 @@ public class DataManagementService extends Service {
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 if (!isBlockingBroadcastsForError) sendBroadcast(i);
                 Log.v(TAG, "Broadcasted syncing while in progress");
+                throw new OutOfMemoryError();
+
             }
 
         }
     };
+
+//    private Thread.UncaughtExceptionHandler mOOMHandler = new Thread.UncaughtExceptionHandler() {
+//
+//        @Override
+//        public void uncaughtException(Thread thread, Throwable ex) {
+//            Log.v(TAG, "HAndling uncaught exception");
+//            if (ex instanceof OutOfMemoryError) {
+//                Log.v(TAG, "Handling OOM error");
+//                // Dump memory
+//                String absPath =
+//                        new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+//                                + "/Bandv2/MEMDUMPS"
+//                                , String.valueOf(Calendar.getInstance().getTime())).getAbsolutePath();
+//                try {
+//                    // this'll cause a collection
+//                    Debug.dumpHprofData(absPath);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    } ;
 }
