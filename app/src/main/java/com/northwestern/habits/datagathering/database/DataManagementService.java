@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.database;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -124,7 +126,7 @@ public class DataManagementService extends Service {
                 break;
             case ACTION_STOP_BACKUP:
                 try {
-                    Database db = CouchBaseData.getDatabase(getBaseContext());
+                    Database db = CouchBaseData.getOldestDatabase(getBaseContext());
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -163,35 +165,51 @@ public class DataManagementService extends Service {
 
             try {
                 // Get all the documents from the database
-                final Database db = CouchBaseData.getDatabase(this);
-                Query q = db.createAllDocumentsQuery();
-                q.setLimit(100);
-                q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
-                q.setLimit(100);
-                QueryEnumerator result = q.run();
+                final Database db = CouchBaseData.getOldestDatabase(this);
+                if (db == null) {
+                    Log.v(TAG, "DB was null");
+                    new restartAsync().execute();
+                } else {
+//                    if (!db.isOpen()) db.open();
+                    Log.v(TAG, "Starting");
+                    Query q = db.createAllDocumentsQuery();
+                    q.setLimit(100);
+                    q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
+                    q.setLimit(100);
+                    QueryEnumerator result = q.run();
 
-                // Pack the docIDs into a list
-                final List<String> ids = new LinkedList<>();
-                while (result.hasNext()) {
-                    ids.add(result.next().getDocumentId());
+                    // Pack the docIDs into a list
+                    final List<String> ids = new LinkedList<>();
+                    while (result.hasNext()) {
+                        ids.add(result.next().getDocumentId());
+                    }
+
+                    // Do a one-shot replication
+                    if (push == null || !Objects.equals(push.getLocalDatabase().getName(), db.getName())) {
+                        URL url = new URL(CouchBaseData.URL_STRING);
+                        push = new Replication(db,
+                                url,
+                                Replication.Direction.PUSH);
+                        push.setContinuous(false);
+                        push.addChangeListener(changeListener);
+                    }
+
+                    push.setDocIds(ids);
+                    Log.v(TAG, "Starting rep");
+                    push.start();
                 }
-
-                // Do a one-shot replication
-                if (push == null) {
-                    URL url = new URL(CouchBaseData.URL_STRING);
-                    push = new Replication(db,
-                            url,
-                            Replication.Direction.PUSH);
-                    push.setContinuous(false);
-                    push.addChangeListener(changeListener);
-                }
-
-                push.setDocIds(ids);
-                push.start();
 
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private class restartAsync extends AsyncTask<Void,Void,Void> {
+        @Override
+        protected Void doInBackground(Void[] params) {
+            restartOneShot();
+            return null;
         }
     }
 
@@ -254,7 +272,7 @@ public class DataManagementService extends Service {
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
                     try {
-                        Database db = CouchBaseData.getDatabase(getBaseContext());
+                        Database db = CouchBaseData.getOldestDatabase(getBaseContext());
                         for (String id :
                                 pushed) {
                             // Purge the doc
