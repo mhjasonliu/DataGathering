@@ -151,7 +151,7 @@ public class DataManagementService extends Service {
                 Log.e(TAG, "Non-existant action requested " + intent.getAction());
         }
 
-        return START_NOT_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
 
