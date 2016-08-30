@@ -170,7 +170,7 @@ public class DataManagementService extends Service {
                     Log.v(TAG, "DB was null");
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
-                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCED);
                     if (!isBlockingBroadcastsForError) sendBroadcast(i);
                     new restartAsync().execute();
                 } else {
@@ -267,7 +267,7 @@ public class DataManagementService extends Service {
             } else if (isTransitioningToStopped) {
                 // STOPPING WITHOUT ERROR
                 if (didCompleteAll && !changesAreZero) {
-                    // Broadcast synced
+                    // Broadcast syncing
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
