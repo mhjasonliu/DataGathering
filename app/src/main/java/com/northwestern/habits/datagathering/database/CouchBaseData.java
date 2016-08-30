@@ -35,7 +35,7 @@ public class CouchBaseData {
     private static final String TAG = "CBD";
     private static Database database;
     private static int docCount;
-    private static final int DOC_LIMIT = 100;
+    private static final int DOC_LIMIT = 1000;
     private static Document currentDocument;
     private static Manager currentManager;
 
