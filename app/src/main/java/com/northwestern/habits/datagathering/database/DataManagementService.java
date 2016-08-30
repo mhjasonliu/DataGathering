@@ -168,6 +168,10 @@ public class DataManagementService extends Service {
                 final Database db = CouchBaseData.getOldestDatabase(this);
                 if (db == null) {
                     Log.v(TAG, "DB was null");
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCING);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
                     new restartAsync().execute();
                 } else {
 //                    if (!db.isOpen()) db.open();
@@ -224,8 +228,8 @@ public class DataManagementService extends Service {
             startOneShotRep();
     }
 
+    private boolean isBlockingBroadcastsForError = false;
     Replication.ChangeListener changeListener = new Replication.ChangeListener() {
-        private boolean isBlockingBroadcastsForError = false;
 
         @Override
         public void changed(Replication.ChangeEvent event) {
@@ -314,8 +318,6 @@ public class DataManagementService extends Service {
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 if (!isBlockingBroadcastsForError) sendBroadcast(i);
                 Log.v(TAG, "Broadcasted syncing while in progress");
-                throw new OutOfMemoryError();
-
             }
 
         }
