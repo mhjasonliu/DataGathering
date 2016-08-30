@@ -143,7 +143,7 @@ public class DataManagementService extends Service {
                             db.getActiveReplications()) {
                         r.stop();
                     }
-                } catch (CouchbaseLiteException | IOException e) {
+                } catch (CouchbaseLiteException | IOException | NullPointerException e) {
                     e.printStackTrace();
                 }
                 break;
