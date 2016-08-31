@@ -308,7 +308,8 @@ public abstract class DataManager implements EventListener {
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
         // Split the buffer
-        final Map<Integer, List<Map>> split = myBuffer.splitIntoHours();
+        final Map<Integer, List<Map>> split = myBuffer.splitIntoMinutes();
+        Log.v(TAG, split.keySet().toString());
         Calendar c = Calendar.getInstance();
         for (int hour : split.keySet()) {
             try {

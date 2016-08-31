@@ -64,17 +64,17 @@ public class DataSeries {
         return dataSoFar;
     }
 
-    public Map<Integer, List<Map>> splitIntoHours() {
-        int hour;
+    public Map<Integer, List<Map>> splitIntoMinutes() {
+        int minute;
         Calendar c = Calendar.getInstance();
         Map<Integer, List<Map>> split = new HashMap<>();
         for (Map datum : dataArray) {
             c.setTimeInMillis(Long.valueOf((String) datum.get("Time")));
-            hour = c.get(Calendar.HOUR_OF_DAY);
-            if (!split.containsKey(hour)) {
-                split.put(hour, new LinkedList<Map>());
+            minute = c.get(Calendar.MINUTE);
+            if (!split.containsKey(minute)) {
+                split.put(minute, new LinkedList<Map>());
             }
-            split.get(hour).add(datum);
+            split.get(minute).add(datum);
         }
         return split;
     }

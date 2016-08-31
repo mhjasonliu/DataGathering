@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by William on 6/22/2016
@@ -41,10 +42,11 @@ public class CouchBaseData {
 
     public static Database getDatabase(Context c) throws CouchbaseLiteException, IOException {
         c = c.getApplicationContext();
-
-        if (database == null || docCount > DOC_LIMIT) {
+        Calendar cal = Calendar.getInstance();
+        String name = DB_NAME_BASE + Integer.toString(cal.get(Calendar.MONTH)+1) +
+                cal.get(Calendar.DAY_OF_WEEK) +cal.get(Calendar.HOUR_OF_DAY);
+        if (database == null || !Objects.equals(database.getName(), name)) {
             Log.d(TAG, "Creating new database");
-            String name = DB_NAME_BASE + Calendar.getInstance().getTimeInMillis();
             database = getManager(c).getDatabase(name);
             docCount = database.getDocumentCount();
         }
@@ -93,7 +95,7 @@ public class CouchBaseData {
 
     public static Document getDocument(Calendar date, String type, String userId, Context context)
             throws CouchbaseLiteException, IOException {
-        // ID will be formed as follows: UserID_Type_MM-DD-YYYY_HHHH
+        // ID will be formed as follows: UserID_Type_MM-DD-YYYY_HHHH_MM
         StringBuilder docID = new StringBuilder();
         docID.append(userId);
         docID.append("_");
@@ -110,6 +112,8 @@ public class CouchBaseData {
             docID.append("0");
         docID.append(hour);
         docID.append("00");
+        docID.append("_");
+        docID.append(date.get(Calendar.MINUTE));
 
         Document d = getDatabase(context).getDocument(docID.toString());
 
@@ -124,7 +128,7 @@ public class CouchBaseData {
             properties.put("User", userId);
 
             properties.put(DataManagementService.FIRST_ENTRY, date.getTimeInMillis());
-            date.set(Calendar.MINUTE, 59);
+            date.set(Calendar.SECOND, 59);
             properties.put(DataManagementService.LAST_ENTRY, date.getTimeInMillis());
             properties.put(DataManagementService.USER_ID, userId);
             properties.put(DataManagementService.DATA, new LinkedList<Map>());
