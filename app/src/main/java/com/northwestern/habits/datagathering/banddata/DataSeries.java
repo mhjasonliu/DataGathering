@@ -17,6 +17,7 @@ import com.northwestern.habits.datagathering.database.DataManagementService;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -90,46 +91,55 @@ public class DataSeries {
 
         @Override
         protected Object doInBackground(Object[] params) {
-            // Make csv name
-            String fName = userID;
-            fName += "_" + type + "_";
-            fName += firstEntry;
-            fName += "_thru_";
-            fName += lastEntry + ".csv";
 
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 Log.e(TAG, "permission denied");
             }
 
-            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" + type + "/";
+            // Date for use in the folder path
+            Calendar date = Calendar.getInstance();
+            date.setTimeInMillis(firstEntry);
+            int day = date.get(Calendar.DAY_OF_MONTH);
+            int month = date.get(Calendar.MONTH) + 1;
+            int year = date.get(Calendar.YEAR);
+            String dateString = Integer.toString(month) + "-"
+                    + Integer.toString(day) + "-"
+                    + Integer.toString(year);
+
+            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" +
+                    userID + "/" + type + "/" + dateString + "/";
             File folder = new File(PATH);
             if (!folder.exists()) {
                 Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
             }
 
+            // Make csv name
+            String fName = Integer.toString(date.get(Calendar.HOUR_OF_DAY)) + "00.csv";
+
             File csv = new File(PATH, fName);
-            if (!csv.exists()) {
+            List<Map> dataSeries = dataArray;
+            List<String> properties = new LinkedList(dataArray.get(0).keySet());
+            try {
+                FileWriter csvWriter = new FileWriter(csv.getPath(), true);
                 try {
-                    // Make the file
-                    if (!csv.createNewFile()) {
-                        throw new IOException();
-                    }
-                    FileWriter csvWriter = new FileWriter(csv.getPath(), true);
-                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    intent.setData(Uri.fromFile(csv));
-                    context.sendBroadcast(intent);
+                    if (!csv.exists()) {
+                        // Make the file
+                        if (!csv.createNewFile()) {
+                            throw new IOException();
+                        }
+                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                        intent.setData(Uri.fromFile(csv));
+                        context.sendBroadcast(intent);
 
 
-                    List<Map> dataSeries = dataArray;
-                    List<String> properties = new LinkedList(dataArray.get(0).keySet());
-
-                    for (int i = 0; i < properties.size(); i++) {
-                        csvWriter.append(properties.get(i));
-                        if (i == properties.size() - 1) {
-                            csvWriter.append("\n");
-                        } else {
-                            csvWriter.append(",");
+                        for (int i = 0; i < properties.size(); i++) {
+                            csvWriter.append(properties.get(i));
+                            if (i == properties.size() - 1) {
+                                csvWriter.append("\n");
+                            } else {
+                                csvWriter.append(",");
+                            }
                         }
                     }
 
@@ -169,12 +179,15 @@ public class DataSeries {
                             }
                         }
                     }
+
+                } catch (ConcurrentModificationException e) {
+                    e.printStackTrace();
+                } finally {
                     csvWriter.flush();
                     csvWriter.close();
-
-                } catch (IOException | ConcurrentModificationException e) {
-                    e.printStackTrace();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             return null;
