@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.microsoft.band.sensors.HeartRateQuality;
+import com.microsoft.band.sensors.MotionType;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.io.File;
@@ -150,6 +151,8 @@ public class DataSeries {
                                 } else if (datum instanceof Float) {
                                     csvWriter.append(Float.toString((Float) datum));
                                 } else if (datum instanceof HeartRateQuality) {
+                                    csvWriter.append(datum.toString());
+                                } else if (datum instanceof MotionType) {
                                     csvWriter.append(datum.toString());
                                 } else {
                                     Log.e(TAG, "Unhandled case " + datum.getClass());
