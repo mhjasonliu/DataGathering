@@ -12,7 +12,6 @@ import android.util.Log;
 
 import com.microsoft.band.sensors.HeartRateQuality;
 import com.microsoft.band.sensors.MotionType;
-import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -23,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by William on 8/2/2016
@@ -58,17 +58,28 @@ public class DataSeries {
         return dataArray.size() >= capacity;
     }
 
-    public Map<String, Object> pack() {
-        Map<String, Object> m = new HashMap<>();
-
-        m.put(DataManagementService.FIRST_ENTRY, firstEntry);
-        m.put(DataManagementService.LAST_ENTRY, lastEntry);
-        m.put(DataManagementService.TYPE, type);
-        m.put(DataManagementService.DATA, dataArray);
-        m.put(DataManagementService.DATA_KEYS, dataArray.get(0).keySet());
-
-        return m;
+    public static List<Map> pack(List<Map> dataSoFar, List<Map> dataToAdd) {
+        if (dataSoFar == null) dataSoFar = new LinkedList<>();
+        dataSoFar.addAll(dataToAdd);
+        return dataSoFar;
     }
+
+    public Map<Integer, List<Map>> splitIntoHours() {
+        int hour;
+        Calendar c = Calendar.getInstance();
+        Map<Integer, List<Map>> split = new HashMap<>();
+        for (Map datum : dataArray) {
+            c.setTimeInMillis(Long.valueOf((String) datum.get("Time")));
+            hour = c.get(Calendar.HOUR_OF_DAY);
+            if (!split.containsKey(hour)) {
+                split.put(hour, new LinkedList<Map>());
+            }
+            split.get(hour).add(datum);
+        }
+        return split;
+    }
+
+    public Set getDataKeys() {return dataArray.get(0).keySet();}
 
     public int getCount() {
         return dataArray.size();

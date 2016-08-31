@@ -21,6 +21,7 @@ import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -275,6 +276,8 @@ public class DataManagementService extends Service {
                     Log.v(TAG, "Broadcasted syncing after successful sync");
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
+                    Collections.sort(pushed);
+                    pushed.remove(pushed.size()-1);
                     try {
                         Database db = CouchBaseData.getOldestDatabase(getBaseContext());
                         for (String id :

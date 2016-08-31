@@ -25,8 +25,10 @@ import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -262,7 +264,7 @@ public abstract class DataManager implements EventListener {
                         unSubscribe(this_info);
 
                         try {
-                            Thread.sleep(TIMEOUT_INTERVAL/2);
+                            Thread.sleep(TIMEOUT_INTERVAL / 2);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -301,30 +303,36 @@ public abstract class DataManager implements EventListener {
     }
 
 
-
     protected void writeData(Context context, final BandInfo info, String type) {
         final DataSeries myBuffer = dataBuffer;
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
-        try {
-            CouchBaseData.getNewDocument(context).update(new Document.DocumentUpdater() {
-                @Override
-                public boolean update(UnsavedRevision newRevision) {
-                    Map<String, Object> properties = newRevision.getUserProperties();
-                    properties.putAll(myBuffer.pack());
-                    properties.put(DataManagementService.DEVICE_MAC, info.getMacAddress());
-                    properties.put(DataManagementService.T_DEVICE, T_BAND2);
-                    properties.put(DataManagementService.USER_ID, userID);
+        // Split the buffer
+        final Map<Integer, List<Map>> split = myBuffer.splitIntoHours();
+        Calendar c = Calendar.getInstance();
+        for (int hour : split.keySet()) {
+            try {
+                // All the Calendar hours in this slice should be the same, so effectively they are
+                // the same
+                c.setTimeInMillis(Long.valueOf((String) split.get(hour).get(0).get("Time")));
 
-                    newRevision.setUserProperties(properties);
-                    return true;
-                }
-            });
+                // Add the slice to the data
+                final int h = hour;
+                CouchBaseData.getDocument(c, type, userID, context).update(new Document.DocumentUpdater() {
+                    @Override
+                    public boolean update(UnsavedRevision newRevision) {
+                        Map<String, Object> properties = newRevision.getUserProperties();
+                        List<Map> toAdd = split.get(h);
+                        properties.put(DataManagementService.DATA,
+                                DataSeries.pack((List<Map>) properties.get(DataManagementService.DATA), toAdd));
+                        return true;
+                    }
+                });
 
-            // Write to csv
-            myBuffer.exportCSV(context, userID, T_BAND2);
-        } catch (CouchbaseLiteException | IOException e) {
-            e.printStackTrace();
+
+            } catch (CouchbaseLiteException | IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

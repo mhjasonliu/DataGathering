@@ -74,7 +74,7 @@ public class CouchBaseData {
         return db;
     }
 
-    public static Document getNewDocument (Context c) throws CouchbaseLiteException, IOException {
+    public static Document getNewDocument(Context c) throws CouchbaseLiteException, IOException {
 
         try {
             currentDocument = getDatabase(c).getDocument(
@@ -85,11 +85,54 @@ public class CouchBaseData {
         Log.v(TAG, "Created new document " + currentDocument.getId());
         Map<String, Object> properties = new HashMap<>();
         properties.put("Time_Created", Long.toString(Calendar.getInstance().getTimeInMillis()));
-        properties.put("Version", "2.0.3");
 
         currentDocument.putProperties(properties);
         return currentDocument;
 
+    }
+
+    public static Document getDocument(Calendar date, String type, String userId, Context context)
+            throws CouchbaseLiteException, IOException {
+        // ID will be formed as follows: UserID_Type_MM-DD-YYYY_HHHH
+        StringBuilder docID = new StringBuilder();
+        docID.append(userId);
+        docID.append("_");
+        docID.append(type);
+        docID.append("_");
+        docID.append(date.get(Calendar.MONTH));
+        docID.append("-");
+        docID.append(date.get(Calendar.DAY_OF_MONTH) + 1);
+        docID.append("-");
+        docID.append(date.get(Calendar.YEAR));
+        docID.append("_");
+        int hour = date.get(Calendar.HOUR_OF_DAY);
+        if (hour < 10)
+            docID.append("0");
+        docID.append(hour);
+        docID.append("00");
+
+        Document d = getDatabase(context).getDocument(docID.toString());
+
+        Map<String, Object> properties = d.getProperties();
+
+        if (properties == null || !properties.containsKey("Version")) {
+            Log.v(TAG, "Setting metadata properties");
+            properties = new HashMap<>();
+            // New document
+            properties.put(DataManagementService.TYPE, type);
+            properties.put("Hour", hour);
+            properties.put("User", userId);
+
+            properties.put(DataManagementService.FIRST_ENTRY, date.getTimeInMillis());
+            date.set(Calendar.MINUTE, 59);
+            properties.put(DataManagementService.LAST_ENTRY, date.getTimeInMillis());
+            properties.put(DataManagementService.USER_ID, userId);
+            properties.put(DataManagementService.DATA, new LinkedList<Map>());
+            properties.put("Version", "3.0.0");
+            d.putProperties(properties);
+        }
+
+        return d;
     }
 
     @Deprecated
