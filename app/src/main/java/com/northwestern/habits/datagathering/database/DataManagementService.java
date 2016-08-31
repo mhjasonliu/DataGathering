@@ -191,6 +191,7 @@ public class DataManagementService extends Service {
 
                     // Do a one-shot replication
                     if (push == null || !Objects.equals(push.getLocalDatabase().getName(), db.getName())) {
+                        if (push != null) push.stop();
                         URL url = new URL(CouchBaseData.URL_STRING);
                         push = new Replication(db,
                                 url,

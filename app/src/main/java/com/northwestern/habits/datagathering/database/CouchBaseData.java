@@ -30,7 +30,7 @@ public class CouchBaseData {
     private static Replication replication = null;
     public static final String URL_STRING = "http://107.170.25.202:4984/db/";
 
-    public static final String DB_NAME_BASE = "data_gathering_db";
+    public static final String DB_NAME = "data_gathering_db";
 
     private static final String TAG = "CBD";
     private static Database database;
@@ -42,11 +42,8 @@ public class CouchBaseData {
     public static Database getDatabase(Context c) throws CouchbaseLiteException, IOException {
         c = c.getApplicationContext();
 
-        if (database == null || docCount > DOC_LIMIT) {
-            Log.d(TAG, "Creating new database");
-            String name = DB_NAME_BASE + Calendar.getInstance().getTimeInMillis();
-            database = getManager(c).getDatabase(name);
-            docCount = database.getDocumentCount();
+        if (database == null) {
+            database = getManager(c).getDatabase(DB_NAME);
         }
         docCount = database.getDocumentCount();
         Log.d(TAG, Integer.toString(docCount) + " documents in database");
