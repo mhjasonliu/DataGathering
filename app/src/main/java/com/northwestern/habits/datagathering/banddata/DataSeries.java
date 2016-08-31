@@ -103,6 +103,7 @@ public class DataSeries {
             int day = date.get(Calendar.DAY_OF_MONTH);
             int month = date.get(Calendar.MONTH) + 1;
             int year = date.get(Calendar.YEAR);
+            int hour = date.get(Calendar.HOUR_OF_DAY);
             String dateString = Integer.toString(month) + "-"
                     + Integer.toString(day) + "-"
                     + Integer.toString(year);
@@ -115,38 +116,31 @@ public class DataSeries {
             }
 
             // Make csv name
-            String fName = Integer.toString(date.get(Calendar.HOUR_OF_DAY)) + "00.csv";
+            String fName = getFileName(hour);
 
             File csv = new File(PATH, fName);
             List<Map> dataSeries = dataArray;
             List<String> properties = new LinkedList(dataArray.get(0).keySet());
             try {
-                FileWriter csvWriter = new FileWriter(csv.getPath(), true);
+                FileWriter csvWriter = null;
                 try {
-                    if (!csv.exists()) {
-                        // Make the file
-                        if (!csv.createNewFile()) {
-                            throw new IOException();
-                        }
-                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                        intent.setData(Uri.fromFile(csv));
-                        context.sendBroadcast(intent);
-
-
-                        for (int i = 0; i < properties.size(); i++) {
-                            csvWriter.append(properties.get(i));
-                            if (i == properties.size() - 1) {
-                                csvWriter.append("\n");
-                            } else {
-                                csvWriter.append(",");
-                            }
-                        }
-                    }
-
+                csvWriter = writeProperties(properties, csv);
                     // Write the file
                     for (Map<String, Object> dataPoint :
                             dataSeries) {
                         for (int i = 0; i < properties.size(); i++) {
+                            long timestamp = (long) dataPoint.get("Time");
+                            date.setTimeInMillis(timestamp);
+                            if (hour != date.get(Calendar.HOUR_OF_DAY)) {
+                                hour = date.get(Calendar.HOUR_OF_DAY);
+                                fName = getFileName(hour);
+                                csv = new File(PATH, fName);
+                                csvWriter.close();
+                                csvWriter.flush();
+                                csvWriter = writeProperties(properties, csv);
+                            }
+
+
                             try {
                                 Object datum = dataPoint.get(properties.get(i));
 
@@ -183,14 +177,52 @@ public class DataSeries {
                 } catch (ConcurrentModificationException e) {
                     e.printStackTrace();
                 } finally {
-                    csvWriter.flush();
-                    csvWriter.close();
+                    if (csvWriter != null) {
+                        csvWriter.flush();
+                        csvWriter.close();
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             return null;
+        }
+
+        private String getFileName(int hour) {
+            StringBuilder name = new StringBuilder();
+            if (hour < 10) {
+                name.append("0");
+            }
+            name.append(hour);
+            name.append("00.csv");
+            return name.toString();
+        }
+
+        private FileWriter writeProperties(List<String> properties, File csv) throws IOException {
+            if (!csv.exists()) {
+                // Make the file
+                if (!csv.createNewFile()) {
+                    throw new IOException();
+                }
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(Uri.fromFile(csv));
+                context.sendBroadcast(intent);
+
+
+                FileWriter csvWriter = new FileWriter(csv.getPath(), true);
+                for (int i = 0; i < properties.size(); i++) {
+                    csvWriter.append(properties.get(i));
+                    if (i == properties.size() - 1) {
+                        csvWriter.append("\n");
+                    } else {
+                        csvWriter.append(",");
+                    }
+                }
+                return csvWriter;
+            } else {
+                return new FileWriter(csv.getPath(), true);
+            }
         }
     }
 }
