@@ -286,7 +286,9 @@ public class DataManagementService extends Service {
                     if (hour == Calendar.getInstance().get(Calendar.HOUR)) {
                         // Preserve the last doc so the db is not cleaned up
                         Log.v(TAG, Integer.toString(hour) + " > " + Integer.toString(Calendar.getInstance().get(Calendar.HOUR)));
-                        pushed.remove(pushed.size()-1);
+                        // Preserve the last two documents in case of residual writes waiting to be added
+                        if (pushed.size() > 0) pushed.remove(pushed.size()-1);
+                        if (pushed.size() > 0) pushed.remove(pushed.size()-1);
                     }
 
                     try {

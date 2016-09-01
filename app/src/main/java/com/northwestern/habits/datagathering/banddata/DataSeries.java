@@ -70,6 +70,7 @@ public class DataSeries {
         Map<Integer, List<Map>> split = new HashMap<>();
         for (Map datum : dataArray) {
             c.setTimeInMillis(Long.valueOf((String) datum.get("Time")));
+            int second = c.get(Calendar.SECOND);
             minute = c.get(Calendar.MINUTE);
             if (!split.containsKey(minute)) {
                 split.put(minute, new LinkedList<Map>());

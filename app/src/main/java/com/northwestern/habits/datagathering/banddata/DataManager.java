@@ -304,6 +304,7 @@ public abstract class DataManager implements EventListener {
 
 
     protected void writeData(Context context, final BandInfo info, String type) {
+        Log.v(TAG, "Writing data");
         final DataSeries myBuffer = dataBuffer;
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
@@ -311,14 +312,14 @@ public abstract class DataManager implements EventListener {
         final Map<Integer, List<Map>> split = myBuffer.splitIntoMinutes();
         Log.v(TAG, split.keySet().toString());
         Calendar c = Calendar.getInstance();
-        for (int hour : split.keySet()) {
+        for (int minute : split.keySet()) {
             try {
                 // All the Calendar hours in this slice should be the same, so effectively they are
                 // the same
-                c.setTimeInMillis(Long.valueOf((String) split.get(hour).get(0).get("Time")));
+                c.setTimeInMillis(Long.valueOf((String) split.get(minute).get(0).get("Time")));
 
                 // Add the slice to the data
-                final int h = hour;
+                final int h = minute;
                 CouchBaseData.getDocument(c, type, userID, context).update(new Document.DocumentUpdater() {
                     @Override
                     public boolean update(UnsavedRevision newRevision) {
