@@ -24,11 +24,12 @@ import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -206,54 +207,82 @@ public class UserIDFragment extends Fragment {
 
             rButton.setEnabled(false);
 
-            scrollLockRequest(false);
+            scrollLockRequest(true);
 
             // Disable swiping
         }
 
         @Override
         protected Void doInBackground(Void... params) {
-                String hostname= "107.170.25.202";
-                int port = 3000;
+            String hostname = "107.170.25.202";
+            int port = 3000;
 
-                Socket socket = null;
-                PrintWriter writer = null;
-                BufferedReader reader = null;
+            Socket socket = null;
+//                PrintWriter writer = null;
+            BufferedReader reader = null;
+            BufferedWriter wr = null;
 
-                try {
-                    Log.e(TAG, "Writing the socket");
-                    socket = new Socket(hostname, port);
-                    socket.isConnected();
-                    writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-                    writer.println("POST /users HTTP/1.1");
-                    writer.println("Host: " + hostname);
-                    writer.println("Accept: */*");
-                    writer.println("User-Agent: Java"); // Be honest.
-                    writer.println(""); // Important, else the server will expect that there's more into the request.
-                    writer.flush();
 
-                    reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    boolean firstLine = true;
-                    int code = -1;
-                    for (String line; (line = reader.readLine()) != null;) {
-                        if (line.isEmpty()) break; // Stop when headers are completed. We're not interested in all the HTML.
-                        System.out.println(line);
-                        if (firstLine){
-                            firstLine = false;
-                            code = Integer.valueOf(line.substring(9,12));
-                            message = line.substring(13,line.length());
-                        }
+            try {
+                String httpParams = URLEncoder.encode("user", "UTF-8")
+                        + "=" + URLEncoder.encode(id, "UTF-8");
+                Log.e(TAG, "Writing the socket");
+                socket = new Socket(hostname, port);
+                socket.isConnected();
+//                    writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+                wr = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
+                wr.write("POST /users HTTP/1.0\r\n");
+                wr.write("Content-Length: " + httpParams.length() + "\r\n");
+                wr.write("Content-Type: application/x-www-form-urlencoded\r\n");
+                wr.write("\r\n");
+//                    writer.println("POST /users HTTP/1.1");
+//                    writer.println("Host: " + hostname);
+//                    writer.println("Accept: */*");
+//                    writer.println("User-Agent: Java"); // Be honest.
+//                    writer.println("\r\n"); // Important, else the server will expect that there's more into the request.
+//                    writer.println("user=" + id);
+//                    writer.print("");
+//                    writer.flush();
+                wr.write("user=" + id);
+                wr.flush();
+                Log.v(TAG, "Socket written");
+
+                reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                boolean firstLine = true;
+                int code = -1;
+                for (String line; (line = reader.readLine()) != null; ) {
+                    if (line.isEmpty())
+                        break; // Stop when headers are completed. We're not interested in all the HTML.
+                    System.out.println(line);
+                    if (firstLine) {
+                        firstLine = false;
+                        code = Integer.valueOf(line.substring(9, 12));
+                        message = line.substring(13, line.length());
                     }
-
-                    success = code == 200;
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (reader != null) try { reader.close(); } catch (IOException logOrIgnore) {}
-                    if (writer != null) { writer.close(); }
-                    if (socket != null) try { socket.close(); } catch (IOException logOrIgnore) {}
                 }
+
+                Log.v(TAG, "Code " + Integer.toString(code));
+                success = code == 200;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (reader != null) try {
+                    reader.close();
+                } catch (IOException logOrIgnore) {
+                }
+                if (wr != null) {
+                    try {
+                        wr.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (socket != null) try {
+                    socket.close();
+                } catch (IOException logOrIgnore) {
+                }
+            }
 
 
             if (success) {
@@ -269,21 +298,23 @@ public class UserIDFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            for (View view : enableViews) {
-                // TODO not enable the skip button if failure
-                view.setEnabled(true);
-            }
             // Hide views
             for (View v : hideViews) {
                 v.setVisibility(View.INVISIBLE);
             }
+
             TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
             v.setVisibility(View.VISIBLE);
+
+            rButton.setEnabled(true);
             if (success) {
                 Toast.makeText(getContext(), "User ID set to " + id,
                         Toast.LENGTH_SHORT).show();
                 v.setText("User Id is: " + id);
                 v.setVisibility(View.VISIBLE);
+
+                // Unlock
+                scrollLockRequest(false);
             } else {
                 // TODO fix the second half of this string
                 v.setText(message + "\nUser Id is: " + id);
@@ -334,7 +365,5 @@ public class UserIDFragment extends Fragment {
         input.requestFocus();
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-
-
     }
 }
