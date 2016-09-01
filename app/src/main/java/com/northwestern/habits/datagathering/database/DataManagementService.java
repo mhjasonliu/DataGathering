@@ -222,7 +222,7 @@ public class DataManagementService extends Service {
     private void restartOneShot() {
         isReplicating = false;
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
