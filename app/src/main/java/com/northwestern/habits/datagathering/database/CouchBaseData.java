@@ -62,6 +62,7 @@ public class CouchBaseData {
         List<String> names = new ArrayList<>(m.getAllDatabaseNames());
         if (names.size() == 0) return null;
         Collections.sort(names);
+        Collections.reverse(names);
         Log.d(TAG, "List of names: " + names);
         Database db = null;
         int i = 0;
