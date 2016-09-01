@@ -72,12 +72,12 @@ public class CouchBaseData {
                 Log.v(TAG, "Deleting database " + db.getName());
                 db.delete();
                 db = null;
-            } else {
+            } else if (db != null){
                 Log.v(TAG, "Database " + db.getName() + " has " + db.getDocumentCount() + " docs");
             }
             i++;
         }
-        Log.v(TAG, "Using database " + db.getName());
+        if (db != null) Log.v(TAG, "Using database " + db.getName());
         return db;
     }
 
