@@ -270,18 +270,23 @@ public class UserIDFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             for (View view : enableViews) {
+                // TODO not enable the skip button if failure
                 view.setEnabled(true);
             }
             // Hide views
             for (View v : hideViews) {
-                v.setVisibility(View.VISIBLE);
+                v.setVisibility(View.INVISIBLE);
             }
+            TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
+            v.setVisibility(View.VISIBLE);
             if (success) {
                 Toast.makeText(getContext(), "User ID set to " + id,
                         Toast.LENGTH_SHORT).show();
-                TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
                 v.setText("User Id is: " + id);
                 v.setVisibility(View.VISIBLE);
+            } else {
+                // TODO fix the second half of this string
+                v.setText(message + "\nUser Id is: " + id);
             }
         }
     }
