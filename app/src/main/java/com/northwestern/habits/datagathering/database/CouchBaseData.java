@@ -68,11 +68,15 @@ public class CouchBaseData {
         while (db == null && i < names.size()) {
             db = m.getExistingDatabase(names.get(i));
             if (db != null && db.getDocumentCount() == 0) {
+                Log.v(TAG, "Deleting database " + db.getName());
                 db.delete();
                 db = null;
+            } else {
+                Log.v(TAG, "Database " + db.getName() + " has " + db.getDocumentCount() + " docs");
             }
             i++;
         }
+        Log.v(TAG, "Using database " + db.getName());
         return db;
     }
 

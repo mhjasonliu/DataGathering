@@ -21,6 +21,7 @@ import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -277,7 +278,17 @@ public class DataManagementService extends Service {
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
                     Collections.sort(pushed);
-                    pushed.remove(pushed.size()-1);
+                    String lastDocName = pushed.get(pushed.size()-1);
+                    String lastDocTime = lastDocName.substring(lastDocName.length()-7,lastDocName.length());
+                    lastDocTime = lastDocTime.replace("_", "");
+                    int hour = Integer.valueOf(lastDocTime.substring(0, 2));
+
+                    if (hour == Calendar.getInstance().get(Calendar.HOUR)) {
+                        // Preserve the last doc so the db is not cleaned up
+                        Log.v(TAG, Integer.toString(hour) + " > " + Integer.toString(Calendar.getInstance().get(Calendar.HOUR)));
+                        pushed.remove(pushed.size()-1);
+                    }
+
                     try {
                         Database db = CouchBaseData.getOldestDatabase(getBaseContext());
                         for (String id :
@@ -298,6 +309,7 @@ public class DataManagementService extends Service {
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCED);
                     if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    Log.v(TAG, "Documents " + push.getDocIds());
                     Log.v(TAG, "Broadcasted synced");
 
                 } else {
