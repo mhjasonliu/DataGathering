@@ -191,6 +191,7 @@ public class UserIDFragment extends Fragment {
         String id;
         boolean success = false;
         String message = "";
+        boolean skipButtonPreviousEnabled;
 
         public IdVerificationTask(List<View> h, List<View> e, String id) {
             hideViews = h;
@@ -200,6 +201,9 @@ public class UserIDFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
+            TextView sButton = ((TextView) UserIDFragment.this.getView().findViewById(R.id.skip_button));
+            skipButtonPreviousEnabled = sButton.isEnabled();
+            sButton.setEnabled(false);
             // Hide views
             for (View v : hideViews) {
                 v.setVisibility(View.VISIBLE);
@@ -235,14 +239,6 @@ public class UserIDFragment extends Fragment {
                 wr.write("Content-Length: " + httpParams.length() + "\r\n");
                 wr.write("Content-Type: application/x-www-form-urlencoded\r\n");
                 wr.write("\r\n");
-//                    writer.println("POST /users HTTP/1.1");
-//                    writer.println("Host: " + hostname);
-//                    writer.println("Accept: */*");
-//                    writer.println("User-Agent: Java"); // Be honest.
-//                    writer.println("\r\n"); // Important, else the server will expect that there's more into the request.
-//                    writer.println("user=" + id);
-//                    writer.print("");
-//                    writer.flush();
                 wr.write("user=" + id);
                 wr.flush();
                 Log.v(TAG, "Socket written");
@@ -304,6 +300,7 @@ public class UserIDFragment extends Fragment {
             }
 
             TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
+            TextView skipbutton = ((TextView) UserIDFragment.this.getView().findViewById(R.id.skip_button));
             v.setVisibility(View.VISIBLE);
 
             rButton.setEnabled(true);
@@ -312,12 +309,15 @@ public class UserIDFragment extends Fragment {
                         Toast.LENGTH_SHORT).show();
                 v.setText("User Id is: " + id);
                 v.setVisibility(View.VISIBLE);
+                skipbutton.setEnabled(true);
 
                 // Unlock
                 scrollLockRequest(false);
             } else {
                 // TODO fix the second half of this string
-                v.setText(message + "\nUser Id is: " + id);
+                v.setText(message);
+                skipbutton.setEnabled(skipButtonPreviousEnabled);
+                scrollLockRequest(skipButtonPreviousEnabled);
             }
         }
     }
