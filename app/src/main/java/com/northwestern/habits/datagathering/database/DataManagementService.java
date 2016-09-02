@@ -279,14 +279,17 @@ public class DataManagementService extends Service {
                     List<String> pushed = push.getDocIds();
                     Collections.sort(pushed);
                     String lastDbName = pushed.get(pushed.size()-1);
-                    int hyphenLocation = lastDbName.indexOf("-");
+                    int hyphenLocation = lastDbName.lastIndexOf("_");
                     String lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
+                    lastDbName = lastDbName.replace(lastDbTime, "");
+                    hyphenLocation = lastDbName.lastIndexOf("_");
+                    lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
                     lastDbTime = lastDbTime.replace("_", "");
-                    int hour = Integer.valueOf(lastDbTime.substring(0, 2));
+                    int hour = Integer.valueOf(lastDbTime);
+                    hour = hour/100;
 
-                    if (hour == Calendar.getInstance().get(Calendar.HOUR)) {
+                    if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
                         // Preserve the last doc so the db is not cleaned up
-                        Log.v(TAG, Integer.toString(hour) + " = " + Integer.toString(Calendar.getInstance().get(Calendar.HOUR)));
                         // Preserve the last two documents in case of residual writes waiting to be added
                         if (pushed.size() > 0) pushed.remove(pushed.size()-1);
                         if (pushed.size() > 0) pushed.remove(pushed.size()-1);
