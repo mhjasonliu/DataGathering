@@ -44,7 +44,7 @@ public class CouchBaseData {
         c = c.getApplicationContext();
         Calendar cal = Calendar.getInstance();
         String name = DB_NAME_BASE + Integer.toString(cal.get(Calendar.MONTH)+1) +
-                cal.get(Calendar.DAY_OF_MONTH) +cal.get(Calendar.HOUR_OF_DAY);
+                cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.HOUR_OF_DAY);
         if (database == null || !Objects.equals(database.getName(), name)) {
             Log.d(TAG, "Creating new database");
             database = getManager(c).getDatabase(name);
