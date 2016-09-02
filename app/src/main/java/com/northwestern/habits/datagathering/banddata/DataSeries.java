@@ -115,12 +115,16 @@ public class DataSeries {
             int month = date.get(Calendar.MONTH) + 1;
             int year = date.get(Calendar.YEAR);
             int hour = date.get(Calendar.HOUR_OF_DAY);
+            String hourst = (hour < 10)
+                    ? "0" + Integer.toString(hour) + "00"
+                    : Integer.toString(hour) + "00";
+            int minute = date.get(Calendar.MINUTE);
             String dateString = Integer.toString(month) + "-"
                     + Integer.toString(day) + "-"
                     + Integer.toString(year);
 
             String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" +
-                    userID + "/" + type + "/" + dateString + "/";
+                    userID + "/" + type + "/" + dateString + "/" + hourst;
             File folder = new File(PATH);
             if (!folder.exists()) {
                 Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
@@ -142,12 +146,13 @@ public class DataSeries {
                         for (int i = 0; i < properties.size(); i++) {
                             long timestamp = Long.valueOf((String) dataPoint.get("Time"));
                             date.setTimeInMillis(timestamp);
-                            if (hour != date.get(Calendar.HOUR_OF_DAY)) {
-                                hour = date.get(Calendar.HOUR_OF_DAY);
-                                fName = getFileName(hour);
+                            if (minute != date.get(Calendar.MINUTE)) {
+                                minute = date.get(Calendar.MINUTE);
+                                fName = hourst.replace("0","").concat(":" + Integer.toString(minute) + ".csv");
+                                Log.v(TAG, fName);
                                 csv = new File(PATH, fName);
-                                csvWriter.close();
                                 csvWriter.flush();
+                                csvWriter.close();
                                 csvWriter = writeProperties(properties, csv);
                             }
 
@@ -181,11 +186,14 @@ public class DataSeries {
                             } catch (NullPointerException e) {
                                 Log.e(TAG, "Row was null");
                                 e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
+                    Log.v(TAG, "Wrote the file");
 
-                } catch (ConcurrentModificationException e) {
+                } catch (ConcurrentModificationException | IOException e) {
                     e.printStackTrace();
                 } finally {
                     if (csvWriter != null) {
