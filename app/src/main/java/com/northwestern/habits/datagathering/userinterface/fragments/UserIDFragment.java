@@ -373,9 +373,7 @@ public class UserIDFragment extends Fragment {
         final EditText input = new EditText(getContext());
         builder
                 .setTitle("User ID")
-                .setMessage("Gvie the user a unique ID\n" +
-                        "WARNING: the app is currently not configured to check if the ID is " +
-                        "unique... please be creative.")
+                .setMessage("Give the user a unique ID\nPlease make sure you are connected to the internet")
                 .setView(input)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
