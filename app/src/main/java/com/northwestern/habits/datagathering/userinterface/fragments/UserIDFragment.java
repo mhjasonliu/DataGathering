@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +34,7 @@ import java.net.Socket;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -211,9 +214,11 @@ public class UserIDFragment extends Fragment {
 
             rButton.setEnabled(false);
 
+            // Disable swiping
             scrollLockRequest(true);
 
-            // Disable swiping
+            ((TextView) getView().findViewById(R.id.text_user_id)).setText("Requesting id...");
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
         }
 
         @Override
@@ -294,17 +299,19 @@ public class UserIDFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+
             // Hide views
             for (View v : hideViews) {
-                v.setVisibility(View.INVISIBLE);
+                if (v != null) v.setVisibility(View.INVISIBLE);
             }
 
-            TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
-            TextView skipbutton = ((TextView) UserIDFragment.this.getView().findViewById(R.id.skip_button));
+            final TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
+            final Button skipbutton = (Button) UserIDFragment.this.getView().findViewById(R.id.skip_button);
             v.setVisibility(View.VISIBLE);
 
             rButton.setEnabled(true);
             if (success) {
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 Toast.makeText(getContext(), "User ID set to " + id,
                         Toast.LENGTH_SHORT).show();
                 v.setText("User Id is: " + id);
@@ -314,10 +321,47 @@ public class UserIDFragment extends Fragment {
                 // Unlock
                 scrollLockRequest(false);
             } else {
-                // TODO fix the second half of this string
-                v.setText(message);
-                skipbutton.setEnabled(skipButtonPreviousEnabled);
-                scrollLockRequest(skipButtonPreviousEnabled);
+                if (Objects.equals(message, "User name already exists")) {
+                    // Launch a warning dialog that allows them to continue
+                    Log.v(TAG, "duplicate id detected");
+                    new AlertDialog.Builder(getContext()).setTitle("WARNING")
+                            .setMessage(message)
+                            .setPositiveButton("Continue with " + id, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    scrollLockRequest(false);
+                                    getContext().sendBroadcast(
+                                            new Intent(BandDataService.ACTION_USER_ID)
+                                                    .putExtra(BandDataService.USER_ID_EXTRA, id));
+                                    // Set user id preference in this process
+                                    PreferenceManager.getDefaultSharedPreferences(context).edit()
+                                            .putString(Preferences.USER_ID, id).apply();
+
+                                    Toast.makeText(getContext(), "User ID set to " + id,
+                                            Toast.LENGTH_SHORT).show();
+                                    v.setText("User Id is: " + id);
+                                    v.setVisibility(View.VISIBLE);
+                                    skipbutton.setEnabled(true);
+
+                                    // Unlock
+                                    scrollLockRequest(false);
+                                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    v.setText(message + id);
+                                    skipbutton.setEnabled(skipButtonPreviousEnabled);
+                                    scrollLockRequest(skipButtonPreviousEnabled);
+                                }
+                            }).create().show();
+                } else {
+                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                    v.setText(message);
+                    skipbutton.setEnabled(skipButtonPreviousEnabled);
+                    scrollLockRequest(skipButtonPreviousEnabled);
+                }
             }
         }
     }
