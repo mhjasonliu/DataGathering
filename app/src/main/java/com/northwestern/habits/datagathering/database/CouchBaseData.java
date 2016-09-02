@@ -44,7 +44,7 @@ public class CouchBaseData {
         c = c.getApplicationContext();
         Calendar cal = Calendar.getInstance();
         String name = DB_NAME_BASE + Integer.toString(cal.get(Calendar.MONTH)+1) +
-                cal.get(Calendar.DAY_OF_MONTH) +cal.get(Calendar.HOUR_OF_DAY);
+                cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.HOUR_OF_DAY);
         if (database == null || !Objects.equals(database.getName(), name)) {
             Log.d(TAG, "Creating new database");
             database = getManager(c).getDatabase(name);
@@ -62,8 +62,9 @@ public class CouchBaseData {
         List<String> names = new ArrayList<>(m.getAllDatabaseNames());
         if (names.size() == 0) return null;
         Collections.sort(names);
-        Collections.reverse(names);
         Log.d(TAG, "List of names: " + names);
+
+
         Database db = null;
         int i = 0;
         while (db == null && i < names.size()) {
@@ -106,9 +107,9 @@ public class CouchBaseData {
         docID.append("_");
         docID.append(type);
         docID.append("_");
-        docID.append(date.get(Calendar.MONTH));
+        docID.append(date.get(Calendar.MONTH) + 1);
         docID.append("-");
-        docID.append(date.get(Calendar.DAY_OF_MONTH) + 1);
+        docID.append(date.get(Calendar.DAY_OF_MONTH));
         docID.append("-");
         docID.append(date.get(Calendar.YEAR));
         docID.append("_");

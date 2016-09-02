@@ -278,14 +278,18 @@ public class DataManagementService extends Service {
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
                     Collections.sort(pushed);
-                    String lastDocName = pushed.get(pushed.size()-1);
-                    String lastDocTime = lastDocName.substring(lastDocName.length()-7,lastDocName.length());
-                    lastDocTime = lastDocTime.replace("_", "");
-                    int hour = Integer.valueOf(lastDocTime.substring(0, 2));
+                    String lastDbName = pushed.get(pushed.size()-1);
+                    int hyphenLocation = lastDbName.lastIndexOf("_");
+                    String lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
+                    lastDbName = lastDbName.replace(lastDbTime, "");
+                    hyphenLocation = lastDbName.lastIndexOf("_");
+                    lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
+                    lastDbTime = lastDbTime.replace("_", "");
+                    int hour = Integer.valueOf(lastDbTime);
+                    hour = hour/100;
 
-                    if (hour == Calendar.getInstance().get(Calendar.HOUR)) {
+                    if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
                         // Preserve the last doc so the db is not cleaned up
-                        Log.v(TAG, Integer.toString(hour) + " > " + Integer.toString(Calendar.getInstance().get(Calendar.HOUR)));
                         // Preserve the last two documents in case of residual writes waiting to be added
                         if (pushed.size() > 0) pushed.remove(pushed.size()-1);
                         if (pushed.size() > 0) pushed.remove(pushed.size()-1);
