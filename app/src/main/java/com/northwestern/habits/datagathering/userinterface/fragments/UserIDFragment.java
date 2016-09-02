@@ -6,8 +6,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +25,16 @@ import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -176,19 +188,186 @@ public class UserIDFragment extends Fragment {
 
     }
 
-    private void requestUserID(List<View> hideViews, final List<View> enableViews) {
+    private class IdVerificationTask extends AsyncTask<Void, Void, Void> {
 
-        // set the visibility for progress bar
-        for (View view : hideViews) {
-            view.setVisibility(View.INVISIBLE);
+        List<View> hideViews, enableViews;
+        String id;
+        boolean success = false;
+        String message = "";
+        boolean skipButtonPreviousEnabled;
+
+        public IdVerificationTask(List<View> h, List<View> e, String id) {
+            hideViews = h;
+            enableViews = e;
+            this.id = id;
         }
 
-        rButton.setEnabled(true);
+        @Override
+        protected void onPreExecute() {
+            TextView sButton = ((TextView) UserIDFragment.this.getView().findViewById(R.id.skip_button));
+            skipButtonPreviousEnabled = sButton.isEnabled();
+            sButton.setEnabled(false);
+            // Hide views
+            for (View v : hideViews) {
+                v.setVisibility(View.VISIBLE);
+            }
+
+            rButton.setEnabled(false);
+
+            // Disable swiping
+            scrollLockRequest(true);
+
+            ((TextView) getView().findViewById(R.id.text_user_id)).setText("Requesting id...");
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            String hostname = "107.170.25.202";
+            int port = 3000;
+
+            Socket socket = null;
+//                PrintWriter writer = null;
+            BufferedReader reader = null;
+            BufferedWriter wr = null;
 
 
-        // Disable swiping
-        scrollLockRequest(false);
+            try {
+                String httpParams = URLEncoder.encode("user", "UTF-8")
+                        + "=" + URLEncoder.encode(id, "UTF-8");
+                Log.e(TAG, "Writing the socket");
+                socket = new Socket(hostname, port);
+                socket.isConnected();
+//                    writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+                wr = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
+                wr.write("POST /users HTTP/1.0\r\n");
+                wr.write("Content-Length: " + httpParams.length() + "\r\n");
+                wr.write("Content-Type: application/x-www-form-urlencoded\r\n");
+                wr.write("\r\n");
+                wr.write("user=" + id);
+                wr.flush();
+                Log.v(TAG, "Socket written");
 
+                reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                boolean firstLine = true;
+                int code = -1;
+                for (String line; (line = reader.readLine()) != null; ) {
+                    if (line.isEmpty())
+                        break; // Stop when headers are completed. We're not interested in all the HTML.
+                    System.out.println(line);
+                    if (firstLine) {
+                        firstLine = false;
+                        code = Integer.valueOf(line.substring(9, 12));
+                        message = line.substring(13, line.length());
+                    }
+                }
+
+                Log.v(TAG, "Code " + Integer.toString(code));
+                success = code == 200;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (reader != null) try {
+                    reader.close();
+                } catch (IOException logOrIgnore) {
+                }
+                if (wr != null) {
+                    try {
+                        wr.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (socket != null) try {
+                    socket.close();
+                } catch (IOException logOrIgnore) {
+                }
+            }
+
+
+            if (success) {
+                getContext().sendBroadcast(
+                        new Intent(BandDataService.ACTION_USER_ID)
+                                .putExtra(BandDataService.USER_ID_EXTRA, id));
+                // Set user id preference in this process
+                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                        .putString(Preferences.USER_ID, id).apply();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+
+            // Hide views
+            for (View v : hideViews) {
+                if (v != null) v.setVisibility(View.INVISIBLE);
+            }
+
+            final TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
+            final Button skipbutton = (Button) UserIDFragment.this.getView().findViewById(R.id.skip_button);
+            v.setVisibility(View.VISIBLE);
+
+            rButton.setEnabled(true);
+            if (success) {
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                Toast.makeText(getContext(), "User ID set to " + id,
+                        Toast.LENGTH_SHORT).show();
+                v.setText("User Id is: " + id);
+                v.setVisibility(View.VISIBLE);
+                skipbutton.setEnabled(true);
+
+                // Unlock
+                scrollLockRequest(false);
+            } else {
+                if (Objects.equals(message, "User name already exists")) {
+                    // Launch a warning dialog that allows them to continue
+                    Log.v(TAG, "duplicate id detected");
+                    new AlertDialog.Builder(getContext()).setTitle("WARNING")
+                            .setMessage(message)
+                            .setPositiveButton("Continue with " + id, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    scrollLockRequest(false);
+                                    getContext().sendBroadcast(
+                                            new Intent(BandDataService.ACTION_USER_ID)
+                                                    .putExtra(BandDataService.USER_ID_EXTRA, id));
+                                    // Set user id preference in this process
+                                    PreferenceManager.getDefaultSharedPreferences(context).edit()
+                                            .putString(Preferences.USER_ID, id).apply();
+
+                                    Toast.makeText(getContext(), "User ID set to " + id,
+                                            Toast.LENGTH_SHORT).show();
+                                    v.setText("User Id is: " + id);
+                                    v.setVisibility(View.VISIBLE);
+                                    skipbutton.setEnabled(true);
+
+                                    // Unlock
+                                    scrollLockRequest(false);
+                                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                                    v.setText(message + id);
+                                    skipbutton.setEnabled(skipButtonPreviousEnabled);
+                                    scrollLockRequest(skipButtonPreviousEnabled);
+                                }
+                            }).create().show();
+                } else {
+                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                    v.setText(message);
+                    skipbutton.setEnabled(skipButtonPreviousEnabled);
+                    scrollLockRequest(skipButtonPreviousEnabled);
+                }
+            }
+        }
+    }
+
+    private void requestUserID(final List<View> hideViews, final List<View> enableViews) {
 
         android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
         final EditText input = new EditText(getContext());
@@ -204,32 +383,16 @@ public class UserIDFragment extends Fragment {
                         String value = input.getText().toString();
                         if (input.getText().toString().trim().length() == 0) {
                             Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
-                            InputMethodManager imm = (InputMethodManager) getContext()
-                                    .getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                            dialog.dismiss();
                         } else {
-                            getContext().sendBroadcast(
-                                    new Intent(BandDataService.ACTION_USER_ID)
-                                            .putExtra(BandDataService.USER_ID_EXTRA, value));
-                            // Set user id preference in this process
-                            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                                    .putString(Preferences.USER_ID, value).apply();
+                            // Verify with server
+                            new IdVerificationTask(hideViews, enableViews, value).execute();
 
-                            Toast.makeText(getContext(), "User ID set to " + value,
-                                    Toast.LENGTH_SHORT).show();
-                            for (View view : enableViews) {
-                                view.setEnabled(true);
-                            }
-
-                            TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
-                            v.setText("User Id is: " + value);
-
-                            InputMethodManager imm = (InputMethodManager) getContext()
-                                    .getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                            dialog.dismiss();
                         }
+                        // Close keyboard and dialog
+                        InputMethodManager imm = (InputMethodManager) getContext()
+                                .getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                        dialog.dismiss();
 
                     }
                 })
@@ -247,7 +410,5 @@ public class UserIDFragment extends Fragment {
         input.requestFocus();
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-
-
     }
 }
