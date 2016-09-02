@@ -261,7 +261,7 @@ public class UserIDFragment extends Fragment {
                         message = line.substring(13, line.length());
                     }
                 }
-
+                if (code == -1) message = "Failed to reach the server";
                 Log.v(TAG, "Code " + Integer.toString(code));
                 success = code == 200;
 
