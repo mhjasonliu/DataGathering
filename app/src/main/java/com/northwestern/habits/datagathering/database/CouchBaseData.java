@@ -107,9 +107,9 @@ public class CouchBaseData {
         docID.append("_");
         docID.append(type);
         docID.append("_");
-        docID.append(date.get(Calendar.MONTH));
+        docID.append(date.get(Calendar.MONTH) + 1);
         docID.append("-");
-        docID.append(date.get(Calendar.DAY_OF_MONTH) + 1);
+        docID.append(date.get(Calendar.DAY_OF_MONTH));
         docID.append("-");
         docID.append(date.get(Calendar.YEAR));
         docID.append("_");
