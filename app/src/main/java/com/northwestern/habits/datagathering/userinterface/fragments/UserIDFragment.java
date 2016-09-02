@@ -351,6 +351,7 @@ public class UserIDFragment extends Fragment {
                             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+                                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                                     v.setText(message + id);
                                     skipbutton.setEnabled(skipButtonPreviousEnabled);
                                     scrollLockRequest(skipButtonPreviousEnabled);
