@@ -131,7 +131,7 @@ public class DataSeries {
             }
 
             // Make csv name
-            String fName = getFileName(hour);
+            String fName = hourst.replace("0","").concat(":" + Integer.toString(minute) + ".csv");
 
             File csv = new File(PATH, fName);
             List<Map> dataSeries = dataArray;
