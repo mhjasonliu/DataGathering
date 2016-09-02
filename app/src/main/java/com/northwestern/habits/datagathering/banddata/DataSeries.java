@@ -70,7 +70,6 @@ public class DataSeries {
         Map<Integer, List<Map>> split = new HashMap<>();
         for (Map datum : dataArray) {
             c.setTimeInMillis(Long.valueOf((String) datum.get("Time")));
-            int second = c.get(Calendar.SECOND);
             minute = c.get(Calendar.MINUTE);
             if (!split.containsKey(minute)) {
                 split.put(minute, new LinkedList<Map>());
@@ -141,7 +140,7 @@ public class DataSeries {
                     for (Map<String, Object> dataPoint :
                             dataSeries) {
                         for (int i = 0; i < properties.size(); i++) {
-                            long timestamp = (long) dataPoint.get("Time");
+                            long timestamp = Long.valueOf((String) dataPoint.get("Time"));
                             date.setTimeInMillis(timestamp);
                             if (hour != date.get(Calendar.HOUR_OF_DAY)) {
                                 hour = date.get(Calendar.HOUR_OF_DAY);

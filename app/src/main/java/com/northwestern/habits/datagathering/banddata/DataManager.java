@@ -308,6 +308,9 @@ public abstract class DataManager implements EventListener {
         final DataSeries myBuffer = dataBuffer;
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
+        // Export the data to a csv
+        myBuffer.exportCSV(context, userID, type);
+
         // Split the buffer
         final Map<Integer, List<Map>> split = myBuffer.splitIntoMinutes();
         Log.v(TAG, split.keySet().toString());
