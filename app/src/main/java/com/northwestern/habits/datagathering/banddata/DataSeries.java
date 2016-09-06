@@ -131,7 +131,8 @@ public class DataSeries {
             }
 
             // Make csv name
-            String fName = hourst.replace("0","").concat(":" + Integer.toString(minute) + ".csv");
+            hourst = Integer.toString(hour);
+            String fName = hourst.concat(":" + Integer.toString(minute) + ".csv");
 
             File csv = new File(PATH, fName);
             List<Map> dataSeries = dataArray;
@@ -206,16 +207,6 @@ public class DataSeries {
             }
 
             return null;
-        }
-
-        private String getFileName(int hour) {
-            StringBuilder name = new StringBuilder();
-            if (hour < 10) {
-                name.append("0");
-            }
-            name.append(hour);
-            name.append("00.csv");
-            return name.toString();
         }
 
         private FileWriter writeProperties(List<String> properties, File csv) throws IOException {
