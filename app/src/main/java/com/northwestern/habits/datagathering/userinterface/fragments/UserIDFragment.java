@@ -414,6 +414,12 @@ public class UserIDFragment extends Fragment {
             // No wifi
             new AlertDialog.Builder(getContext()).setTitle("No Wifi")
                     .setMessage("Please connect to wifi before requesting a new study id")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    })
                     .show();
         }
     }
