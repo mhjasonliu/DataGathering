@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.BandDataService;
@@ -369,44 +370,51 @@ public class UserIDFragment extends Fragment {
 
     private void requestUserID(final List<View> hideViews, final List<View> enableViews) {
 
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
-        final EditText input = new EditText(getContext());
-        builder
-                .setTitle("User ID")
-                .setMessage("Give the user a unique ID\nPlease make sure you are connected to the internet")
-                .setView(input)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+        if (MyReceiver.isWifiConnected(getContext())) {
+            android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
+            final EditText input = new EditText(getContext());
+            builder
+                    .setTitle("User ID")
+                    .setMessage("Give the user a unique ID\nPlease make sure you are connected to the internet")
+                    .setView(input)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
-                    public void onClick(DialogInterface dialog, int which) {
-                        String value = input.getText().toString();
-                        if (input.getText().toString().trim().length() == 0) {
-                            Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Verify with server
-                            new IdVerificationTask(hideViews, enableViews, value).execute();
+                        public void onClick(DialogInterface dialog, int which) {
+                            String value = input.getText().toString();
+                            if (input.getText().toString().trim().length() == 0) {
+                                Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
+                            } else {
+                                // Verify with server
+                                new IdVerificationTask(hideViews, enableViews, value).execute();
+
+                            }
+                            // Close keyboard and dialog
+                            InputMethodManager imm = (InputMethodManager) getContext()
+                                    .getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                            dialog.dismiss();
 
                         }
-                        // Close keyboard and dialog
-                        InputMethodManager imm = (InputMethodManager) getContext()
-                                .getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                        dialog.dismiss();
+                    })
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+                            dialog.dismiss();
+                        }
 
-                    public void onClick(DialogInterface dialog, int which) {
-                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                        dialog.dismiss();
-                    }
+                    });
 
-                });
-
-        builder.show();
-        input.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            builder.show();
+            input.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        } else {
+            // No wifi
+            new AlertDialog.Builder(getContext()).setTitle("No Wifi")
+                    .setMessage("Please connect to wifi before requesting a new study id")
+                    .show();
+        }
     }
 }
