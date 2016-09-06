@@ -86,7 +86,7 @@ public class DataSeries {
     }
 
     public void exportCSV(Context c, String userID, String type) {
-        new ExportCSVTask(c, userID, type).doInBackground(null);
+        new ExportCSVTask(c, userID).doInBackground(null);
     }
 
 
@@ -95,7 +95,7 @@ public class DataSeries {
         private Context context;
         private String userID;
 
-        public ExportCSVTask(Context c, String uID, String t) {
+        public ExportCSVTask(Context c, String uID) {
             context = c;
             userID = uID;
         }
