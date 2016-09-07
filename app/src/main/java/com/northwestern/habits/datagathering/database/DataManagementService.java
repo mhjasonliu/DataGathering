@@ -268,7 +268,7 @@ public class DataManagementService extends Service {
 
             } else if (isTransitioningToStopped) {
                 // STOPPING WITHOUT ERROR
-                if (didCompleteAll && !changesAreZero) {
+                if (didCompleteAll && !isBlockingBroadcastsForError) {
                     // Broadcast syncing
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
