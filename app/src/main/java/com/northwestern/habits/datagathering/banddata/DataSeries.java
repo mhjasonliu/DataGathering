@@ -149,7 +149,7 @@ public class DataSeries {
                             date.setTimeInMillis(timestamp);
                             if (minute != date.get(Calendar.MINUTE)) {
                                 minute = date.get(Calendar.MINUTE);
-                                fName = hourst.replace("0","").concat(":" + Integer.toString(minute) + ".csv");
+                                fName = hourst.concat(":" + Integer.toString(minute) + ".csv");
                                 Log.v(TAG, fName);
                                 csv = new File(PATH, fName);
                                 csvWriter.flush();
