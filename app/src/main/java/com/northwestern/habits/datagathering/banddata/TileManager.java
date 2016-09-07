@@ -38,7 +38,6 @@ import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -87,7 +86,8 @@ public class TileManager extends BroadcastReceiver {
                 Log.e("", "Unknown button press received");
         }
         context.sendBroadcast(i);
-        return !Objects.equals(activity, prev);
+//        return !Objects.equals(activity, prev);
+        return true;
     }
 
 
@@ -151,15 +151,18 @@ public class TileManager extends BroadcastReceiver {
         }
     }
 
+    static boolean isEating = false;
     protected static void updatePages(BandClient client, UUID tileId) throws BandIOException {
+        String activityText = (isEating) ? "Eating" : "Not eating";
+        String buttonText = (isEating) ? "Stop eating" : "Start eating";
+        Log.v(TAG, "isEating is " + isEating + " and button text is " + buttonText);
+
         client.getTileManager().setPages(tileId,
-                new PageData(pageId2, 0)
-                        .update(new TextButtonData(BTN_EATING, "Eating"))
-                        .update(new TextButtonData(BTN_DRINKING, "Drinking"))
-                        .update(new TextButtonData(BTN_NOTHING, "Note to self")),
                 new PageData(pageId1, 1)
-                        .update(new TextBlockData(TXT_TITLE, "Current Activity"))
-                        .update(new TextBlockData(TXT_ACTIVITY, activity)));
+                        .update(new TextBlockData(TXT_TITLE, activityText))
+                        .update(new TextButtonData(BTN_EATING, buttonText))
+                );
+        isEating = !isEating;
     }
 
 
@@ -284,19 +287,21 @@ public class TileManager extends BroadcastReceiver {
                 new FlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
                         .addElements(new TextBlock(0, 0, 260, 45, TextBlockFont.MEDIUM).setMargins(0, 5, 0, 0)
                                 .setId(TXT_TITLE).setAutoWidthEnabled(true))
-                        .addElements(new TextBlock(0, 0, 260, 90, TextBlockFont.SMALL).setMargins(0, 5, 0, 0)
-                                .setId(TXT_ACTIVITY).setAutoWidthEnabled(true)));
+//                        .addElements(new TextBlock(0, 0, 260, 90, TextBlockFont.SMALL).setMargins(0, 5, 0, 0)
+//                                .setId(TXT_ACTIVITY).setAutoWidthEnabled(true))
+                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
+                            .setId(BTN_EATING).setPressedColor(Color.BLUE)));
     }
 
     private PageLayout createButtonLayout() {
         return new PageLayout(
-                new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
-                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
-                                .setId(BTN_EATING).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
-                                .setId(BTN_DRINKING).setPressedColor(Color.BLUE))
-                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
-                                .setId(BTN_NOTHING).setPressedColor(Color.BLUE)));
+                new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL));
+//                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
+//                                .setId(BTN_EATING).setPressedColor(Color.BLUE)));
+//                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
+//                                .setId(BTN_DRINKING).setPressedColor(Color.BLUE))
+//                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
+//                                .setId(BTN_NOTHING).setPressedColor(Color.BLUE)));
     }
 
     /* *************************** GENERIC BAND STUFF *************************** */
