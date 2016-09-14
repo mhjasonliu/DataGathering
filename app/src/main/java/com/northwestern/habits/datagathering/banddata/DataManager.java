@@ -309,7 +309,7 @@ public abstract class DataManager implements EventListener {
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
         // Export the data to a csv
-        myBuffer.exportCSV(context, userID, type);
+//        myBuffer.exportCSV(context, userID, type);
 
         // Split the buffer
         final Map<Integer, List<Map>> split = myBuffer.splitIntoMinutes();
@@ -317,19 +317,19 @@ public abstract class DataManager implements EventListener {
         Calendar c = Calendar.getInstance();
         for (int minute : split.keySet()) {
             try {
-                // All the Calendar hours in this slice should be the same, so effectively they are
-                // the same
+                // All the Calendar minutes in this slice should be the same, so effectively they
+                // are the same
                 c.setTimeInMillis(Long.valueOf((String) split.get(minute).get(0).get("Time")));
 
                 // Add the slice to the data
-                final int h = minute;
+                final int m = minute;
                 CouchBaseData.getDocument(c, type, userID, context).update(new Document.DocumentUpdater() {
                     @Override
                     public boolean update(UnsavedRevision newRevision) {
                         Map<String, Object> properties = newRevision.getUserProperties();
-                        List<Map> toAdd = split.get(h);
-                        properties.put(DataManagementService.DATA,
-                                DataSeries.pack((List<Map>) properties.get(DataManagementService.DATA), toAdd));
+                        List<Map> oldData = (List) properties.get(DataManagementService.DATA);
+                        List<Map> newData = split.get(m);
+                        oldData.addAll(newData);
                         return true;
                     }
                 });
@@ -340,5 +340,4 @@ public abstract class DataManager implements EventListener {
             }
         }
     }
-
 }

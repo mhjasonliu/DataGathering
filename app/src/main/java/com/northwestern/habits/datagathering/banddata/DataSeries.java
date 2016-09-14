@@ -16,6 +16,7 @@ import com.microsoft.band.sensors.MotionType;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -79,7 +80,7 @@ public class DataSeries {
         return split;
     }
 
-    public Set getDataKeys() {return dataArray.get(0).keySet();}
+    public Set<String> getDataKeys() {return dataArray.get(0).keySet();}
 
     public int getCount() {
         return dataArray.size();
@@ -136,7 +137,9 @@ public class DataSeries {
 
             File csv = new File(PATH, fName);
             List<Map> dataSeries = dataArray;
-            List<String> properties = new LinkedList(dataArray.get(0).keySet());
+            ArrayList a = new ArrayList();
+            a.addAll(getDataKeys());
+            List<String> properties = a;
             try {
                 FileWriter csvWriter = null;
                 try {

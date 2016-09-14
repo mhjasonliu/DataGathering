@@ -48,6 +48,7 @@ public class CouchBaseData {
         if (database == null || !Objects.equals(database.getName(), name)) {
             Log.d(TAG, "Creating new database");
             database = getManager(c).getDatabase(name);
+            database.setMaxRevTreeDepth(1);
             docCount = database.getDocumentCount();
         }
         docCount = database.getDocumentCount();
