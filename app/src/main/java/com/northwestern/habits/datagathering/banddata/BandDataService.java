@@ -18,6 +18,7 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.lang.ref.WeakReference;
@@ -99,6 +100,8 @@ public class BandDataService extends Service {
         b.setSmallIcon(android.R.drawable.arrow_up_float);
 
         startForeground(NOTIFICATION_ID, b.build());
+
+        Thread.setDefaultUncaughtExceptionHandler(DataGatheringApplication.getInstance());
 
         // Set receivers
         if (userIDReceiver == null) {
