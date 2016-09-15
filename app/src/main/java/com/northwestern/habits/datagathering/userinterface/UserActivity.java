@@ -35,6 +35,7 @@ import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 public class UserActivity extends AppCompatActivity {
@@ -224,10 +225,9 @@ public class UserActivity extends AppCompatActivity {
 
     private void sendLabelBroadcast(int label) {
         // Store label in preferences
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .edit().putInt(Preferences.LABEL, label).apply();
         Intent i = new Intent(MyReceiver.ACTION_LABEL);
         i.putExtra(MyReceiver.LABEL_EXTRA, label);
+        i.putExtra(MyReceiver.TIMESTAMP_EXTRA, Calendar.getInstance().getTimeInMillis());
         this.sendBroadcast(i);
     }
 

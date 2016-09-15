@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.LabelManager;
 import com.northwestern.habits.datagathering.userinterface.SplashActivity;
 
 /**
@@ -21,6 +22,8 @@ public class MyReceiver extends BroadcastReceiver {
     private static final String TAG = "BroadcastReceiver";
     public static final String ACTION_LABEL = "com.northwestern.habits.datagathering.action.LABEL";
     public static final String LABEL_EXTRA = "Label";
+    public static final String USER_ID_EXTRA = "UserID";
+    public static final String TIMESTAMP_EXTRA = "timestamp";
 
     /**
      * Returns whether or not the wifi is accessable
@@ -101,10 +104,14 @@ public class MyReceiver extends BroadcastReceiver {
                     // Hand it off to the LabelManager
                     //TODO get actual values from the intent
                     int labelExtra = intent.getIntExtra(LABEL_EXTRA, 0);
+                    long timestamp = intent.getLongExtra(TIMESTAMP_EXTRA, 0);
                     PreferenceManager.getDefaultSharedPreferences(context)
                             .edit().putInt(Preferences.LABEL, labelExtra).apply();
+                    String userID = PreferenceManager
+                            .getDefaultSharedPreferences(context)
+                            .getString(Preferences.USER_ID, "");
                     Log.v(TAG, "Label change received: " + labelExtra);
-//                    LabelManager.addLabelChange("", context, "", 1);
+                    LabelManager.addLabelChange(userID, context, Integer.toString(labelExtra), timestamp);
                     break;
                 default:
                     Log.e(TAG, "Unknown type sent to receiver: " + intent.getAction());
