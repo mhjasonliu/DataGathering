@@ -55,13 +55,49 @@ public class CouchBaseData {
         return database;
     }
 
-    public static Database getLabelDatabase(Context c) throws CouchbaseLiteException, IOException {
-        c = c.getApplicationContext();
-        return getManager(c).getDatabase(LABEL_DB_NAME);
-    }
-
     public static Document getLabelDocument(String userID, Context context) throws CouchbaseLiteException, IOException {
-        return getLabelDatabase(context).getDocument(userID + "_Labels");
+        Calendar date = Calendar.getInstance();
+
+        StringBuilder docID = new StringBuilder();
+        docID.append(userID);
+        docID.append("_");
+        docID.append(date.get(Calendar.MONTH) + 1);
+        docID.append("-");
+        docID.append(date.get(Calendar.DAY_OF_MONTH));
+        docID.append("-");
+        docID.append(date.get(Calendar.YEAR));
+        docID.append("_");
+        int hour = date.get(Calendar.HOUR_OF_DAY);
+        if (hour < 10)
+            docID.append("0");
+        docID.append(hour);
+        docID.append("00");
+        docID.append("_");
+        docID.append(date.get(Calendar.MINUTE));
+        docID.append("_");
+        docID.append("Labels");
+
+        Document d = getDatabase(context).getDocument(docID.toString());
+        Map<String, Object> properties = d.getProperties();
+
+        if (properties == null || !properties.containsKey("Version")) {
+            Log.v(TAG, "Setting metadata properties");
+            properties = new HashMap<>();
+            // New document
+            properties.put(DataManagementService.TYPE, "Label");
+            properties.put("Hour", date.get(Calendar.HOUR_OF_DAY));
+            properties.put("User", userID);
+
+            properties.put(DataManagementService.FIRST_ENTRY, date.getTimeInMillis());
+            date.set(Calendar.MINUTE, 59);
+            date.set(Calendar.SECOND, 59);
+            properties.put(DataManagementService.LAST_ENTRY, date.getTimeInMillis());
+            properties.put(DataManagementService.USER_ID, userID);
+            properties.put(DataManagementService.DATA, new LinkedList<Map>());
+            properties.put("Version", "3.0.0");
+            d.putProperties(properties);
+        }
+        return d;
     }
 
 
