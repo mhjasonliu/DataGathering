@@ -73,8 +73,6 @@ public class CouchBaseData {
         docID.append(hour);
         docID.append("00");
         docID.append("_");
-        docID.append(date.get(Calendar.MINUTE));
-        docID.append("_");
         docID.append("Labels");
 
         Document d = getDatabase(context).getDocument(docID.toString());
