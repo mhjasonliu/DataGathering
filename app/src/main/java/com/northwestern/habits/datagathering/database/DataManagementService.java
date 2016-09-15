@@ -125,6 +125,7 @@ public class DataManagementService extends Service {
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 sendBroadcast(i);
                 startOneShotRep();
+                startLabelBackup();
                 break;
             case ACTION_STOP_BACKUP:
                 try {
@@ -145,9 +146,16 @@ public class DataManagementService extends Service {
                             db.getActiveReplications()) {
                         r.stop();
                     }
+
+
+                    // Stop label replication
+                    labelPush.stop();
+
                 } catch (CouchbaseLiteException | IOException | NullPointerException e) {
                     e.printStackTrace();
                 }
+
+
                 break;
             default:
                 Log.e(TAG, "Non-existant action requested " + intent.getAction());
@@ -159,11 +167,41 @@ public class DataManagementService extends Service {
 
     private boolean isReplicating = false;
     private Replication push;
+    private Replication labelPush;
+
+    private void startLabelBackup() {
+        if (labelPush == null) {
+            try {
+                labelPush = new Replication(CouchBaseData.getLabelDatabase(getBaseContext()),
+                        new URL(CouchBaseData.URL_STRING),
+                        Replication.Direction.PUSH);
+                labelPush.setContinuous(false);
+                labelPush.addChangeListener(new Replication.ChangeListener() {
+                    @Override
+                    public void changed(Replication.ChangeEvent event) {
+                        Log.v(TAG, event.toString());
+                    }
+                });
+
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (!labelPush.isRunning()) {
+            labelPush.start();
+        }
+    }
 
     private void startOneShotRep() {
         // Only start a replication if another is not running
         if (!isReplicating) {
             isReplicating = true;
+
+            // Start replication for label
+            startLabelBackup();
 
             try {
                 // Get all the documents from the database
@@ -211,7 +249,7 @@ public class DataManagementService extends Service {
         }
     }
 
-    private class restartAsync extends AsyncTask<Void,Void,Void> {
+    private class restartAsync extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void[] params) {
             restartOneShot();
@@ -278,7 +316,7 @@ public class DataManagementService extends Service {
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
                     Collections.sort(pushed);
-                    String lastDbName = pushed.get(pushed.size()-1);
+                    String lastDbName = pushed.get(pushed.size() - 1);
                     int hyphenLocation = lastDbName.lastIndexOf("_");
                     String lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
                     lastDbName = lastDbName.replace(lastDbTime, "");
@@ -286,13 +324,13 @@ public class DataManagementService extends Service {
                     lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
                     lastDbTime = lastDbTime.replace("_", "");
                     int hour = Integer.valueOf(lastDbTime);
-                    hour = hour/100;
+                    hour = hour / 100;
 
                     if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
                         // Preserve the last doc so the db is not cleaned up
                         // Preserve the last two documents in case of residual writes waiting to be added
-                        if (pushed.size() > 0) pushed.remove(pushed.size()-1);
-                        if (pushed.size() > 0) pushed.remove(pushed.size()-1);
+                        if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
+                        if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
                     }
 
                     try {
