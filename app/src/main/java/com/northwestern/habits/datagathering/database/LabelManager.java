@@ -30,13 +30,14 @@ public class LabelManager {
                 @Override
                 public boolean update(UnsavedRevision newRevision) {
                     Map<String, Object> properties = newRevision.getProperties();
-                    List<Map<Long, String>> labels = (List<Map<Long, String>>) properties.get(DataManagementService.DATA);
+                    List<Map<String, Object>> labels = (List<Map<String, Object>>) properties.get(DataManagementService.DATA);
                     if (labels == null) {
                         labels = new LinkedList<>();
                         properties.put(DataManagementService.DATA, labels);
                     }
                     Map newMap = new HashMap<>();
-                    newMap.put(timeStamp, label);
+                    newMap.put("Time", timeStamp);
+                    newMap.put("Label", label);
                     labels.add(newMap);
                     Log.v(TAG, "Updated database");
                     return true;
