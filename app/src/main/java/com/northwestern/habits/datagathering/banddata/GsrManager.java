@@ -188,7 +188,6 @@ public class GsrManager extends DataManager {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
                 datapoint.put("Time", Long.toString(event.getTimestamp()));
-                datapoint.put("Label", label);
                 datapoint.put("Resistance", event.getResistance());
 
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());

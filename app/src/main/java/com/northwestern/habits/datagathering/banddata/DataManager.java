@@ -65,7 +65,6 @@ public abstract class DataManager implements EventListener {
     protected long TIMEOUT_INTERVAL = TimeUnit.MINUTES.toMillis(1);
     protected int restartCount = 0;
     protected String STREAM_TYPE;
-    protected static int label = 0;
 
     protected DataSeries dataBuffer;
     protected int BUFFER_SIZE = 100;

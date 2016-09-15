@@ -179,7 +179,6 @@ public class DistanceManager extends DataManager {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
                 datapoint.put("Time", Long.toString(event.getTimestamp()));
-                datapoint.put("Label", label);
                 datapoint.put("Motion_Type", event.getMotionType());
                 datapoint.put("Pace", event.getPace());
                 datapoint.put("Speed", event.getSpeed());

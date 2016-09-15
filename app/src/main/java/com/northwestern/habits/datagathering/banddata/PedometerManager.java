@@ -190,7 +190,6 @@ public class PedometerManager extends DataManager {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
                 datapoint.put("Time", Long.toString(event.getTimestamp()));
-                datapoint.put("Label", label);
                 datapoint.put("Total_Steps", event.getTotalSteps());
                 try {
                     datapoint.put("Steps_Today", event.getStepsToday());

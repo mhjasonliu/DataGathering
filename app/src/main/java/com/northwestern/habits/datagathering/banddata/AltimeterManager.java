@@ -190,7 +190,6 @@ public class AltimeterManager extends DataManager {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
                 datapoint.put("Time", Long.toString(event.getTimestamp()));
-                datapoint.put("Label", label);
                 datapoint.put("Total_Gain", event.getTotalGain());
                 datapoint.put("Total_Loss", event.getTotalLoss());
                 datapoint.put("Stepping_Gain", event.getSteppingGain());
