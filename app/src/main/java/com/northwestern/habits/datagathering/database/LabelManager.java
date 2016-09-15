@@ -8,6 +8,8 @@ import com.couchbase.lite.UnsavedRevision;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,12 +28,14 @@ public class LabelManager {
                 @Override
                 public boolean update(UnsavedRevision newRevision) {
                     Map<String, Object> properties = newRevision.getProperties();
-                    Map<Long, String> labels = (Map<Long, String>) properties.get(DataManagementService.DATA);
+                    List<Map<Long, String>> labels = (List<Map<Long, String>>) properties.get(DataManagementService.DATA);
                     if (labels == null) {
-                        labels = new HashMap();
+                        labels = new LinkedList<>();
                         properties.put(DataManagementService.DATA, labels);
                     }
-                    labels.put(timeStamp,label);
+                    Map newMap = new HashMap<>();
+                    newMap.put(timeStamp, label);
+                    labels.add(newMap);
                     return true;
                 }
             });
