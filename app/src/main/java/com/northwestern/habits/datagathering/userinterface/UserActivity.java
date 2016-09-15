@@ -31,10 +31,8 @@ import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.MyReceiver;
-import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
-import com.northwestern.habits.datagathering.banddata.BandDataService;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.util.concurrent.TimeUnit;
@@ -228,8 +226,8 @@ public class UserActivity extends AppCompatActivity {
         // Store label in preferences
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit().putInt(Preferences.LABEL, label).apply();
-        Intent i = new Intent(BandDataService.ACTION_LABEL);
-        i.putExtra(BandDataService.LABEL_EXTRA, label);
+        Intent i = new Intent(MyReceiver.ACTION_LABEL);
+        i.putExtra(MyReceiver.LABEL_EXTRA, label);
         this.sendBroadcast(i);
     }
 
