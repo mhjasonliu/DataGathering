@@ -72,6 +72,7 @@ public class CouchBaseData {
         List<String> names = new ArrayList<>(m.getAllDatabaseNames());
         if (names.size() == 0) return null;
         Collections.sort(names);
+        names.remove(LABEL_DB_NAME);
         Log.d(TAG, "List of names: " + names);
 
 
