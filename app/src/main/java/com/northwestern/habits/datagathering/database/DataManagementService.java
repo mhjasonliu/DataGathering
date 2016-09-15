@@ -125,7 +125,6 @@ public class DataManagementService extends Service {
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 sendBroadcast(i);
                 startOneShotRep();
-                startLabelBackup();
                 break;
             case ACTION_STOP_BACKUP:
                 try {
@@ -169,39 +168,11 @@ public class DataManagementService extends Service {
     private Replication push;
     private Replication labelPush;
 
-    private void startLabelBackup() {
-        if (labelPush == null) {
-            try {
-                labelPush = new Replication(CouchBaseData.getLabelDatabase(getBaseContext()),
-                        new URL(CouchBaseData.URL_STRING),
-                        Replication.Direction.PUSH);
-                labelPush.setContinuous(false);
-                labelPush.addChangeListener(new Replication.ChangeListener() {
-                    @Override
-                    public void changed(Replication.ChangeEvent event) {
-                        Log.v(TAG, event.toString());
-                    }
-                });
-
-            } catch (CouchbaseLiteException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (!labelPush.isRunning()) {
-            labelPush.start();
-        }
-    }
 
     private void startOneShotRep() {
         // Only start a replication if another is not running
         if (!isReplicating) {
             isReplicating = true;
-
-            // Start replication for label
-            startLabelBackup();
 
             try {
                 // Get all the documents from the database
@@ -327,6 +298,14 @@ public class DataManagementService extends Service {
                     hour = hour / 100;
 
                     if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+                        // Preserve the label document
+                        for (String name : pushed) {
+                            if (name.substring(name.lastIndexOf("_"), name.length()) == "_Labels") {
+                                Log.v(TAG, "Successfully preserved label document");
+                                pushed.remove(name);
+                            }
+
+                        }
                         // Preserve the last doc so the db is not cleaned up
                         // Preserve the last two documents in case of residual writes waiting to be added
                         if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
