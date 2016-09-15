@@ -26,10 +26,10 @@ public class LabelManager {
                 @Override
                 public boolean update(UnsavedRevision newRevision) {
                     Map<String, Object> properties = newRevision.getProperties();
-                    Map<Long, String> labels = (Map<Long, String>) properties.get("labels");
+                    Map<Long, String> labels = (Map<Long, String>) properties.get(DataManagementService.DATA);
                     if (labels == null) {
                         labels = new HashMap();
-                        properties.put("labels", labels);
+                        properties.put(DataManagementService.DATA, labels);
                     }
                     labels.put(timeStamp,label);
                     return true;
