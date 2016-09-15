@@ -102,7 +102,6 @@ public class MyReceiver extends BroadcastReceiver {
                     break;
                 case ACTION_LABEL:
                     // Hand it off to the LabelManager
-                    //TODO get actual values from the intent
                     int labelExtra = intent.getIntExtra(LABEL_EXTRA, 0);
                     long timestamp = intent.getLongExtra(TIMESTAMP_EXTRA, 0);
                     PreferenceManager.getDefaultSharedPreferences(context)
