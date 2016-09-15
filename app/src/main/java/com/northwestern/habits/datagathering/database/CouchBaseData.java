@@ -32,7 +32,7 @@ public class CouchBaseData {
     public static final String URL_STRING = "http://107.170.25.202:4984/db/";
 
     public static final String DB_NAME_BASE = "data_gathering_db";
-    public static final String LABEL_DB_NAME = "LABEL_DB";
+    public static final String LABEL_DB_NAME = "label_db";
 
     private static final String TAG = "CBD";
     private static Database database;
