@@ -32,11 +32,10 @@ public class CouchBaseData {
     public static final String URL_STRING = "http://107.170.25.202:4984/db/";
 
     public static final String DB_NAME_BASE = "data_gathering_db";
+    public static final String LABEL_DB_NAME = "LABEL_DB";
 
     private static final String TAG = "CBD";
     private static Database database;
-    private static int docCount;
-    private static final int DOC_LIMIT = 1000;
     private static Document currentDocument;
     private static Manager currentManager;
 
@@ -45,6 +44,7 @@ public class CouchBaseData {
         Calendar cal = Calendar.getInstance();
         String name = DB_NAME_BASE + Integer.toString(cal.get(Calendar.MONTH)+1) +
                 cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.HOUR_OF_DAY);
+        int docCount;
         if (database == null || !Objects.equals(database.getName(), name)) {
             Log.d(TAG, "Creating new database");
             database = getManager(c).getDatabase(name);
@@ -54,6 +54,16 @@ public class CouchBaseData {
         Log.d(TAG, Integer.toString(docCount) + " documents in database");
         return database;
     }
+
+    public static Database getLabelDatabase(Context c) throws CouchbaseLiteException, IOException {
+        c = c.getApplicationContext();
+        return getManager(c).getDatabase(LABEL_DB_NAME);
+    }
+
+    public static Document getLabelDocument(String userID, Context context) throws CouchbaseLiteException, IOException {
+        return getLabelDatabase(context).getDocument(userID + "_Labels");
+    }
+
 
 
     public static Database getOldestDatabase(Context c) throws IOException, CouchbaseLiteException {
