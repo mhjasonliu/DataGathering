@@ -296,13 +296,14 @@ public class DataManagementService extends Service {
                     if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
                         Log.v(TAG, "Pushed: " +pushed.toString());
                         // Preserve the label document
+                        int labelIndex = -1;
                         for (String name : pushed) {
                             if (Objects.equals(name.substring(name.lastIndexOf("_"), name.length()), "_Labels")) {
                                 Log.v(TAG, "Successfully preserved label document");
-                                pushed.remove(name);
+                                labelIndex = pushed.indexOf(name);
                             }
-
                         }
+                        if (labelIndex >=0) pushed.remove(labelIndex);
                         // Preserve the last doc so the db is not cleaned up
                         // Preserve the last two documents in case of residual writes waiting to be added
                         if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
