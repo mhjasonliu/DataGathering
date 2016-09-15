@@ -50,13 +50,13 @@ public class CrashActivity extends Activity implements View.OnClickListener {
             return;
 
         Intent intent = new Intent (Intent.ACTION_SEND);
-        intent.setType ("plain/text");
+        intent.setType ("text/plain");
         intent.putExtra (Intent.EXTRA_EMAIL, new String[] {"williamstogin2018@u.northwestern.edu"});
         intent.putExtra (Intent.EXTRA_SUBJECT, "MyApp log file");
         intent.putExtra (Intent.EXTRA_STREAM, Uri.parse("file://" + fullName));
         intent.putExtra (Intent.EXTRA_TEXT, "Log file attached."); // do this so some email clients don't complain about empty body.
         startActivity (intent);
-        moveTaskToBack(true);
+        //moveTaskToBack(true);
         finish();
     }
 

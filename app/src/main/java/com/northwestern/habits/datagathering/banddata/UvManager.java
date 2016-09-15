@@ -185,7 +185,6 @@ public class UvManager extends DataManager {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
                 datapoint.put("Time", Long.toString(event.getTimestamp()));
-                datapoint.put("Label", label);
                 datapoint.put("Level", event.getUVIndexLevel());
                 try {
                     datapoint.put("UV_Exposure_Today", event.getUVExposureToday());

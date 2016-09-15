@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.database;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -14,12 +15,17 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -69,6 +75,7 @@ public class DataManagementService extends Service {
      * Constructor
      */
     public DataManagementService() {
+        Thread.setDefaultUncaughtExceptionHandler(DataGatheringApplication.getInstance());
     }
 
     @Override
@@ -121,7 +128,7 @@ public class DataManagementService extends Service {
                 break;
             case ACTION_STOP_BACKUP:
                 try {
-                    Database db = CouchBaseData.getDatabase(getBaseContext());
+                    Database db = CouchBaseData.getOldestDatabase(getBaseContext());
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -138,20 +145,29 @@ public class DataManagementService extends Service {
                             db.getActiveReplications()) {
                         r.stop();
                     }
-                } catch (CouchbaseLiteException | IOException e) {
+
+
+                    // Stop label replication
+                    labelPush.stop();
+
+                } catch (CouchbaseLiteException | IOException | NullPointerException e) {
                     e.printStackTrace();
                 }
+
+
                 break;
             default:
                 Log.e(TAG, "Non-existant action requested " + intent.getAction());
         }
 
-        return START_NOT_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
 
     private boolean isReplicating = false;
     private Replication push;
+    private Replication labelPush;
+
 
     private void startOneShotRep() {
         // Only start a replication if another is not running
@@ -160,28 +176,43 @@ public class DataManagementService extends Service {
 
             try {
                 // Get all the documents from the database
-                final Database db = CouchBaseData.getDatabase(this);
-                Query q = db.createAllDocumentsQuery();
-                q.setLimit(100);
-                q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
-                QueryEnumerator result = q.run();
+                final Database db = CouchBaseData.getOldestDatabase(this);
+                if (db == null) {
+                    Log.v(TAG, "DB was null");
+                    Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
+                    i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
+                            UserActivity.DbUpdateReceiver.STATUS_SYNCED);
+                    if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    new restartAsync().execute();
+                } else {
+//                    if (!db.isOpen()) db.open();
+                    Log.v(TAG, "Starting");
+                    Query q = db.createAllDocumentsQuery();
+                    q.setLimit(100);
+                    q.setAllDocsMode(Query.AllDocsMode.ALL_DOCS);
+                    q.setLimit(100);
+                    QueryEnumerator result = q.run();
 
-                // Pack the docIDs into a list
-                final List<String> ids = new LinkedList<>();
-                while (result.hasNext()) {
-                    ids.add(result.next().getDocumentId());
+                    // Pack the docIDs into a list
+                    final List<String> ids = new LinkedList<>();
+                    while (result.hasNext()) {
+                        ids.add(result.next().getDocumentId());
+                    }
+
+                    // Do a one-shot replication
+                    if (push == null || !Objects.equals(push.getLocalDatabase().getName(), db.getName())) {
+                        URL url = new URL(CouchBaseData.URL_STRING);
+                        push = new Replication(db,
+                                url,
+                                Replication.Direction.PUSH);
+                        push.setContinuous(false);
+                        push.addChangeListener(changeListener);
+                    }
+
+                    push.setDocIds(ids);
+                    Log.v(TAG, "Starting rep");
+                    push.start();
                 }
-
-                // Do a one-shot replication
-                URL url = new URL(CouchBaseData.URL_STRING);
-                push = new Replication(db,
-                        url,
-                        Replication.Direction.PUSH);
-
-                push.setContinuous(false);
-                push.setDocIds(ids);
-                push.addChangeListener(changeListener);
-                push.start();
 
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
@@ -189,18 +220,27 @@ public class DataManagementService extends Service {
         }
     }
 
+    private class restartAsync extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void[] params) {
+            restartOneShot();
+            return null;
+        }
+    }
+
     private void restartOneShot() {
         isReplicating = false;
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        startOneShotRep();
+        if (MyReceiver.isCharging(getBaseContext()) && MyReceiver.isWifiConnected(getBaseContext()))
+            startOneShotRep();
     }
 
+    private boolean isBlockingBroadcastsForError = false;
     Replication.ChangeListener changeListener = new Replication.ChangeListener() {
-        private boolean isBlockingBroadcastsForError = false;
 
         @Override
         public void changed(Replication.ChangeEvent event) {
@@ -237,9 +277,8 @@ public class DataManagementService extends Service {
 
             } else if (isTransitioningToStopped) {
                 // STOPPING WITHOUT ERROR
-                Log.v(TAG, "Stopped");
-                if (didCompleteAll && !changesAreZero) {
-                    // Broadcast synced
+                if (didCompleteAll && !isBlockingBroadcastsForError) {
+                    // Broadcast syncing
                     Intent i = new Intent(UserActivity.DbUpdateReceiver.ACTION_DB_STATUS);
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
@@ -247,8 +286,32 @@ public class DataManagementService extends Service {
                     Log.v(TAG, "Broadcasted syncing after successful sync");
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
+                    Collections.sort(pushed);
+                    String lastDbName = push.getLocalDatabase().getName();//pushed.get(pushed.size() - 1);
+                    int hyphenLocation = lastDbName.lastIndexOf("-");
+                    String lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
+                    lastDbTime = lastDbTime.replace("-", "");
+                    int hour = Integer.valueOf(lastDbTime);
+
+                    if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+                        Log.v(TAG, "Pushed: " +pushed.toString());
+                        // Preserve the label document
+                        int labelIndex = -1;
+                        for (String name : pushed) {
+                            if (Objects.equals(name.substring(name.lastIndexOf("_"), name.length()), "_Labels")) {
+                                Log.v(TAG, "Successfully preserved label document");
+                                labelIndex = pushed.indexOf(name);
+                            }
+                        }
+                        if (labelIndex >=0) pushed.remove(labelIndex);
+                        // Preserve the last doc so the db is not cleaned up
+                        // Preserve the last two documents in case of residual writes waiting to be added
+                        if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
+                        if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
+                    }
+
                     try {
-                        Database db = CouchBaseData.getDatabase(getBaseContext());
+                        Database db = CouchBaseData.getOldestDatabase(getBaseContext());
                         for (String id :
                                 pushed) {
                             // Purge the doc
@@ -267,6 +330,7 @@ public class DataManagementService extends Service {
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCED);
                     if (!isBlockingBroadcastsForError) sendBroadcast(i);
+                    Log.v(TAG, "Documents " + push.getDocIds());
                     Log.v(TAG, "Broadcasted synced");
 
                 } else {
@@ -275,9 +339,7 @@ public class DataManagementService extends Service {
                     i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                     if (!isBlockingBroadcastsForError) sendBroadcast(i);
-                    Log.v(TAG, "Broadcasted syncing by default 1");
-                    Log.v(TAG, "Did complete all is " + didCompleteAll);
-                    Log.v(TAG, "Changes are zero is " + changesAreZero);
+                    Log.v(TAG, "Broadcasted syncing by default");
                 }
 
                 // Restart?
@@ -291,7 +353,7 @@ public class DataManagementService extends Service {
                 i.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                         UserActivity.DbUpdateReceiver.STATUS_SYNCING);
                 if (!isBlockingBroadcastsForError) sendBroadcast(i);
-                Log.v(TAG, "Broadcasted syncing by default 2");
+                Log.v(TAG, "Broadcasted syncing while in progress");
             }
 
         }

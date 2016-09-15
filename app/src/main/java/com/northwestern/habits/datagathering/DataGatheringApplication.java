@@ -57,7 +57,7 @@ public class DataGatheringApplication extends Application implements Thread.Unca
         handleUncaughtException(ex);
     }
 
-    /* ********************************* MANAGE THE DATABASE ********************************* */
+    /* ********************************* MANAGE THE DATABASE ********************************** */
     public static String getDataFilePath(Context context, int hour) {
         return context.getFilesDir().getPath()
                 + "/hour_" + Integer.toString(hour) + "_data";

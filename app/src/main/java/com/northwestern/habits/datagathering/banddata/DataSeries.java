@@ -2,20 +2,17 @@ package com.northwestern.habits.datagathering.banddata;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.microsoft.band.sensors.HeartRateQuality;
-import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.CsvWriter;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,7 +26,7 @@ public class DataSeries {
 
     private int capacity = 0;
 
-    private List<Map> dataArray = new LinkedList<>();
+    private List<Map<String, Object>> dataArray = new LinkedList<>();
     private long firstEntry;
     private long lastEntry;
     private String type;
@@ -56,16 +53,25 @@ public class DataSeries {
         return dataArray.size() >= capacity;
     }
 
-    public Map<String, Object> pack() {
-        Map<String, Object> m = new HashMap<>();
+    public static List<Map> pack(List<Map> dataSoFar, List<Map> dataToAdd) {
+        if (dataSoFar == null) dataSoFar = new LinkedList<>();
+        dataSoFar.addAll(dataToAdd);
+        return dataSoFar;
+    }
 
-        m.put(DataManagementService.FIRST_ENTRY, firstEntry);
-        m.put(DataManagementService.LAST_ENTRY, lastEntry);
-        m.put(DataManagementService.TYPE, type);
-        m.put(DataManagementService.DATA, dataArray);
-        m.put(DataManagementService.DATA_KEYS, dataArray.get(0).keySet());
-
-        return m;
+    public Map<Integer, List<Map>> splitIntoMinutes() {
+        int minute;
+        Calendar c = Calendar.getInstance();
+        Map<Integer, List<Map>> split = new HashMap<>();
+        for (Map datum : dataArray) {
+            c.setTimeInMillis(Long.valueOf((String) datum.get("Time")));
+            minute = c.get(Calendar.MINUTE);
+            if (!split.containsKey(minute)) {
+                split.put(minute, new LinkedList<Map>());
+            }
+            split.get(minute).add(datum);
+        }
+        return split;
     }
 
     public int getCount() {
@@ -73,7 +79,7 @@ public class DataSeries {
     }
 
     public void exportCSV(Context c, String userID, String type) {
-        new ExportCSVTask(c, userID, type).doInBackground(null);
+        new ExportCSVTask(c, userID).doInBackground(null);
     }
 
 
@@ -82,95 +88,47 @@ public class DataSeries {
         private Context context;
         private String userID;
 
-        public ExportCSVTask(Context c, String uID, String t) {
+        public ExportCSVTask(Context c, String uID) {
             context = c;
             userID = uID;
         }
 
         @Override
         protected Object doInBackground(Object[] params) {
-            // Make csv name
-            String fName = userID;
-            fName += "_" + type + "_";
-            fName += firstEntry;
-            fName += "_thru_";
-            fName += lastEntry + ".csv";
 
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 Log.e(TAG, "permission denied");
             }
 
-            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" + type + "/";
-            File folder = new File(PATH);
-            if (!folder.exists()) {
-                Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
-            }
+            File folder = CsvWriter.getFolder(firstEntry, userID, type);
 
-            File csv = new File(PATH, fName);
-            if (!csv.exists()) {
-                try {
-                    // Make the file
-                    if (!csv.createNewFile()) {
-                        throw new IOException();
+            // Make csv
+            File csv = CsvWriter.getCsv(folder, firstEntry);
+
+            List<Map<String, Object>> dataSeries = dataArray;
+            List<String> properties = new LinkedList(dataArray.get(0).keySet());
+            FileWriter writer = null;
+            try {
+                if (!csv.exists()) {
+                    writer = CsvWriter.writeProperties(properties, csv, context);
+                } else {
+                    writer = new FileWriter(csv, true);
+                }
+
+                CsvWriter.writeDataSeries(writer, dataSeries, properties);
+                Log.v(TAG, "Wrote the file");
+
+            } catch (ConcurrentModificationException | IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.flush();
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                    FileWriter csvWriter = new FileWriter(csv.getPath(), true);
-                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    intent.setData(Uri.fromFile(csv));
-                    context.sendBroadcast(intent);
-
-
-                    List<Map> dataSeries = dataArray;
-                    List<String> properties = new LinkedList(dataArray.get(0).keySet());
-
-                    for (int i = 0; i < properties.size(); i++) {
-                        csvWriter.append(properties.get(i));
-                        if (i == properties.size() - 1) {
-                            csvWriter.append("\n");
-                        } else {
-                            csvWriter.append(",");
-                        }
-                    }
-
-                    // Write the file
-                    for (Map<String, Object> dataPoint :
-                            dataSeries) {
-                        for (int i = 0; i < properties.size(); i++) {
-                            try {
-                                Object datum = dataPoint.get(properties.get(i));
-
-                                if (datum instanceof String) {
-                                    csvWriter.append(datum.toString());
-                                } else if (datum instanceof Double) {
-                                    csvWriter.append(Double.toString((Double) datum));
-                                } else if (datum instanceof Integer) {
-                                    csvWriter.append(Integer.toString((Integer) datum));
-                                } else if (datum instanceof Long) {
-                                    csvWriter.append(Long.toString((Long) datum));
-                                } else if (datum instanceof Float) {
-                                    csvWriter.append(Float.toString((Float) datum));
-                                } else if (datum instanceof HeartRateQuality) {
-                                    csvWriter.append(datum.toString());
-                                } else {
-                                    Log.e(TAG, "Unhandled case " + datum.getClass());
-                                    csvWriter.append(datum.toString());
-                                }
-                                if (i == properties.size() - 1) {
-                                    csvWriter.append("\n");
-                                } else {
-                                    csvWriter.append(",");
-                                }
-                            } catch (NullPointerException e) {
-                                Log.e(TAG, "Row was null");
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    csvWriter.flush();
-                    csvWriter.close();
-
-                } catch (IOException | ConcurrentModificationException e) {
-                    e.printStackTrace();
                 }
             }
 

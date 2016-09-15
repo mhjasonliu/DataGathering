@@ -55,9 +55,11 @@ public class GyroscopeManager extends DataManager {
         }
 
         // Record frequency change
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor e = prefs.edit();
-        e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.GYRO), f).apply();
+        if (bandinfo != null) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor e = prefs.edit();
+            e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.GYRO), f).apply();
+        }
     }
 
     public GyroscopeManager(Context context) {
@@ -275,7 +277,6 @@ public class GyroscopeManager extends DataManager {
                 this.lastDataSample = System.currentTimeMillis();
                 Map<String, Object> datapoint = new HashMap<>();
                 datapoint.put("Time", Long.toString(event.getTimestamp()));
-                datapoint.put("Label", label);
                 datapoint.put("Linear_Accel_x", event.getAccelerationX());
                 datapoint.put("Linear_Accel_y", event.getAccelerationY());
                 datapoint.put("Linear_Accel_z", event.getAccelerationZ());

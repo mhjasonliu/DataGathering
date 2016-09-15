@@ -69,10 +69,6 @@ public class BandDataService extends Service {
     private BroadcastReceiver userIDReceiver;
     public static final String ACTION_USER_ID = "User_ID";
     public static final String USER_ID_EXTRA = "User_ID_Extra";
-    private BroadcastReceiver labelReceiver;
-    public static final String ACTION_LABEL = "Label broadcast";
-    public static final String LABEL_EXTRA = "Label";
-    private BroadcastReceiver tileEventReceiver;
 
 
     // Data managers
@@ -263,9 +259,6 @@ public class BandDataService extends Service {
         // Unregister receivers
         getBaseContext().unregisterReceiver(userIDReceiver);
         userIDReceiver = null;
-        getBaseContext().unregisterReceiver(labelReceiver);
-        labelReceiver = null;
-        getBaseContext().unregisterReceiver(tileEventReceiver);
 
         super.onDestroy();
     }
