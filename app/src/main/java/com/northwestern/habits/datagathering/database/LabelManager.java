@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.database;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
@@ -16,6 +17,7 @@ import java.util.Map;
  * Created by William on 9/15/2016
  */
 public class LabelManager {
+    private static final String TAG = "LabelManager";
 
     public static void addLabelChange(String userID, Context c, final String label, final long timeStamp) {
         // Add change to the csv
@@ -36,6 +38,7 @@ public class LabelManager {
                     Map newMap = new HashMap<>();
                     newMap.put(timeStamp, label);
                     labels.add(newMap);
+                    Log.v(TAG, "Updated database");
                     return true;
                 }
             });
