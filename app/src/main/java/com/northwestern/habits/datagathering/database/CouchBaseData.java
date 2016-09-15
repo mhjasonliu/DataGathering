@@ -166,7 +166,12 @@ public class CouchBaseData {
         docID.append("_");
         docID.append(date.get(Calendar.MINUTE));
 
-        Document d = getDatabase(context).getDocument(docID.toString());
+        Database db = getDatabase(context);
+        if (db.getDocumentCount() == 0) {
+            // Need to insert the label document
+            getLabelDocument(userId, context);
+        }
+        Document d = db.getDocument(docID.toString());
 
         Map<String, Object> properties = d.getProperties();
 
