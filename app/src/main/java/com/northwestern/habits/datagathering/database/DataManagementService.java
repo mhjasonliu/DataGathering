@@ -287,20 +287,17 @@ public class DataManagementService extends Service {
                     // Delete old documents
                     List<String> pushed = push.getDocIds();
                     Collections.sort(pushed);
-                    String lastDbName = pushed.get(pushed.size() - 1);
-                    int hyphenLocation = lastDbName.lastIndexOf("_");
+                    String lastDbName = push.getLocalDatabase().getName();//pushed.get(pushed.size() - 1);
+                    int hyphenLocation = lastDbName.lastIndexOf("-");
                     String lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
-                    lastDbName = lastDbName.replace(lastDbTime, "");
-                    hyphenLocation = lastDbName.lastIndexOf("_");
-                    lastDbTime = lastDbName.substring(hyphenLocation, lastDbName.length());
-                    lastDbTime = lastDbTime.replace("_", "");
+                    lastDbTime = lastDbTime.replace("-", "");
                     int hour = Integer.valueOf(lastDbTime);
-                    hour = hour / 100;
 
                     if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+                        Log.v(TAG, "Pushed: " +pushed.toString());
                         // Preserve the label document
                         for (String name : pushed) {
-                            if (name.substring(name.lastIndexOf("_"), name.length()) == "_Labels") {
+                            if (Objects.equals(name.substring(name.lastIndexOf("_"), name.length()), "_Labels")) {
                                 Log.v(TAG, "Successfully preserved label document");
                                 pushed.remove(name);
                             }
