@@ -34,6 +34,7 @@ import com.microsoft.band.tiles.pages.TextBlockData;
 import com.microsoft.band.tiles.pages.TextBlockFont;
 import com.microsoft.band.tiles.pages.TextButton;
 import com.microsoft.band.tiles.pages.TextButtonData;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 
@@ -68,19 +69,19 @@ public class TileManager extends BroadcastReceiver {
 
     static boolean onButtonClicked(int clickedID, Context context) throws BandIOException {
         String prev = activity;
-        Intent i = new Intent(BandDataService.ACTION_LABEL);
+        Intent i = new Intent(MyReceiver.ACTION_LABEL);
         switch (clickedID) {
             case BTN_EATING:
                 activity = "Eating";
-                i.putExtra(BandDataService.LABEL_EXTRA, DataManagementService.L_EATING);
+                i.putExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_EATING);
                 break;
             case BTN_DRINKING:
                 activity = "Drinking";
-                i.putExtra(BandDataService.LABEL_EXTRA, DataManagementService.L_DRINKING);
+                i.putExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_DRINKING);
                 break;
             case BTN_NOTHING:
                 activity = "Note to self";
-                i.putExtra(BandDataService.LABEL_EXTRA, DataManagementService.L_NOTHING);
+                i.putExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_NOTHING);
                 break;
             default:
                 Log.e("", "Unknown button press received");
