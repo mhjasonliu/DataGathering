@@ -24,7 +24,6 @@ import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
-import com.microsoft.band.tiles.pages.FlowPanel;
 import com.microsoft.band.tiles.pages.FlowPanelOrientation;
 import com.microsoft.band.tiles.pages.PageData;
 import com.microsoft.band.tiles.pages.PageLayout;
@@ -186,7 +185,9 @@ public class TileManager extends BroadcastReceiver {
             /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
         else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
             TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-//            new HandleBroadcastTask(context, buttonData).execute();
+            Intent i = new Intent(context, MyService.class);
+            i.putExtra(MyService.BUTTON_DATA_EXTRA, buttonData);
+            context.startService(i);
         }
     }
 
@@ -285,7 +286,7 @@ public class TileManager extends BroadcastReceiver {
 
     private PageLayout createTextLayout() {
         return new PageLayout(
-                new FlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
+                new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
                         .addElements(new TextBlock(0, 0, 260, 45, TextBlockFont.MEDIUM).setMargins(0, 5, 0, 0)
                                 .setId(TXT_TITLE).setAutoWidthEnabled(true))
 //                        .addElements(new TextBlock(0, 0, 260, 90, TextBlockFont.SMALL).setMargins(0, 5, 0, 0)
@@ -315,29 +316,5 @@ public class TileManager extends BroadcastReceiver {
         } else {
             throw new BandException("Could not connect to client", BandErrorType.UNKNOWN_ERROR);
         }
-    }
-}
-
-class HandleBroadcastTask extends AsyncTask<Void, Void, Void> {
-    public HandleBroadcastTask(Context c, TileButtonEvent e) {
-        context = c;
-        buttonData = e;
-    }
-
-    private Context context;
-    private TileButtonEvent buttonData;
-
-    @Override
-    protected Void doInBackground(Void... params) {
-        try {
-            UUID tid = buttonData.getTileID();
-            BandInfo i = TileManager.infoFromUUID(tid);
-            if (TileManager.onButtonClicked(buttonData.getElementID(), context) && i != null) {
-                TileManager.updatePages(TileManager.getConnectedBandClient(i, context), tid);
-            }
-        } catch (InterruptedException | BandException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 }
