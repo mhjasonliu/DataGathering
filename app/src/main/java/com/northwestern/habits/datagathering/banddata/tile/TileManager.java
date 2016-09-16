@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -25,6 +24,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
 import com.microsoft.band.tiles.TileEvent;
+import com.microsoft.band.tiles.pages.FlowPanel;
 import com.microsoft.band.tiles.pages.FlowPanelOrientation;
 import com.microsoft.band.tiles.pages.PageData;
 import com.microsoft.band.tiles.pages.PageLayout;
@@ -131,8 +131,7 @@ public class TileManager extends BroadcastReceiver {
     static boolean isEating = false;
     protected static void updatePages(BandClient client, UUID tileId, Context c) throws BandIOException {
         // Update isEating based on shared preferences
-        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
-
+        isEating = PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_EATING, isEating);
 
         if (buttonPressedFlag) {
             // Handle button press
@@ -156,7 +155,6 @@ public class TileManager extends BroadcastReceiver {
                         .update(new TextBlockData(TXT_TITLE, activityText))
                         .update(new TextButtonData(BTN_EATING, buttonText))
                 );
-        isEating = !isEating;
     }
 
 
@@ -289,12 +287,12 @@ public class TileManager extends BroadcastReceiver {
 
     private PageLayout createTextLayout() {
         return new PageLayout(
-                new ScrollFlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
+                new FlowPanel(15, 0, 260, 125, FlowPanelOrientation.VERTICAL)
                         .addElements(new TextBlock(0, 0, 260, 45, TextBlockFont.MEDIUM).setMargins(0, 5, 0, 0)
                                 .setId(TXT_TITLE).setAutoWidthEnabled(true))
 //                        .addElements(new TextBlock(0, 0, 260, 90, TextBlockFont.SMALL).setMargins(0, 5, 0, 0)
 //                                .setId(TXT_ACTIVITY).setAutoWidthEnabled(true))
-                        .addElements(new TextButton(0, 0, 260, 2 * 45).setMargins(0, 5, 0, 0)
+                        .addElements(new TextButton(0, 0, 260, 2 * 35).setMargins(0, 5, 0, 0)
                             .setId(BTN_EATING).setPressedColor(Color.BLUE)));
     }
 
