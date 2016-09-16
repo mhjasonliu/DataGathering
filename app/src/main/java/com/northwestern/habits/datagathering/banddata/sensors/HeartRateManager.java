@@ -190,7 +190,7 @@ public class HeartRateManager extends DataManager {
                 datapoint.put("quality", event.getQuality());
 
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());
-                Log.v(TAG, Integer.toString(dataBuffer.getCount()));
+//                Log.v(TAG, Integer.toString(dataBuffer.getCount()));
 
                 if (dataBuffer.isFull()) {
                     writeData(context, info, DataManagementService.T_Heart_Rate);
