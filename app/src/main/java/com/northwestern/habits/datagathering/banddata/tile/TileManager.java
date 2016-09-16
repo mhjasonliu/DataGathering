@@ -24,7 +24,6 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.notifications.VibrationType;
 import com.microsoft.band.tiles.BandTile;
-import com.microsoft.band.tiles.TileButtonEvent;
 import com.microsoft.band.tiles.TileEvent;
 import com.microsoft.band.tiles.pages.FlowPanelOrientation;
 import com.microsoft.band.tiles.pages.PageData;
@@ -35,8 +34,10 @@ import com.microsoft.band.tiles.pages.TextBlockData;
 import com.microsoft.band.tiles.pages.TextBlockFont;
 import com.microsoft.band.tiles.pages.TextButton;
 import com.microsoft.band.tiles.pages.TextButtonData;
+import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
+import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.util.List;
 import java.util.UUID;
@@ -133,6 +134,17 @@ public class TileManager extends BroadcastReceiver {
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
         isEating = p.getBoolean(Preferences.IS_EATING, false);
 
+        if (buttonPressedFlag) {
+            // Handle button press
+            isEating = !isEating;
+
+            Intent i = new Intent(MyReceiver.ACTION_LABEL);
+            int label = (isEating) ? DataManagementService.L_EATING: DataManagementService.L_DRINKING;
+            i.putExtra(MyReceiver.LABEL_EXTRA, label);
+
+            buttonPressedFlag = false;
+        }
+
 
 
         String activityText = (isEating) ? "Eating" : "Not eating";
@@ -160,18 +172,21 @@ public class TileManager extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.e(TAG, "tile event received!");
+
+        TileEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
         if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
         } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
         }
 
             /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
         else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
-            TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-            Intent i = new Intent(context, TileManagerService.class);
-            i.putExtra(TileManagerService.BUTTON_DATA_EXTRA, buttonData);
-            context.startService(i);
+            buttonPressedFlag = true;
         }
+        Intent i = new Intent(context, TileManagerService.class);
+        i.putExtra(TileManagerService.BUTTON_DATA_EXTRA, buttonData);
+        context.startService(i);
     }
+    private static boolean buttonPressedFlag = false;
 
 
     private class appTask extends AsyncTask<Void, Void, Void> {

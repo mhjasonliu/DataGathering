@@ -105,7 +105,10 @@ public class MyReceiver extends BroadcastReceiver {
                     int labelExtra = intent.getIntExtra(LABEL_EXTRA, 0);
                     long timestamp = intent.getLongExtra(TIMESTAMP_EXTRA, 0);
                     PreferenceManager.getDefaultSharedPreferences(context)
-                            .edit().putInt(Preferences.LABEL, labelExtra).apply();
+                            .edit().putInt(Preferences.LABEL, labelExtra)
+                            .putBoolean(Preferences.IS_EATING,
+                                    labelExtra == DataManagementService.L_EATING)
+                            .apply();
                     String userID = PreferenceManager
                             .getDefaultSharedPreferences(context)
                             .getString(Preferences.USER_ID, "");
