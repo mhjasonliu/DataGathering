@@ -150,8 +150,6 @@ public class DataManagementService extends Service {
 
 
                     // Stop label replication
-                    labelPush.stop();
-
                 } catch (CouchbaseLiteException | IOException | NullPointerException e) {
                     e.printStackTrace();
                 }
@@ -168,7 +166,6 @@ public class DataManagementService extends Service {
 
     private boolean isReplicating = false;
     private Replication push;
-    private Replication labelPush;
 
 
     private void startOneShotRep() {
