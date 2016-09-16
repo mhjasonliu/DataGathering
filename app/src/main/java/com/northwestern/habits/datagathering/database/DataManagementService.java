@@ -141,9 +141,11 @@ public class DataManagementService extends Service {
                     broadcastIntent.putExtra(UserActivity.DbUpdateReceiver.STATUS_EXTRA,
                             UserActivity.DbUpdateReceiver.STATUS_UNKNOWN);
                     sendBroadcast(broadcastIntent);
-                    for (Replication r :
-                            db.getActiveReplications()) {
-                        r.stop();
+                    if (db != null) {
+                        for (Replication r :
+                                db.getActiveReplications()) {
+                            if (r != null) r.stop();
+                        }
                     }
 
 
@@ -294,7 +296,7 @@ public class DataManagementService extends Service {
                     int hour = Integer.valueOf(lastDbTime);
 
                     if (hour == Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-                        Log.v(TAG, "Pushed: " +pushed.toString());
+                        Log.v(TAG, "Pushed: " + pushed.toString());
                         // Preserve the label document
                         int labelIndex = -1;
                         for (String name : pushed) {
@@ -303,7 +305,7 @@ public class DataManagementService extends Service {
                                 labelIndex = pushed.indexOf(name);
                             }
                         }
-                        if (labelIndex >=0) pushed.remove(labelIndex);
+                        if (labelIndex >= 0) pushed.remove(labelIndex);
                         // Preserve the last doc so the db is not cleaned up
                         // Preserve the last two documents in case of residual writes waiting to be added
                         if (pushed.size() > 0) pushed.remove(pushed.size() - 1);
@@ -315,7 +317,11 @@ public class DataManagementService extends Service {
                         for (String id :
                                 pushed) {
                             // Purge the doc
-                            db.getDocument(id).purge();
+                            try {
+                                db.getDocument(id).purge();
+                            } catch (NullPointerException e) {
+                                e.printStackTrace();
+                            }
                         }
                         Log.v(TAG, "Deleted " + Integer.toString(pushed.size()) + " documents");
                     } catch (CouchbaseLiteException e) {
