@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
@@ -20,7 +19,6 @@ public class TileManagerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(TAG, "Started");
         UUID buttonData = (UUID) intent.getExtras().get(TILE_ID_EXTRA);
         new HandleBroadcastTask(getBaseContext(), buttonData).execute();
         return START_NOT_STICKY;

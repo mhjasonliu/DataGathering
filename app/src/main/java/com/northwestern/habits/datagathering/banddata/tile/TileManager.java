@@ -131,11 +131,8 @@ public class TileManager extends BroadcastReceiver {
     static boolean isEating = false;
     protected static void updatePages(BandClient client, UUID tileId, Context c) throws BandIOException {
         // Update isEating based on shared preferences
-        Log.v(TAG, "Initial isEating: " + isEating);
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
-        isEating = p.getBoolean(Preferences.IS_EATING, false);
 
-        Log.v(TAG, "Secondatry isEAting: " + isEating);
 
         if (buttonPressedFlag) {
             // Handle button press
@@ -153,7 +150,6 @@ public class TileManager extends BroadcastReceiver {
 
         String activityText = (isEating) ? "Eating" : "Not eating";
         String buttonText = (isEating) ? "Stop eating" : "Start eating";
-        Log.v(TAG, "isEating is " + isEating + " and button text is " + buttonText);
 
         client.getTileManager().setPages(tileId,
                 new PageData(pageId1, 1)
@@ -185,7 +181,6 @@ public class TileManager extends BroadcastReceiver {
                 context.startService(i);
             }
         } else {
-            Log.e(TAG, "tile event received!");
 
             TileEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
             if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
@@ -220,7 +215,6 @@ public class TileManager extends BroadcastReceiver {
             try {
                 BandClient client = getConnectedBandClient(bandinfo, context);
                 if (client != null) {
-                    Log.v(TAG, "Band is connected.\n");
                     if (addTile(bandinfo, activity)) {
                         UUID key = generateUUID(bandinfo.getMacAddress());
                         updatePages(client, key, context);
@@ -260,21 +254,18 @@ public class TileManager extends BroadcastReceiver {
 
     private UUID generateUUID(String mac) {
         mac = mac.replace(":", "");
-        Log.v(TAG, "Generated uuid with " + ID_BASE + mac);
         return UUID.fromString(ID_BASE + mac);
     }
 
     protected static BandInfo infoFromUUID(UUID uuid) {
         String mac = uuid.toString().substring(24);
         mac = mac.toUpperCase();
-        Log.v(TAG, "Mac without colons: " + mac);
         mac = mac.substring(0, 2) + ":"
                 + mac.substring(2, 4) + ":"
                 + mac.substring(4, 6) + ":"
                 + mac.substring(6, 8) + ":"
                 + mac.substring(8, 10) + ":"
                 + mac.substring(10, 12);
-        Log.v(TAG, "mac with colons: " + mac);
 
 
         BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
@@ -282,7 +273,7 @@ public class TileManager extends BroadcastReceiver {
             if (band.getMacAddress().equals(mac)) {
                 return band;
             } else {
-                Log.v(TAG, band.getMacAddress() + " does not equal " + mac);
+                Log.e(TAG, band.getMacAddress() + " does not equal " + mac);
             }
         }
         Log.e(TAG, "No info found");
