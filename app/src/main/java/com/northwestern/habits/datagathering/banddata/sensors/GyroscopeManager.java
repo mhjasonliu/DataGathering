@@ -25,8 +25,6 @@ import java.util.Map;
  */
 public class GyroscopeManager extends DataManager {
     private Map<BandInfo, SampleRate> frequencies = new HashMap<>();
-    private final long TIMEOUT_INTERVAL = 1000;
-    private int restartCount = 1;
 
     protected void setFrequency(String f, BandInfo bandinfo) {
         boolean rateChanged = false;
