@@ -96,9 +96,7 @@
                 <action android:name="com.northwestern.habits.datagathering.action.LABEL" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".banddata.tile.TileManager"
-            android:process=":BandData" >
+        <receiver android:name=".banddata.tile.TileManager">
             <intent-filter>
                 <action android:name="com.microsoft.band.action.ACTION_TILE_OPENED" />
                 <action android:name="com.microsoft.band.action.ACTION_TILE_BUTTON_PRESSED" />

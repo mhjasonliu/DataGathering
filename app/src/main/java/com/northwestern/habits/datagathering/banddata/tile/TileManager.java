@@ -5,10 +5,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
@@ -33,9 +35,8 @@ import com.microsoft.band.tiles.pages.TextBlockData;
 import com.microsoft.band.tiles.pages.TextBlockFont;
 import com.microsoft.band.tiles.pages.TextButton;
 import com.microsoft.band.tiles.pages.TextButtonData;
-import com.northwestern.habits.datagathering.MyReceiver;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
-import com.northwestern.habits.datagathering.database.DataManagementService;
 
 import java.util.List;
 import java.util.UUID;
@@ -65,31 +66,6 @@ public class TileManager extends BroadcastReceiver {
         }
 
     }
-
-    static boolean onButtonClicked(int clickedID, Context context) throws BandIOException {
-        String prev = activity;
-        Intent i = new Intent(MyReceiver.ACTION_LABEL);
-        switch (clickedID) {
-            case BTN_EATING:
-                activity = "Eating";
-                i.putExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_EATING);
-                break;
-            case BTN_DRINKING:
-                activity = "Drinking";
-                i.putExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_DRINKING);
-                break;
-            case BTN_NOTHING:
-                activity = "Note to self";
-                i.putExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_NOTHING);
-                break;
-            default:
-                Log.e("", "Unknown button press received");
-        }
-        context.sendBroadcast(i);
-//        return !Objects.equals(activity, prev);
-        return true;
-    }
-
 
     /* *************************** TILE MANAGING FUNCTIONS *************************** */
 //    private static final UUID tileId = UUID.fromString("cc0D508F-70A3-47D4-BBA3-812BADB1F8Aa");
@@ -152,7 +128,13 @@ public class TileManager extends BroadcastReceiver {
     }
 
     static boolean isEating = false;
-    protected static void updatePages(BandClient client, UUID tileId) throws BandIOException {
+    protected static void updatePages(BandClient client, UUID tileId, Context c) throws BandIOException {
+        // Update isEating based on shared preferences
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
+        isEating = p.getBoolean(Preferences.IS_EATING, false);
+
+
+
         String activityText = (isEating) ? "Eating" : "Not eating";
         String buttonText = (isEating) ? "Stop eating" : "Start eating";
         Log.v(TAG, "isEating is " + isEating + " and button text is " + buttonText);
@@ -211,7 +193,7 @@ public class TileManager extends BroadcastReceiver {
                     Log.v(TAG, "Band is connected.\n");
                     if (addTile(bandinfo, activity)) {
                         UUID key = generateUUID(bandinfo.getMacAddress());
-                        updatePages(client, key);
+                        updatePages(client, key, context);
                     }
                 } else {
                     Log.e(TAG, "Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");

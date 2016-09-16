@@ -3,7 +3,7 @@ package com.northwestern.habits.datagathering;
 import com.microsoft.band.sensors.SampleRate;
 
 /**
- * Created by William on 6/14/2016.
+ * Created by William on 6/14/2016
  */
 public class Preferences {
 
@@ -69,5 +69,7 @@ public class Preferences {
     public static final String PEDOMETER = "pedometer";
     public static final String SKIN_TEMP = "skinTemperature";
     public static final String UV = "ultraViolet";
+
+    public static final String IS_EATING = "is_eating";
 
 }
