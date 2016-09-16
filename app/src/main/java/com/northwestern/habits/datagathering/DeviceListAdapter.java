@@ -26,8 +26,8 @@ import android.widget.GridLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.northwestern.habits.datagathering.banddata.BandDataService;
-import com.northwestern.habits.datagathering.banddata.TileManager;
+import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
+import com.northwestern.habits.datagathering.banddata.tile.TileManager;
 
 import java.util.Arrays;
 import java.util.HashMap;

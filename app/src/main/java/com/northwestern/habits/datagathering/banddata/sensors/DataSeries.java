@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering.banddata;
+package com.northwestern.habits.datagathering.banddata.sensors;
 
 import android.Manifest;
 import android.content.Context;

@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering.banddata;
+package com.northwestern.habits.datagathering.banddata.tile;
 
 import android.app.Service;
 import android.content.Context;
@@ -10,13 +10,14 @@ import android.util.Log;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.tiles.TileButtonEvent;
+import com.northwestern.habits.datagathering.banddata.tile.TileManager;
 
 import java.util.UUID;
 
-public class MyService extends Service {
+public class TileManagerService extends Service {
     public static final String BUTTON_DATA_EXTRA = "Button_data";
     private static final String TAG = "TileManagerService";
-    public MyService() {
+    public TileManagerService() {
     }
 
     @Override

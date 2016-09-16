@@ -21,7 +21,7 @@ import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DeviceListAdapter;
 import com.northwestern.habits.datagathering.DeviceListItem;
 import com.northwestern.habits.datagathering.R;
-import com.northwestern.habits.datagathering.banddata.BandDataService;
+import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 
 import java.util.HashMap;
 import java.util.LinkedList;

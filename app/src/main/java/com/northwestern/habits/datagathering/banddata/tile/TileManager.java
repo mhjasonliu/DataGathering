@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering.banddata;
+package com.northwestern.habits.datagathering.banddata.tile;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -185,8 +185,8 @@ public class TileManager extends BroadcastReceiver {
             /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
         else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
             TileButtonEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-            Intent i = new Intent(context, MyService.class);
-            i.putExtra(MyService.BUTTON_DATA_EXTRA, buttonData);
+            Intent i = new Intent(context, TileManagerService.class);
+            i.putExtra(TileManagerService.BUTTON_DATA_EXTRA, buttonData);
             context.startService(i);
         }
     }

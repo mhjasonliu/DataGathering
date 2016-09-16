@@ -23,7 +23,7 @@
         </activity>
 
         <service
-            android:name=".banddata.BandDataService"
+            android:name=".banddata.sensors.BandDataService"
             android:enabled="true"
             android:exported="false"
             android:label="Band Data Service"
@@ -97,7 +97,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".banddata.TileManager"
+            android:name=".banddata.tile.TileManager"
             android:process=":BandData" >
             <intent-filter>
                 <action android:name="com.microsoft.band.action.ACTION_TILE_OPENED" />
@@ -115,7 +115,7 @@
         </activity>
 
         <service
-            android:name=".banddata.MyService"
+            android:name=".banddata.tile.TileManagerService"
             android:enabled="true"
             android:exported="true" >
         </service>

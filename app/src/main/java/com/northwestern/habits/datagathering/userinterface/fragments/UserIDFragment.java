@@ -24,7 +24,7 @@ import android.widget.Toast;
 import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
-import com.northwestern.habits.datagathering.banddata.BandDataService;
+import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
