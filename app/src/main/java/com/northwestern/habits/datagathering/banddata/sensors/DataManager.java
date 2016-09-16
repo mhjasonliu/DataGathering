@@ -307,26 +307,29 @@ public abstract class DataManager implements EventListener {
         final DataSeries myBuffer = dataBuffer;
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
-        // Export the data to a csv
-        myBuffer.exportCSV(context, userID, type);
-
         // Split the buffer
-        final Map<Integer, List<Map>> split = myBuffer.splitIntoMinutes();
+        final Map<Integer, List<Map<String, Object>>> split = myBuffer.splitIntoMinutes();
         Log.v(TAG, split.keySet().toString());
         Calendar c = Calendar.getInstance();
         for (int minute : split.keySet()) {
+
+            // Export the data from minute minute to a csv
+            myBuffer.exportCSV(context, userID, split.get(minute));
+
+
+            // Send to couchbase
             try {
                 // All the Calendar hours in this slice should be the same, so effectively they are
                 // the same
                 c.setTimeInMillis(Long.valueOf((String) split.get(minute).get(0).get("Time")));
 
                 // Add the slice to the data
-                final int h = minute;
+                final int m = minute;
                 CouchBaseData.getDocument(c, type, userID, context).update(new Document.DocumentUpdater() {
                     @Override
                     public boolean update(UnsavedRevision newRevision) {
                         Map<String, Object> properties = newRevision.getUserProperties();
-                        List<Map> toAdd = split.get(h);
+                        List<Map<String, Object>> toAdd = split.get(m);
                         properties.put(DataManagementService.DATA,
                                 DataSeries.pack((List<Map>) properties.get(DataManagementService.DATA), toAdd));
                         return true;

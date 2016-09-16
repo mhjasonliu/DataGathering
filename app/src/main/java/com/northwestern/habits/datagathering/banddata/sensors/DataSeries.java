@@ -53,21 +53,21 @@ public class DataSeries {
         return dataArray.size() >= capacity;
     }
 
-    public static List<Map> pack(List<Map> dataSoFar, List<Map> dataToAdd) {
+    public static List<Map> pack(List<Map> dataSoFar, List<Map<String, Object>> dataToAdd) {
         if (dataSoFar == null) dataSoFar = new LinkedList<>();
         dataSoFar.addAll(dataToAdd);
         return dataSoFar;
     }
 
-    public Map<Integer, List<Map>> splitIntoMinutes() {
+    public Map<Integer, List<Map<String, Object>>> splitIntoMinutes() {
         int minute;
         Calendar c = Calendar.getInstance();
-        Map<Integer, List<Map>> split = new HashMap<>();
+        Map<Integer, List<Map<String, Object>>> split = new HashMap<>();
         for (Map datum : dataArray) {
             c.setTimeInMillis(Long.valueOf((String) datum.get("Time")));
             minute = c.get(Calendar.MINUTE);
             if (!split.containsKey(minute)) {
-                split.put(minute, new LinkedList<Map>());
+                split.put(minute, new LinkedList<Map<String, Object>>());
             }
             split.get(minute).add(datum);
         }
@@ -78,8 +78,8 @@ public class DataSeries {
         return dataArray.size();
     }
 
-    public void exportCSV(Context c, String userID, String type) {
-        new ExportCSVTask(c, userID).doInBackground(null);
+    public void exportCSV(Context c, String userID, List<Map<String, Object>> series) {
+        new ExportCSVTask(c, userID, series).doInBackground(null);
     }
 
 
@@ -87,10 +87,12 @@ public class DataSeries {
         private final String TAG = "ExportCSV_TAsk";
         private Context context;
         private String userID;
+        private List<Map<String, Object>> series;
 
-        public ExportCSVTask(Context c, String uID) {
+        public ExportCSVTask(Context c, String uID, List<Map<String, Object>> series) {
             context = c;
             userID = uID;
+            this.series = series;
         }
 
         @Override
@@ -101,13 +103,27 @@ public class DataSeries {
                 Log.e(TAG, "permission denied");
             }
 
-            File folder = CsvWriter.getFolder(firstEntry, userID, type);
+            Map<String, Object> firstPoint = series.get(0);
+            long firstPointTime = (long) firstPoint.get("Time");
+
+            File folder = CsvWriter.getFolder(firstPointTime, userID, type);
 
             // Make csv
-            File csv = CsvWriter.getCsv(folder, firstEntry);
+            File csv = CsvWriter.getCsv(folder, firstPointTime);
 
-            List<Map<String, Object>> dataSeries = dataArray;
-            List<String> properties = new LinkedList(dataArray.get(0).keySet());
+            List<Map<String, Object>> dataSeries = series;
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(firstPointTime);
+            int firstMinute = c.get(Calendar.MINUTE);
+            int lastMinute = c.get(Calendar.MINUTE);
+
+            Log.v(TAG, "Minute of first entry: " + firstMinute);
+            Log.v(TAG, "Minute of last entry: " + lastMinute);
+            if (firstMinute != lastMinute) {
+                Log.e(TAG, "WARNING: minute not properly split");
+            }
+
+            List<String> properties = new LinkedList(firstPoint.keySet());
             FileWriter writer = null;
             try {
                 if (!csv.exists()) {
