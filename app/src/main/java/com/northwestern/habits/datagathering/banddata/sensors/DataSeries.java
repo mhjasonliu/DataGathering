@@ -104,7 +104,7 @@ public class DataSeries {
             }
 
             Map<String, Object> firstPoint = series.get(0);
-            long firstPointTime = (long) firstPoint.get("Time");
+            Long firstPointTime = Long.valueOf((String) firstPoint.get("Time"));
 
             File folder = CsvWriter.getFolder(firstPointTime, userID, type);
 
