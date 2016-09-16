@@ -42,6 +42,7 @@ public class UserActivity extends AppCompatActivity {
 
     private static final String TAG = "UserActivity";
     private DbUpdateReceiver updateReceiver = new DbUpdateReceiver();
+    private LabelUpdateReceiver labelUpdateReceiver = new LabelUpdateReceiver();
 
     private Notification eatingNotification = null;
 
@@ -66,6 +67,9 @@ public class UserActivity extends AppCompatActivity {
         if (!updateReceiver.registered) {
             registerReceiver(updateReceiver, new IntentFilter(DbUpdateReceiver.ACTION_DB_STATUS));
             updateReceiver.registered = true;
+        }
+        if (!labelUpdateReceiver.isRegistered()) {
+            labelUpdateReceiver.register();
         }
 
         TextView t = ((TextView) findViewById(R.id.db_status_Text));
@@ -307,6 +311,7 @@ public class UserActivity extends AppCompatActivity {
             unregisterReceiver(updateReceiver);
             updateReceiver.registered = false;
         }
+        if (labelUpdateReceiver.isRegistered()) labelUpdateReceiver.unregister();
         super.onDestroy();
     }
 
@@ -356,6 +361,44 @@ public class UserActivity extends AppCompatActivity {
             }
             mDelayedNotification = null;
             this.interrupt();
+        }
+    }
+
+    private void updateUI(int label) {
+        Button b;
+        switch (label) {
+            case DataManagementService.L_EATING:
+                ((Button) findViewById(R.id.button_eating)).setEnabled(false);
+                ((Button) findViewById(R.id.button_nothing)).setEnabled(true);
+                ((Button) findViewById(R.id.button_swallow)).setEnabled(true);
+                break;
+            case DataManagementService.L_NOTHING:
+
+                ((Button) findViewById(R.id.button_eating)).setEnabled(true);
+                ((Button) findViewById(R.id.button_nothing)).setEnabled(false);
+                ((Button) findViewById(R.id.button_swallow)).setEnabled(true);
+            default:
+                ((Button) findViewById(R.id.button_eating)).setEnabled(true);
+                ((Button) findViewById(R.id.button_nothing)).setEnabled(false);
+                ((Button) findViewById(R.id.button_swallow)).setEnabled(true);
+        }
+    }
+
+    private class LabelUpdateReceiver extends BroadcastReceiver {
+        private boolean registered;
+        public boolean isRegistered() {return registered;}
+        public void register() {
+            registerReceiver(this, new IntentFilter(MyReceiver.ACTION_LABEL));
+            registered = true;
+        }
+        public void unregister() {
+            unregisterReceiver(this);
+            registered = false;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateUI(intent.getIntExtra(MyReceiver.LABEL_EXTRA, DataManagementService.L_NOTHING));
         }
     }
 }
