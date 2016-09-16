@@ -131,16 +131,20 @@ public class TileManager extends BroadcastReceiver {
     static boolean isEating = false;
     protected static void updatePages(BandClient client, UUID tileId, Context c) throws BandIOException {
         // Update isEating based on shared preferences
+        Log.v(TAG, "Initial isEating: " + isEating);
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
         isEating = p.getBoolean(Preferences.IS_EATING, false);
+
+        Log.v(TAG, "Secondatry isEAting: " + isEating);
 
         if (buttonPressedFlag) {
             // Handle button press
             isEating = !isEating;
 
             Intent i = new Intent(MyReceiver.ACTION_LABEL);
-            int label = (isEating) ? DataManagementService.L_EATING: DataManagementService.L_DRINKING;
+            int label = (isEating) ? DataManagementService.L_EATING: DataManagementService.L_NOTHING;
             i.putExtra(MyReceiver.LABEL_EXTRA, label);
+            c.sendBroadcast(i);
 
             buttonPressedFlag = false;
         }

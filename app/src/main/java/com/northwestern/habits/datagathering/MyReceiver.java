@@ -108,7 +108,8 @@ public class MyReceiver extends BroadcastReceiver {
                             .edit().putInt(Preferences.LABEL, labelExtra)
                             .putBoolean(Preferences.IS_EATING,
                                     labelExtra == DataManagementService.L_EATING)
-                            .apply();
+                            .commit();
+                    Log.v(TAG, "Commited isEAting to be " + (labelExtra == DataManagementService.L_EATING));
                     String userID = PreferenceManager
                             .getDefaultSharedPreferences(context)
                             .getString(Preferences.USER_ID, "");
