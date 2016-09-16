@@ -175,20 +175,31 @@ public class TileManager extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.e(TAG, "tile event received!");
+        if (intent.getAction() == MyReceiver.ACTION_LABEL) {
+            // Update every connected band
+            for (BandInfo info :
+                    BandClientManager.getInstance().getPairedBands()) {
+                UUID tid = generateUUID(info.getMacAddress());
+                Intent i = new Intent(context, TileManagerService.class);
+                i.putExtra(TileManagerService.TILE_ID_EXTRA, tid);
+                context.startService(i);
+            }
+        } else {
+            Log.e(TAG, "tile event received!");
 
-        TileEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
-        if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
-        } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
-        }
+            TileEvent buttonData = intent.getParcelableExtra(TileEvent.TILE_EVENT_DATA);
+            if (intent.getAction() == TileEvent.ACTION_TILE_OPENED) {
+            } else if (intent.getAction() == TileEvent.ACTION_TILE_CLOSED) {
+            }
 
             /* ***** THIS IS THE ONLY EVENT WE ACTUALLY CARE ABOUT ***** */
-        else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
-            buttonPressedFlag = true;
+            else if (intent.getAction() == TileEvent.ACTION_TILE_BUTTON_PRESSED) {
+                buttonPressedFlag = true;
+            }
+            Intent i = new Intent(context, TileManagerService.class);
+            i.putExtra(TileManagerService.TILE_ID_EXTRA, buttonData.getTileID());
+            context.startService(i);
         }
-        Intent i = new Intent(context, TileManagerService.class);
-        i.putExtra(TileManagerService.BUTTON_DATA_EXTRA, buttonData);
-        context.startService(i);
     }
     private static boolean buttonPressedFlag = false;
 

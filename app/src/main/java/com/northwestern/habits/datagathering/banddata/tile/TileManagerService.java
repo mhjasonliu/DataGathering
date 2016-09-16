@@ -9,12 +9,11 @@ import android.util.Log;
 
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
-import com.microsoft.band.tiles.TileEvent;
 
 import java.util.UUID;
 
 public class TileManagerService extends Service {
-    public static final String BUTTON_DATA_EXTRA = "Button_data";
+    public static final String TILE_ID_EXTRA = "Button_data";
     private static final String TAG = "TileManagerService";
     public TileManagerService() {
     }
@@ -22,7 +21,7 @@ public class TileManagerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Started");
-        TileEvent buttonData = (TileEvent) intent.getExtras().get(BUTTON_DATA_EXTRA);
+        UUID buttonData = (UUID) intent.getExtras().get(TILE_ID_EXTRA);
         new HandleBroadcastTask(getBaseContext(), buttonData).execute();
         return START_NOT_STICKY;
     }
@@ -35,18 +34,18 @@ public class TileManagerService extends Service {
 
 
     class HandleBroadcastTask extends AsyncTask<Void, Void, Void> {
-        public HandleBroadcastTask(Context c, TileEvent e) {
+        public HandleBroadcastTask(Context c, UUID e) {
             context = c;
-            buttonData = e;
+            tID = e;
         }
 
         private Context context;
-        private TileEvent buttonData;
+        private UUID tID;
 
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                UUID tid = buttonData.getTileID();
+                UUID tid = tID;
                 BandInfo i = TileManager.infoFromUUID(tid);
                 if (i != null) {
                     TileManager.updatePages(TileManager.getConnectedBandClient(i, context), tid, context);
