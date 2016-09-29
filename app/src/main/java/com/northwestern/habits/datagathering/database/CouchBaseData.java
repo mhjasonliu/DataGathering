@@ -55,6 +55,16 @@ public class CouchBaseData {
         return database;
     }
 
+    public static void compactDatabases(Context c) {
+        try {
+            Database d = getOldestDatabase(c);
+            if (d != null) d.compact();
+        } catch (CouchbaseLiteException | IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public static Document getLabelDocument(String userID, Context context) throws CouchbaseLiteException, IOException {
         Calendar date = Calendar.getInstance();
 
@@ -141,11 +151,14 @@ public class CouchBaseData {
 
         currentDocument.putProperties(properties);
         return currentDocument;
-
     }
 
+    // TODO: unhack this hack
+    private static int documentsGot = 0;
     public static Document getDocument(Calendar date, String type, String userId, Context context)
             throws CouchbaseLiteException, IOException {
+        if (documentsGot++ %20 == 0) {Log.v(TAG, "Compacting...");compactDatabases(context);}
+
         // ID will be formed as follows: UserID_Type_MM-DD-YYYY_HHHH_MM
         StringBuilder docID = new StringBuilder();
         docID.append(userId);
