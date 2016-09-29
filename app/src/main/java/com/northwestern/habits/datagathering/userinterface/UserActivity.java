@@ -42,6 +42,7 @@ public class UserActivity extends AppCompatActivity {
 
     private static final String TAG = "UserActivity";
     private DbUpdateReceiver updateReceiver = new DbUpdateReceiver();
+    private DataUpdateReceiver dataReceiver = new DataUpdateReceiver();
     private LabelUpdateReceiver labelUpdateReceiver = new LabelUpdateReceiver();
 
     private Notification eatingNotification = null;
@@ -68,9 +69,8 @@ public class UserActivity extends AppCompatActivity {
             registerReceiver(updateReceiver, new IntentFilter(DbUpdateReceiver.ACTION_DB_STATUS));
             updateReceiver.registered = true;
         }
-        if (!labelUpdateReceiver.isRegistered()) {
-            labelUpdateReceiver.register();
-        }
+        if (!labelUpdateReceiver.isRegistered()) labelUpdateReceiver.register();
+        if (!dataReceiver.isRegistered()) dataReceiver.register();
 
         TextView t = ((TextView) findViewById(R.id.db_status_Text));
         if (t != null) {
@@ -246,6 +246,39 @@ public class UserActivity extends AppCompatActivity {
         }
     }
 
+    public class DataUpdateReceiver extends BroadcastReceiver {
+
+        public static final String FREQUENCY_UPDATE = "Frequency update";
+        public static final String SETTING_EXTRA = "setting";
+        public static final String ACTUAL_EXTRA = "actual";
+
+        private boolean registered = false;
+
+        public boolean isRegistered() { return registered; }
+
+        public void register() {
+            registerReceiver(this, new IntentFilter(FREQUENCY_UPDATE));
+            registered = true;
+        }
+
+        public void unRegister() {
+            unregisterReceiver(this);
+            registered = false;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle extras = intent.getExtras();
+            TextView textView = ((TextView) UserActivity.this.findViewById(R.id.frequency_text));
+            if (extras != null && textView != null) {
+                textView.setText("Gyro status:  "
+                        + Float.toString(extras.getFloat(ACTUAL_EXTRA))
+                        + " Hz, set to "
+                        + extras.getString(SETTING_EXTRA));
+            }
+        }
+    }
+
     public class DbUpdateReceiver extends BroadcastReceiver {
         public boolean registered = false;
         public static final String ACTION_DB_STATUS = "db status";
@@ -312,6 +345,7 @@ public class UserActivity extends AppCompatActivity {
             updateReceiver.registered = false;
         }
         if (labelUpdateReceiver.isRegistered()) labelUpdateReceiver.unregister();
+        if (dataReceiver.isRegistered()) dataReceiver.unRegister();
         super.onDestroy();
     }
 

@@ -39,6 +39,15 @@
             android:id="@+id/db_status_Text"
             android:text=""
             android:visibility="visible"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_weight="1"
+            android:text="Gyro status:  "
+            android:id="@+id/frequency_text"
+            android:visibility="visible"/>
     </LinearLayout>
 
     <LinearLayout

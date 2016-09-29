@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.banddata.sensors;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -16,6 +17,7 @@ import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.userinterface.UserActivity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -255,7 +257,9 @@ public class GyroscopeManager extends DataManager {
         }
 
         @Override
-        public void run() {r.run();}
+        public void run() {
+            r.run();
+        }
     }
 
 
@@ -283,8 +287,22 @@ public class GyroscopeManager extends DataManager {
                 datapoint.put("Angular_Velocity_z", event.getAngularVelocityZ());
 
                 dataBuffer.putDataPoint(datapoint, event.getTimestamp());
-                if (dataBuffer.isFull())
+                if (dataBuffer.isFull()) {
+                    // Send update to the UI about the data frequency
+                    Intent i = new Intent(UserActivity.DataUpdateReceiver.FREQUENCY_UPDATE);
+                    float numPoints = dataBuffer.getCount();
+                    float time = event.getTimestamp() - dataBuffer.getFirstEntry();
+
+                    // Number of points / time(in seconds)
+                    float frequency = numPoints/(time*1000);
+                    i.putExtra(UserActivity.DataUpdateReceiver.ACTUAL_EXTRA, frequency);
+
+                    String values = Preferences.sampleRateToString(frequencies.get(info));
+                    i.putExtra(UserActivity.DataUpdateReceiver.FREQUENCY_UPDATE, values);
+
+                    context.sendBroadcast(i);
                     writeData(context, info, DataManagementService.T_Gyroscope);
+                }
             }
         }
     }

@@ -40,6 +40,8 @@ public class DataSeries {
         this.lastEntry = 0;
     }
 
+    public long getFirstEntry() { return firstEntry; }
+
     public void putDataPoint(Map point, long time) {
         if (firstEntry == 0) {
             firstEntry = time;
