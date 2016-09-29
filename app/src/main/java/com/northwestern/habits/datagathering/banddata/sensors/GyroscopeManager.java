@@ -294,11 +294,11 @@ public class GyroscopeManager extends DataManager {
                     float time = event.getTimestamp() - dataBuffer.getFirstEntry();
 
                     // Number of points / time(in seconds)
-                    float frequency = numPoints/(time*1000);
+                    float frequency = numPoints/(time/1000);
                     i.putExtra(UserActivity.DataUpdateReceiver.ACTUAL_EXTRA, frequency);
 
-                    String values = Preferences.sampleRateToString(frequencies.get(info));
-                    i.putExtra(UserActivity.DataUpdateReceiver.FREQUENCY_UPDATE, values);
+                    String setting = Preferences.sampleRateToString(frequencies.get(info));
+                    i.putExtra(UserActivity.DataUpdateReceiver.SETTING_EXTRA, setting);
 
                     context.sendBroadcast(i);
                     writeData(context, info, DataManagementService.T_Gyroscope);

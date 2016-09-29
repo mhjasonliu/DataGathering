@@ -271,10 +271,12 @@ public class UserActivity extends AppCompatActivity {
             Bundle extras = intent.getExtras();
             TextView textView = ((TextView) UserActivity.this.findViewById(R.id.frequency_text));
             if (extras != null && textView != null) {
+                String setting = extras.getString(SETTING_EXTRA);
+
                 textView.setText("Gyro status:  "
                         + Float.toString(extras.getFloat(ACTUAL_EXTRA))
                         + " Hz, set to "
-                        + extras.getString(SETTING_EXTRA));
+                        + setting);
             }
         }
     }
