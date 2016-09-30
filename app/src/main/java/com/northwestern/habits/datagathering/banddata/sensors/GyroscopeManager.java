@@ -56,9 +56,13 @@ public class GyroscopeManager extends DataManager {
 
         // Record frequency change
         if (bandinfo != null) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            SharedPreferences.Editor e = prefs.edit();
-            e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.GYRO), f).apply();
+            try {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences.Editor e = prefs.edit();
+                e.putString(Preferences.getFrequencyKey(bandinfo.getMacAddress(), Preferences.GYRO), f).apply();
+            } catch (NullPointerException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -291,7 +295,7 @@ public class GyroscopeManager extends DataManager {
                     float time = event.getTimestamp() - dataBuffer.getFirstEntry();
 
                     // Number of points / time(in seconds)
-                    float frequency = numPoints/(time/1000);
+                    float frequency = numPoints / (time / 1000);
                     i.putExtra(UserActivity.DataUpdateReceiver.ACTUAL_EXTRA, frequency);
 
                     String setting = Preferences.sampleRateToString(frequencies.get(info));
