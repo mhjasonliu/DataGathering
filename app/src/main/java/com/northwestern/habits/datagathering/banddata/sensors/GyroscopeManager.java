@@ -187,9 +187,6 @@ public class GyroscopeManager extends DataManager {
                                         + STREAM_TYPE, Toast.LENGTH_LONG).show();
                             }
                         });
-
-                        // trigger crash
-                        ((BandInfo) null).getName();
                     }
                 }
             };
