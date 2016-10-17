@@ -262,9 +262,12 @@ public class UserIDFragment extends Fragment {
                         message = line.substring(13, line.length());
                     }
                 }
-                if (code == -1) message = "Failed to reach the server";
+                if (code == -1) message = "Failed to reach the server\nWARNING: the id on the phone " +
+                        "has chagned, but the server does not know that this id exists. " +
+                        "You can query for it and get the data, but the server will not display " +
+                        "it under the list of users.";
                 Log.v(TAG, "Code " + Integer.toString(code));
-                success = code == 200;
+                success = (code == 200);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -363,6 +366,19 @@ public class UserIDFragment extends Fragment {
                     v.setText(message);
                     skipbutton.setEnabled(skipButtonPreviousEnabled);
                     scrollLockRequest(skipButtonPreviousEnabled);
+                    v.setText("User Id is: " + id);
+                    v.setVisibility(View.VISIBLE);
+                    skipbutton.setEnabled(true);
+
+                    // Unlock
+                    scrollLockRequest(false);
+
+                    getContext().sendBroadcast(
+                            new Intent(BandDataService.ACTION_USER_ID)
+                                    .putExtra(BandDataService.USER_ID_EXTRA, id));
+                    // Set user id preference in this process
+                    PreferenceManager.getDefaultSharedPreferences(context).edit()
+                            .putString(Preferences.USER_ID, id).apply();
                 }
             }
         }
