@@ -28,6 +28,9 @@ local.properties
 .idea/vcs.xml
 *.iml
 
+# Local properties
+/local.properties
+
 # OS-specific files
 .DS_Store
 .DS_Store?
@@ -36,3 +39,6 @@ local.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+# Copied from stack overflow
