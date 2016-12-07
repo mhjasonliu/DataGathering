@@ -40,5 +40,7 @@ local.properties
 ehthumbs.db
 Thumbs.db
 
-
-# Copied from stack overflow
+# memory and allocation profiles
+*.hprof
+*.alloc
+captures/*
