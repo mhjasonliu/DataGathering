@@ -76,6 +76,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
         putDataMapReq.getDataMap().putDataMap("time_entries", toDataMap());
 
         PutDataRequest request = putDataMapReq.asPutDataRequest();
+        Log.v(TAG, "Request: " + request.toString());
 
         DataApi.DataItemResult dataItemResultResult =
                 Wearable.DataApi.putDataItem(googleApiClient, request).await();
@@ -99,7 +100,8 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
     private DataMap toDataMap() {
         DataMap map = new DataMap();
         map.putInt("count", count++);
-        map.putByteArray("data", data);
+        Log.v(TAG, "Count: " + Integer.toString(count));
+//        map.putByteArray("data", data);
         return map;
     }
 }

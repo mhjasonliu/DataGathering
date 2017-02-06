@@ -110,7 +110,7 @@
             android:enabled="true"
             android:exported="true"></service>
         <service
-            android:name=".weardata.WearDataService"
+            android:name=".WearDataService"
             android:enabled="true"
             android:exported="true">
             <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />

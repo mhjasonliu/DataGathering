@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering.weardata;
+package com.northwestern.habits.datagathering;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -59,6 +59,7 @@ public class WearDataService extends WearableListenerService implements GoogleAp
                 });
 
         Wearable.CapabilityApi.addCapabilityListener(googleApiClient, this, "fetch_timeentry_data_capability");
+        Wearable.DataApi.addListener(googleApiClient, this);
     }
 
     @Override
