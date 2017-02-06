@@ -11,6 +11,7 @@ import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.weardata.WearDataService;
 
 public class SplashActivity extends Activity {
 
@@ -47,5 +48,9 @@ public class SplashActivity extends Activity {
             i.setAction(DataManagementService.ACTION_BACKUP);
             context.startService(i);
         }
+
+        // Connect to the wear device
+        i = new Intent(context, WearDataService.class);
+        context.startService(i);
     }
 }
