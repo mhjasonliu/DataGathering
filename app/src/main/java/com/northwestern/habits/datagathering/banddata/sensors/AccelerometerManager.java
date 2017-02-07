@@ -16,6 +16,7 @@ import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.DataSeries;
 
 import java.util.EventListener;
 import java.util.HashMap;

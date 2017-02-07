@@ -11,6 +11,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandCaloriesEvent;
 import com.microsoft.band.sensors.BandCaloriesEventListener;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;

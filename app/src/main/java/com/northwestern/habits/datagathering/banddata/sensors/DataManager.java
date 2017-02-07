@@ -22,6 +22,7 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandSensorEvent;
 import com.northwestern.habits.datagathering.database.CouchBaseData;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.DataSeries;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -314,7 +315,7 @@ public abstract class DataManager implements EventListener {
         for (int minute : split.keySet()) {
 
             // Export the data from minute minute to a csv
-            myBuffer.exportCSV(context, userID, split.get(minute));
+            myBuffer.exportCSV(context, userID);
 
 
             // Send to couchbase

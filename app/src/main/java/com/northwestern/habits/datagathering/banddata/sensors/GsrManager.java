@@ -12,6 +12,7 @@ import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;

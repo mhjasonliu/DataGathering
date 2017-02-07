@@ -13,6 +13,7 @@ import com.microsoft.band.InvalidBandVersionException;
 import com.microsoft.band.sensors.BandPedometerEvent;
 import com.microsoft.band.sensors.BandPedometerEventListener;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;

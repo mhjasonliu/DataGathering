@@ -101,7 +101,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
         DataMap map = new DataMap();
         map.putInt("count", count++);
         Log.v(TAG, "Count: " + Integer.toString(count));
-//        map.putByteArray("data", data);
+        map.putByteArray("data", data);
         return map;
     }
 }

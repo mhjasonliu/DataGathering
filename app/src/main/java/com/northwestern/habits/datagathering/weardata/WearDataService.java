@@ -1,4 +1,4 @@
-package com.northwestern.habits.datagathering;
+package com.northwestern.habits.datagathering.weardata;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -16,8 +16,6 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.List;
 
 public class WearDataService extends WearableListenerService implements GoogleApiClient.ConnectionCallbacks {
@@ -116,16 +114,11 @@ public class WearDataService extends WearableListenerService implements GoogleAp
                 Log.v(TAG, "Count is " + Integer.toString(count));
 
                 if (data != null) {
-                    Log.v(TAG, Float.toString(bytes2Float(data)));
-
-                    int i = 0;
-                    while (i < data.length) {
-                        // x
-                        // y
-                        // z
-
-                    }
-
+                    AccelerometerData accelerometerData = new AccelerometerData(data);
+                    if (accelerometerData.dataSeries != null)
+                        accelerometerData.sendToCsv(this);
+                    else
+                        Log.e(TAG, "Data series null");
                 } else
                     Log.v(TAG, "Data was null");
 
@@ -134,10 +127,5 @@ public class WearDataService extends WearableListenerService implements GoogleAp
             }
 
         }
-    }
-
-
-    private float bytes2Float(byte[] bytes) {
-        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getFloat();
     }
 }

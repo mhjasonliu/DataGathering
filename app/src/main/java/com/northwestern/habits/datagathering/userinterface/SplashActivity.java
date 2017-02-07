@@ -11,7 +11,7 @@ import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 import com.northwestern.habits.datagathering.database.DataManagementService;
-import com.northwestern.habits.datagathering.WearDataService;
+import com.northwestern.habits.datagathering.weardata.WearDataService;
 
 public class SplashActivity extends Activity {
 
