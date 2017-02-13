@@ -1,5 +1,6 @@
 package com.northwestern.habits.datagathering;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -7,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class DataService extends Service {
@@ -25,6 +27,10 @@ public class DataService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Log.v(TAG, "Starting service...");
+        Notification notification = new NotificationCompat.Builder(this)
+                .setContentTitle("Data Gathering Wear Data")
+                .setContentText("Gathering wear data in foreground service").build();
+        startForeground(1, notification);
 
         initSensors();
 
