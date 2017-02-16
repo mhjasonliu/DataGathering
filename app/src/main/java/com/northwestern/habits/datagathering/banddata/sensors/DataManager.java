@@ -11,19 +11,13 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Document;
-import com.couchbase.lite.UnsavedRevision;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.sensors.BandSensorEvent;
-import com.northwestern.habits.datagathering.database.CouchBaseData;
-import com.northwestern.habits.datagathering.database.DataManagementService;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.EventListener;
@@ -315,31 +309,6 @@ public abstract class DataManager implements EventListener {
 
             // Export the data from minute minute to a csv
             myBuffer.exportCSV(context, userID, split.get(minute));
-
-
-            // Send to couchbase
-            try {
-                // All the Calendar hours in this slice should be the same, so effectively they are
-                // the same
-                c.setTimeInMillis(Long.valueOf((String) split.get(minute).get(0).get("Time")));
-
-                // Add the slice to the data
-                final int m = minute;
-                CouchBaseData.getDocument(c, type, userID, context).update(new Document.DocumentUpdater() {
-                    @Override
-                    public boolean update(UnsavedRevision newRevision) {
-                        Map<String, Object> properties = newRevision.getUserProperties();
-                        List<Map<String, Object>> toAdd = split.get(m);
-                        properties.put(DataManagementService.DATA,
-                                DataSeries.pack((List<Map>) properties.get(DataManagementService.DATA), toAdd));
-                        return true;
-                    }
-                });
-
-
-            } catch (CouchbaseLiteException | IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
