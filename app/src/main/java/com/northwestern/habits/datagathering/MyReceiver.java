@@ -11,9 +11,20 @@ import android.os.BatteryManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.northwestern.habits.datagathering.database.CsvWriter;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.database.LabelManager;
 import com.northwestern.habits.datagathering.userinterface.SplashActivity;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by William on 7/11/2016
@@ -56,9 +67,27 @@ public class MyReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null) {
+            String userID = PreferenceManager
+                    .getDefaultSharedPreferences(context)
+                    .getString(Preferences.USER_ID, "");
+            long ts = Calendar.getInstance().getTimeInMillis();
+            File logCsv = CsvWriter.getCsv(CsvWriter.getFolder(ts, userID, "LOG"), ts);
+            List<String> properties = new ArrayList<>();
+            properties.add("Timestamp");
+            properties.add("Event");
+            FileWriter csvwriter = null;
+            try {
+                csvwriter = CsvWriter.writeProperties(properties, logCsv, context);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            String event = intent.getAction();
+
             switch (intent.getAction()) {
                 case Intent.ACTION_POWER_CONNECTED:
                     Log.v(TAG, "Power connected action received.");
+                    event = "Power connected";
 
                     // Power connected, start backup if wifi connected
                     if (isWifiConnected(context)) {
@@ -69,8 +98,8 @@ public class MyReceiver extends BroadcastReceiver {
                     }
                     break;
                 case Intent.ACTION_POWER_DISCONNECTED:
+                    event = "Power disconnected";
                     Log.v(TAG, "Power disconnected action received.");
-
                     // Power disconnected. stop backup if it is running
                     Intent i = new Intent(context, DataManagementService.class);
                     i.setAction(DataManagementService.ACTION_STOP_BACKUP);
@@ -81,6 +110,7 @@ public class MyReceiver extends BroadcastReceiver {
                     Log.v(TAG, "Wifi action received");
                     if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
                             false)) {
+                        event = "Wifi connected";
                         // Wifi is connected, start backup if power connected
                         if (isCharging(context)) {
                             i = new Intent(context, DataManagementService.class);
@@ -90,6 +120,7 @@ public class MyReceiver extends BroadcastReceiver {
 
                     } else {
                         // Wifi disconnected, stop backup if it is running
+                        event = "Wifi disconnected";
                         i = new Intent(context, DataManagementService.class);
                         i.setAction(DataManagementService.ACTION_STOP_BACKUP);
                         context.startService(i);
@@ -98,6 +129,7 @@ public class MyReceiver extends BroadcastReceiver {
 
                     break;
                 case Intent.ACTION_BOOT_COMPLETED:
+                    event = "Phone turned on";
                     SplashActivity.onStartup(context);
                     break;
                 case ACTION_LABEL:
@@ -109,13 +141,43 @@ public class MyReceiver extends BroadcastReceiver {
                             .putBoolean(Preferences.IS_EATING,
                                     labelExtra == DataManagementService.L_EATING)
                             .commit();
-                    String userID = PreferenceManager
-                            .getDefaultSharedPreferences(context)
-                            .getString(Preferences.USER_ID, "");
                     LabelManager.addLabelChange(userID, context, Integer.toString(labelExtra), timestamp);
+                    break;
+                case Intent.ACTION_AIRPLANE_MODE_CHANGED:
+                    event = "Airplane mode changed";
+                    break;
+                case Intent.ACTION_SHUTDOWN:
+                    event = "Shutdown Started";
+                    break;
+                case Intent.ACTION_DEVICE_STORAGE_LOW:
+                    event = "Device storage low";
+                    break;
+                case Intent.ACTION_DEVICE_STORAGE_OK:
+                    event = "Device storage OK";
+                    break;
+                case Intent.ACTION_BATTERY_LOW:
+                    event = "Battery low.";
+                    break;
+                case Intent.ACTION_BATTERY_OKAY:
+                    event = "Battery OK";
                     break;
                 default:
                     Log.e(TAG, "Unknown type sent to receiver: " + intent.getAction());
+            }
+
+            if (csvwriter != null) {
+                List<Map<String,Object>> data = new LinkedList<>();
+                Map<String,Object> map = new HashMap<>();
+                map.put("Timestamp", Calendar.getInstance().getTime().toString());
+                map.put("Event", event);
+                data.add(map);
+                CsvWriter.writeDataSeries(csvwriter, data, properties);
+                try {
+                    csvwriter.flush();
+                    csvwriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
