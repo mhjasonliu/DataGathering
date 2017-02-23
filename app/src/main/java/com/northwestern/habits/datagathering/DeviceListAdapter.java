@@ -30,6 +30,7 @@ import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 import com.northwestern.habits.datagathering.banddata.tile.TileManager;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +53,14 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
         this._listDataChild = childData;
     }
 
+    @Override
+    public void notifyDataSetChanged() {
+        // Update childdata and headerdata
+        this._listDataChild = createChildren(_listDataHeader);
+        super.notifyDataSetChanged();
+    }
+
+
     public void setMessenger(Messenger m) {
         messenger = m;
     }
@@ -62,14 +71,17 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 items) {
             switch (device.getType()) {
                 case BAND:
-                    children.put(device, Arrays.asList("BAND"));
+                    children.put(device, Collections.singletonList("BAND"));
                     break;
                 case PHONE:
-                    children.put(device, Arrays.asList("PHONE"));
+                    children.put(device, Collections.singletonList("PHONE"));
                     break;
                 case OTHER:
                     children.put(device, Arrays.asList("OTHER", "OTHER",
                             "OTHER", "OTHER"));
+                    break;
+                case WEAR:
+                    children.put(device, Collections.singletonList("WEAR"));
                     break;
                 default:
                     Log.e(TAG, "UNIMPLEMENTED TYPE");
@@ -316,6 +328,14 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                 setSensorsInGrid(rootView, device);
 
                 return rootView;
+
+            case WEAR:
+                rootView = infalInflater.inflate(R.layout.item_phone_sensors, null);
+                rootView.findViewById(R.id.accelBox).setEnabled(true);
+                setSensorsInGrid(rootView, device);
+                return rootView;
+
+
             case OTHER:
             default:
                 // TODO make this code not be from the old ExpandableListAdapter class
@@ -548,6 +568,9 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     break;
                 case PHONE:
                     // TODO implement phone sensor streaming
+                    break;
+                case WEAR:
+                    Log.v(TAG, "Wear sensor requested.");
                     break;
                 case OTHER:
                     break;

@@ -1,5 +1,6 @@
 package com.northwestern.habits.datagathering;
 
+import com.google.android.gms.wearable.Node;
 import com.microsoft.band.BandInfo;
 
 /**
@@ -22,8 +23,13 @@ public class DeviceListItem {
         type = DeviceType.BAND;
     }
 
+    public DeviceListItem(Node node) {
+        name = node.getDisplayName();
+        type = DeviceType.WEAR;
+    }
+
     public enum DeviceType {
-        BAND, OTHER, PHONE, NECKLACE
+        BAND, OTHER, PHONE, NECKLACE, WEAR
     }
 
     public void setType(DeviceType type) {

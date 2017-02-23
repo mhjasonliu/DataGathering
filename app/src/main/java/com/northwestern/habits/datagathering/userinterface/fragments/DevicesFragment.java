@@ -7,15 +7,21 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
+import com.google.android.gms.wearable.Wearable;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
 import com.northwestern.habits.datagathering.DeviceListAdapter;
@@ -26,6 +32,7 @@ import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A fragment representing a list of Items.
@@ -87,13 +94,14 @@ public class DevicesFragment extends Fragment {
             devices.add(phone);
         }
 
-
         // Get all connected bands and add them to devices list
         BandInfo[] bands = BandClientManager.getInstance().getPairedBands();
         for (BandInfo band :
                 bands) {
             devices.add(new DeviceListItem(band));
         }
+
+        new FindWearTask().execute();
 
         // Bind to the device service
         Intent intent = new Intent(this.getActivity(), BandDataService.class);
@@ -107,6 +115,7 @@ public class DevicesFragment extends Fragment {
 
     private boolean isBound = false;
     private Messenger mMessenger;
+
     public Messenger getmMessenger() {
         if (isBound) {
             return mMessenger;
@@ -208,18 +217,51 @@ public class DevicesFragment extends Fragment {
         }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnDevicesFragmentInterractionListener {
-        public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems);
-        public void advanceScrollRequest();
+    private GoogleApiClient client;
+
+    private class FindWearTask extends AsyncTask<Void, Void, Void> {
+        private List<DeviceListItem> tmpDevices = new LinkedList<>();
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (client == null) {
+                client = new GoogleApiClient.Builder(getContext())
+                        .addApi(Wearable.API)
+                        .build();
+            }
+
+            client.blockingConnect(60, TimeUnit.SECONDS);
+            NodeApi.GetConnectedNodesResult result =
+                    Wearable.NodeApi.getConnectedNodes(client).await();
+            List<Node> nodes = result.getNodes();
+            for (Node node : nodes) {
+                tmpDevices.add(new DeviceListItem(node));
+                Log.v(TAG, "Node found: " + node.toString());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void params) {
+            devices.addAll(tmpDevices);
+            mAdapter.notifyDataSetChanged();
+        }
     }
-}
+
+
+        /**
+         * This interface must be implemented by activities that contain this
+         * fragment to allow an interaction in this fragment to be communicated
+         * to the activity and potentially other fragments contained in that
+         * activity.
+         * <p/>
+         * See the Android Training lesson <a href=
+         * "http://developer.android.com/training/basics/fragments/communicating.html"
+         * >Communicating with Other Fragments</a> for more information.
+         */
+        public interface OnDevicesFragmentInterractionListener {
+            public void onRequestDeviceRegistration(List<DeviceListItem> deviceItems);
+
+            public void advanceScrollRequest();
+        }
+    }

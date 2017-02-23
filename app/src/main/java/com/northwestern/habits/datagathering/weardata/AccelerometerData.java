@@ -10,7 +10,7 @@ import java.util.Map;
  */
 
 class AccelerometerData extends WearDataObject {
-    public AccelerometerData(byte[] dataBuffer) {
+    AccelerometerData(byte[] dataBuffer) {
         dataSeries = new DataSeries(TYPE, dataBuffer.length/ENTRY_SIZE);
         parseObject(dataBuffer);
     }
