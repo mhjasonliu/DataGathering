@@ -18,6 +18,7 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.lang.ref.WeakReference;
@@ -89,6 +90,11 @@ public class BandDataService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Thread.setDefaultUncaughtExceptionHandler(DataGatheringApplication.getInstance());
+
+        String n = null;
+        n.contains("kljh");
+
         Log.v(TAG, "OnStartCommand called");
         Notification.Builder b = new Notification.Builder(this);
         b.setContentTitle("Data streaming");

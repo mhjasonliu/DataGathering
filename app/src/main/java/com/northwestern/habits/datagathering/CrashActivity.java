@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 
 public class CrashActivity extends Activity implements View.OnClickListener {
     private static final String TAG = "CrashActivity ";
+    private  String fullName;
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -28,6 +29,7 @@ public class CrashActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_crash);
         findViewById(R.id.button).setOnClickListener(this);
         findViewById(R.id.button2).setOnClickListener(this);
+        fullName = extractLogToFile();
     }
 
     @Override
@@ -45,10 +47,8 @@ public class CrashActivity extends Activity implements View.OnClickListener {
 
     private void sendLogFile ()
     {
-        String fullName = extractLogToFile();
         if (fullName == null)
             return;
-
         Intent intent = new Intent (Intent.ACTION_SEND);
         intent.setType ("text/plain");
         intent.putExtra (Intent.EXTRA_EMAIL, new String[] {"williamstogin2018@u.northwestern.edu"});
