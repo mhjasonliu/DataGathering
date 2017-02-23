@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,6 +39,7 @@ public abstract class DataManager implements EventListener {
     public DataManager(String tag, Context context, int buffSize) {
         TAG = tag;
         this.context = context;
+        toastEnabled = (context != null);
         toastingFailure = false;
         if (mHandler == null)
             mHandler = new Handler();
@@ -61,12 +63,12 @@ public abstract class DataManager implements EventListener {
     protected String STREAM_TYPE;
 
     protected DataSeries dataBuffer;
-    protected int BUFFER_SIZE = 100;
+    protected int BUFFER_SIZE = 4000;
 
     protected static boolean toastingFailure;
 
     protected static boolean disconnectDetected = false;
-    protected static boolean toastEnabled = true;
+    protected boolean toastEnabled = true;
     protected static Map<String, Integer> connectionFailedMap = new HashMap<>();
 
     protected abstract void subscribe(BandInfo info);
@@ -88,7 +90,7 @@ public abstract class DataManager implements EventListener {
             // Send a start request to the service to attempt to reconnect to sensors
             Log.v(TAG, "Reconnecting...");
             context.startService(new Intent(context, BandDataService.class));
-            toastEnabled = true;
+            toastEnabled = context != null;
             disconnectDetected = false;
         }
     }
@@ -295,10 +297,14 @@ public abstract class DataManager implements EventListener {
         protected BandInfo info;
     }
 
-
     protected void writeData(Context context, final BandInfo info, String type) {
         Log.v(TAG, "Writing data");
-        final DataSeries myBuffer = dataBuffer;
+        Iterator<Map<String, Object>> iter = dataBuffer.getDataIter();
+        long lastEntry = dataBuffer.getFirstEntry();
+        DataSeries myBuffer = new DataSeries(type, BUFFER_SIZE);
+        while (iter.hasNext()) {
+            myBuffer.putDataPoint(iter.next(), lastEntry);
+        }
         dataBuffer = new DataSeries(type, BUFFER_SIZE);
 
         // Split the buffer

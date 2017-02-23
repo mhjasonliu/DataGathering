@@ -238,94 +238,96 @@ public class BandDataService extends Service {
     }
 
     private void genericUnsubscribeFactory(String request, BandInfo band) {
-        // Check for existance of stream
-        if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
-            if (bandStreams.get(band).size() == 1) {
-                // Only stream open for this band, remove from bandStreams
-                bandStreams.remove(band);
-            } else {
-                // Other streams open, remove from list
-                bandStreams.get(band).remove(request);
-            }
+        if (band != null) {
+            // Check for existance of stream
+            if (bandStreams.containsKey(band) && bandStreams.get(band).contains(request)) {
+                if (bandStreams.get(band).size() == 1) {
+                    // Only stream open for this band, remove from bandStreams
+                    bandStreams.remove(band);
+                } else {
+                    // Other streams open, remove from list
+                    bandStreams.get(band).remove(request);
+                }
 
-            // Remove stream from preferences
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-            Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
-            if (streams.contains(request)) {
-                Log.v(TAG, "Removing stream " + request);
-                streams.remove(request);
-                Log.v(TAG, "Streams after removing " + request + ": " + streams);
-                prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
-            }
+                // Remove stream from preferences
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+                Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
+                if (streams.contains(request)) {
+                    Log.v(TAG, "Removing stream " + request);
+                    streams.remove(request);
+                    Log.v(TAG, "Streams after removing " + request + ": " + streams);
+                    prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
+                }
 
-            // Unsubscribe from the appropriate stream
-            switch (request) {
-                case ACCEL_REQ_EXTRA:
-                    if (accManager != null)
-                        accManager.unSubscribe(band);
-                    break;
-                case ALT_REQ_EXTRA:
-                    if (altManager != null)
-                        altManager.unSubscribe(band);
-                    break;
-                case AMBIENT_REQ_EXTRA:
-                    if (ambManager != null)
-                        ambManager.unSubscribe(band);
-                    break;
-                case BAROMETER_REQ_EXTRA:
-                    if (barometerManager != null)
-                        barometerManager.unSubscribe(band);
-                    break;
-                case CALORIES_REQ_EXTRA:
-                    if (calManager != null)
-                        calManager.unSubscribe(band);
-                    break;
-                case CONTACT_REQ_EXTRA:
-                    if (conManager != null)
-                        conManager.unSubscribe(band);
-                    break;
-                case DISTANCE_REQ_EXTRA:
-                    if (distManager != null)
-                        distManager.unSubscribe(band);
-                    break;
-                case GSR_REQ_EXTRA:
-                    if (gsrManager != null)
-                        gsrManager.unSubscribe(band);
-                    break;
-                case GYRO_REQ_EXTRA:
-                    if (gyroManager != null)
-                        gyroManager.unSubscribe(band);
-                    break;
-                case HEART_RATE_REQ_EXTRA:
-                    if (heartManager != null)
-                        heartManager.unSubscribe(band);
-                    break;
-                case PEDOMETER_REQ_EXTRA:
-                    if (pedoManager != null)
-                        pedoManager.unSubscribe(band);
-                    break;
-                case SKIN_TEMP_REQ_EXTRA:
-                    if (skinTempManager != null)
-                        skinTempManager.unSubscribe(band);
-                    break;
-                case UV_REQ_EXTRA:
-                    if (uvManager != null)
-                        uvManager.unSubscribe(band);
-                    break;
-                default:
-                    Log.e(TAG, "Unknown subscription requested " + request);
-            }
-        } else {
-            if (!bandStreams.containsKey(band)) {
-                Log.e(TAG, "Error: unsubscribe request for a band that isnt stored");
-                Log.v(TAG, "Band: " + band.toString());
-                for (BandInfo info :
-                        bandStreams.keySet()) {
-                    Log.v(TAG, "Key: " + info.toString());
+                // Unsubscribe from the appropriate stream
+                switch (request) {
+                    case ACCEL_REQ_EXTRA:
+                        if (accManager != null)
+                            accManager.unSubscribe(band);
+                        break;
+                    case ALT_REQ_EXTRA:
+                        if (altManager != null)
+                            altManager.unSubscribe(band);
+                        break;
+                    case AMBIENT_REQ_EXTRA:
+                        if (ambManager != null)
+                            ambManager.unSubscribe(band);
+                        break;
+                    case BAROMETER_REQ_EXTRA:
+                        if (barometerManager != null)
+                            barometerManager.unSubscribe(band);
+                        break;
+                    case CALORIES_REQ_EXTRA:
+                        if (calManager != null)
+                            calManager.unSubscribe(band);
+                        break;
+                    case CONTACT_REQ_EXTRA:
+                        if (conManager != null)
+                            conManager.unSubscribe(band);
+                        break;
+                    case DISTANCE_REQ_EXTRA:
+                        if (distManager != null)
+                            distManager.unSubscribe(band);
+                        break;
+                    case GSR_REQ_EXTRA:
+                        if (gsrManager != null)
+                            gsrManager.unSubscribe(band);
+                        break;
+                    case GYRO_REQ_EXTRA:
+                        if (gyroManager != null)
+                            gyroManager.unSubscribe(band);
+                        break;
+                    case HEART_RATE_REQ_EXTRA:
+                        if (heartManager != null)
+                            heartManager.unSubscribe(band);
+                        break;
+                    case PEDOMETER_REQ_EXTRA:
+                        if (pedoManager != null)
+                            pedoManager.unSubscribe(band);
+                        break;
+                    case SKIN_TEMP_REQ_EXTRA:
+                        if (skinTempManager != null)
+                            skinTempManager.unSubscribe(band);
+                        break;
+                    case UV_REQ_EXTRA:
+                        if (uvManager != null)
+                            uvManager.unSubscribe(band);
+                        break;
+                    default:
+                        Log.e(TAG, "Unknown subscription requested " + request);
                 }
             } else {
-                if (!bandStreams.get(band).contains(request)) {
-                    Log.e(TAG, "Error: unsubscribe request for unregistered request");
+                if (!bandStreams.containsKey(band)) {
+                    Log.e(TAG, "Error: unsubscribe request for a band that isnt stored");
+                    Log.v(TAG, "Band: " + band.toString());
+                    for (BandInfo info :
+                            bandStreams.keySet()) {
+                        Log.v(TAG, "Key: " + info.toString());
+                    }
+                } else {
+                    if (!bandStreams.get(band).contains(request)) {
+                        Log.e(TAG, "Error: unsubscribe request for unregistered request");
+                    }
                 }
             }
         }
@@ -333,111 +335,113 @@ public class BandDataService extends Service {
 
 
     private void genericSubscriptionFactory(String request, BandInfo band) {
-        Log.v(TAG, request + " requested");
-        if (!bandStreams.containsKey(band)) {
-            // Make a new list to put into the map with the band
-            List<String> list = new LinkedList<>();
-            list.add(request);
+        if (band != null) {
+            Log.v(TAG, request + " requested");
+            if (!bandStreams.containsKey(band)) {
+                // Make a new list to put into the map with the band
+                List<String> list = new LinkedList<>();
+                list.add(request);
 
-            // Add the band to the map
-            bandStreams.put(band, list);
+                // Add the band to the map
+                bandStreams.put(band, list);
 
-        } else if (!bandStreams.get(band).contains(request)) {
-            // Add sensor to the list in the stream map
-            bandStreams.get(band).add(request);
-        }
+            } else if (!bandStreams.get(band).contains(request)) {
+                // Add sensor to the list in the stream map
+                bandStreams.get(band).add(request);
+            }
 
-        // Remove stream from preferences
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
-        if (!streams.contains(request)) {
-            Log.v(TAG, "Adding stream " + request);
-            streams.add(request);
-            prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
-        }
+            // Remove stream from preferences
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+            Set<String> streams = prefs.getStringSet(Preferences.getDeviceKey(band.getMacAddress()), new HashSet<String>());
+            if (!streams.contains(request)) {
+                Log.v(TAG, "Adding stream " + request);
+                streams.add(request);
+                prefs.edit().putStringSet(Preferences.getDeviceKey(band.getMacAddress()), streams).apply();
+            }
 
-        // Request the appropriate stream
-        switch (request) {
-            case ACCEL_REQ_EXTRA:
-                if (accManager == null)
-                    accManager = new AccelerometerManager(getApplicationContext());
+            // Request the appropriate stream
+            switch (request) {
+                case ACCEL_REQ_EXTRA:
+                    if (accManager == null)
+                        accManager = new AccelerometerManager(getApplicationContext());
 
-                accManager.subscribe(band);
-                break;
-            case ALT_REQ_EXTRA:
-                if (altManager == null)
-                    altManager = new AltimeterManager(getApplicationContext());
+                    accManager.subscribe(band);
+                    break;
+                case ALT_REQ_EXTRA:
+                    if (altManager == null)
+                        altManager = new AltimeterManager(getApplicationContext());
 
-                altManager.subscribe(band);
-                break;
-            case AMBIENT_REQ_EXTRA:
-                if (ambManager == null)
-                    ambManager = new AmbientManager(getApplicationContext());
+                    altManager.subscribe(band);
+                    break;
+                case AMBIENT_REQ_EXTRA:
+                    if (ambManager == null)
+                        ambManager = new AmbientManager(getApplicationContext());
 
-                ambManager.subscribe(band);
-                break;
-            case BAROMETER_REQ_EXTRA:
-                if (barometerManager == null)
-                    barometerManager = new BarometerManager(getApplicationContext());
+                    ambManager.subscribe(band);
+                    break;
+                case BAROMETER_REQ_EXTRA:
+                    if (barometerManager == null)
+                        barometerManager = new BarometerManager(getApplicationContext());
 
-                barometerManager.subscribe(band);
-                break;
-            case CALORIES_REQ_EXTRA:
-                if (calManager == null)
-                    calManager = new CaloriesManager(getApplicationContext());
+                    barometerManager.subscribe(band);
+                    break;
+                case CALORIES_REQ_EXTRA:
+                    if (calManager == null)
+                        calManager = new CaloriesManager(getApplicationContext());
 
-                calManager.subscribe(band);
-                break;
-            case CONTACT_REQ_EXTRA:
-                if (conManager == null)
-                    conManager = new ContactManager(getApplicationContext());
+                    calManager.subscribe(band);
+                    break;
+                case CONTACT_REQ_EXTRA:
+                    if (conManager == null)
+                        conManager = new ContactManager(getApplicationContext());
 
-                conManager.subscribe(band);
-                break;
-            case DISTANCE_REQ_EXTRA:
-                if (distManager == null)
-                    distManager = new DistanceManager(getApplicationContext());
+                    conManager.subscribe(band);
+                    break;
+                case DISTANCE_REQ_EXTRA:
+                    if (distManager == null)
+                        distManager = new DistanceManager(getApplicationContext());
 
-                distManager.subscribe(band);
-                break;
-            case GSR_REQ_EXTRA:
-                if (gsrManager == null)
-                    gsrManager = new GsrManager(getApplicationContext());
+                    distManager.subscribe(band);
+                    break;
+                case GSR_REQ_EXTRA:
+                    if (gsrManager == null)
+                        gsrManager = new GsrManager(getApplicationContext());
 
-                gsrManager.subscribe(band);
-                break;
-            case GYRO_REQ_EXTRA:
-                if (gyroManager == null)
-                    gyroManager = new GyroscopeManager(getApplicationContext());
+                    gsrManager.subscribe(band);
+                    break;
+                case GYRO_REQ_EXTRA:
+                    if (gyroManager == null)
+                        gyroManager = new GyroscopeManager(getApplicationContext());
 
-                gyroManager.subscribe(band);
-                break;
-            case HEART_RATE_REQ_EXTRA:
-                if (heartManager == null)
-                    heartManager = new HeartRateManager(getApplicationContext());
+                    gyroManager.subscribe(band);
+                    break;
+                case HEART_RATE_REQ_EXTRA:
+                    if (heartManager == null)
+                        heartManager = new HeartRateManager(getApplicationContext());
 
-                heartManager.subscribe(band);
-                break;
-            case PEDOMETER_REQ_EXTRA:
-                if (pedoManager == null)
-                    pedoManager = new PedometerManager(getApplicationContext());
+                    heartManager.subscribe(band);
+                    break;
+                case PEDOMETER_REQ_EXTRA:
+                    if (pedoManager == null)
+                        pedoManager = new PedometerManager(getApplicationContext());
 
-                pedoManager.subscribe(band);
-                break;
-            case SKIN_TEMP_REQ_EXTRA:
-                if (skinTempManager == null)
-                    skinTempManager = new SkinTempManager(getApplicationContext());
+                    pedoManager.subscribe(band);
+                    break;
+                case SKIN_TEMP_REQ_EXTRA:
+                    if (skinTempManager == null)
+                        skinTempManager = new SkinTempManager(getApplicationContext());
 
-                skinTempManager.subscribe(band);
-                break;
-            case UV_REQ_EXTRA:
-                if (uvManager == null)
-                    uvManager = new UvManager(getApplicationContext());
+                    skinTempManager.subscribe(band);
+                    break;
+                case UV_REQ_EXTRA:
+                    if (uvManager == null)
+                        uvManager = new UvManager(getApplicationContext());
 
-                uvManager.subscribe(band);
-                break;
-            default:
-                Log.e(TAG, "Unknown subscription requested " + request);
+                    uvManager.subscribe(band);
+                    break;
+                default:
+                    Log.e(TAG, "Unknown subscription requested " + request);
+            }
         }
     }
 

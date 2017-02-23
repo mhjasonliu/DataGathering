@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,11 @@ public class DataSeries {
     }
 
     public long getFirstEntry() { return firstEntry; }
+    public long getLastEntry() { return lastEntry; }
+
+    public Iterator<Map<String, Object>> getDataIter() {
+        return dataArray.iterator();
+    }
 
     public void putDataPoint(Map point, long time) {
         if (firstEntry == 0) {
