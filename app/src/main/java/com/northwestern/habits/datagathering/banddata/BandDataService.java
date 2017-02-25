@@ -18,6 +18,7 @@ import android.util.Log;
 
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandInfo;
+import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.Preferences;
 
 import java.lang.ref.WeakReference;
@@ -97,6 +98,8 @@ public class BandDataService extends Service {
         b.setContentTitle("Data streaming");
         b.setContentText("The habits lab is streaming data from your Microsoft Band");
         b.setSmallIcon(android.R.drawable.arrow_up_float);
+
+        Thread.setDefaultUncaughtExceptionHandler(DataGatheringApplication.getInstance());
 
         startForeground(NOTIFICATION_ID, b.build());
 

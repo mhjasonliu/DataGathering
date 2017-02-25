@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Calendar;
 
 public class CrashActivity extends Activity implements View.OnClickListener {
     private static final String TAG = "CrashActivity ";
@@ -74,8 +75,9 @@ public class CrashActivity extends Activity implements View.OnClickListener {
 
         // Make file name - file must be saved to external storage or it wont be readable by
         // the email app.
-        String path = Environment.getExternalStorageDirectory() + "/" + "DataGathering/";
-        String fullName = path + "Error_Report.log";
+        String path = Environment.getExternalStorageDirectory() + "/" + "Bandv2/CrashLogs/";
+        Calendar c = Calendar.getInstance();
+        String fullName = path + "Error_Report" + c.toString() + ".log";
 
         // Extract to file.
         File file = new File (fullName);
