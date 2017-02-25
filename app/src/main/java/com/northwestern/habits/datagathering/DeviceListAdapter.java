@@ -3,6 +3,7 @@ package com.northwestern.habits.datagathering;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -28,6 +29,7 @@ import android.widget.TextView;
 
 import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
 import com.northwestern.habits.datagathering.banddata.tile.TileManager;
+import com.northwestern.habits.datagathering.weardata.WearDataService;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -422,12 +424,14 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
 
             e.apply();
             DeviceListItem device = (DeviceListItem) buttonView.getTag();
+            String text = buttonView.getText().toString();
+
+            Bundle requestBundle = new Bundle();
+
             switch (device.getType()) {
                 case BAND:
                     Message bandMessage = Message.obtain(null, BandDataService.MSG_STREAM, 0, 0);
-                    Bundle requestBundle = new Bundle();
 
-                    String text = buttonView.getText().toString();
                     switch (text) {
                         case "Accelerometer":
                             Log.e(TAG, "Accelerometer check changed when it shouldn't be!");
@@ -570,7 +574,35 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                     // TODO implement phone sensor streaming
                     break;
                 case WEAR:
-                    Log.v(TAG, "Wear sensor requested.");
+                    Intent i = new Intent(context, WearDataService.class);
+                    i.putExtra(WearDataService.NODE_ID, mac);
+                    switch (text) {
+                        case "Accelerometer":
+                            if (isChecked) {
+                                sensors.add(Preferences.ACCEL);
+                            } else {
+                                sensors.remove(Preferences.ACCEL);
+                            }
+                            i.putExtra(WearDataService.ACCEL, isChecked);
+                            break;
+                        case "Altimeter":
+                        case "Ambient Light":
+                        case "Barometer":
+                        case "Calories":
+                        case "Contact":
+                        case "Distance":
+                        case "GSR":
+                        case "Gyroscope":
+                        case "Heart Rate":
+                        case "Pedometer":
+                        case "Skin Temp.":
+                        case "UV":
+                        default:
+                            Log.e(TAG, "Button text not recognized");
+                    }
+
+                    context.startService(i);
+
                     break;
                 case OTHER:
                     break;

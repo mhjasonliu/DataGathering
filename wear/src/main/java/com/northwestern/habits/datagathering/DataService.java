@@ -1,31 +1,25 @@
 package com.northwestern.habits.datagathering;
 
 import android.app.Notification;
-import android.app.Service;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-public class DataService extends Service {
+import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.WearableListenerService;
+
+public class DataService extends WearableListenerService {
     private static final String TAG = "DataService";
 
     public DataService() {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         Log.v(TAG, "Starting service...");
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle("Data Gathering Wear Data")
@@ -33,12 +27,6 @@ public class DataService extends Service {
         startForeground(1, notification);
 
         initSensors();
-
-        if (!accelIsRegistered) {
-            mManager.registerListener(accelListener, mAccel, SensorManager.SENSOR_DELAY_NORMAL);
-            accelIsRegistered = true;
-        }
-
         return START_STICKY;
     }
 
@@ -70,7 +58,7 @@ public class DataService extends Service {
         @Override
         public void onSensorChanged(SensorEvent event) {
             // Handle new accel value
-            if (mAccumulator.addEvent(event)){
+            if (mAccumulator.addEvent(event)) {
                 // Passed the time interval
 
                 // Start a fresh accumulator, preserving the old
@@ -86,10 +74,39 @@ public class DataService extends Service {
             // Handle change of accuracy if necessary
         }
 
-        private void handleFullAccumulator(DataAccumulator accumulator){
+        private void handleFullAccumulator(DataAccumulator accumulator) {
             // Check if connected to phone
             Log.v(TAG, "Accumulator was full");
             new SendDataTask(accumulator.getAsBytes(), DataService.this).execute();
         }
     };
+
+
+    /* ***************** MESSAGE RECEIVING *********************** */
+    @Override
+    public void onMessageReceived(MessageEvent messageEvent) {
+        if (messageEvent != null) {
+            if (messageEvent.getPath().equals("/DataRequest")) {
+                String action = new String(messageEvent.getData());
+                switch (action) {
+                    case "Accelerometer1":
+                        Log.v(TAG, "Start accel requested.");
+                        if (!accelIsRegistered) {
+                            mManager.registerListener(accelListener, mAccel, SensorManager.SENSOR_DELAY_NORMAL);
+                            accelIsRegistered = true;
+                        }
+                        break;
+                    case "Accelerometer0":
+                        Log.v(TAG, "Stop accel requested.");
+                        if (accelIsRegistered) {
+                            mManager.unregisterListener(accelListener, mAccel);
+                            accelIsRegistered = true;
+                        }
+                        break;
+                    default:
+                        Log.w(TAG, "Unknown action received" + action);
+                }
+            }
+        }
+    }
 }

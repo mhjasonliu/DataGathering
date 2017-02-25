@@ -26,6 +26,7 @@ public class DeviceListItem {
     public DeviceListItem(Node node) {
         name = node.getDisplayName();
         type = DeviceType.WEAR;
+        MAC = node.getId();
     }
 
     public enum DeviceType {

@@ -1,5 +1,6 @@
 package com.northwestern.habits.datagathering.weardata;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -19,12 +20,44 @@ import com.google.android.gms.wearable.WearableListenerService;
 import java.util.List;
 
 public class WearDataService extends WearableListenerService implements GoogleApiClient.ConnectionCallbacks {
+    private static final String DATA_REQUEST_PATH = "/DataRequest";
+
     public WearDataService() {
     }
 
     private static final String TAG = "WearDataService";
     GoogleApiClient googleApiClient;
     Node nodeForTimeEntry;
+
+    public static final String NODE_ID = "Nodeid";
+
+    public static final String ACCEL = "Accelerometer";
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
+            String nodeID = extras.getString(NODE_ID);
+            if (nodeID != null) {
+                if (extras.getBoolean(ACCEL)) {
+                    // Request accel
+                    Log.v(TAG, "Accel requested for " + nodeID);
+                    Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                            DATA_REQUEST_PATH, (ACCEL+"1").getBytes());
+
+                } else {
+                    // Request stop accel
+                    Log.v(TAG, "Accel un-requested for " + nodeID);
+                    Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                            DATA_REQUEST_PATH, (ACCEL+"0").getBytes());
+                }
+            } else {
+                Log.e(TAG, "Request received without a node id");
+            }
+        }
+
+        return START_STICKY;
+    }
 
     @Override
     public void onCreate() {
