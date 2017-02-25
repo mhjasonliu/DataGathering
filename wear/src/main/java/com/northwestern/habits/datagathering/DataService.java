@@ -58,6 +58,7 @@ public class DataService extends WearableListenerService {
         @Override
         public void onSensorChanged(SensorEvent event) {
             // Handle new accel value
+            Log.v(TAG, "Event REceived");
             if (mAccumulator.addEvent(event)) {
                 // Passed the time interval
 
