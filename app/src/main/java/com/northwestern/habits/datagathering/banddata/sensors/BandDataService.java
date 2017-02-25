@@ -92,9 +92,6 @@ public class BandDataService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Thread.setDefaultUncaughtExceptionHandler(DataGatheringApplication.getInstance());
 
-        String n = null;
-        n.contains("kljh");
-
         Log.v(TAG, "OnStartCommand called");
         Notification.Builder b = new Notification.Builder(this);
         b.setContentTitle("Data streaming");
