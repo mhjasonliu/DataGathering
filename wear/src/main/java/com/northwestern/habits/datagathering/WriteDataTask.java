@@ -167,7 +167,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
 
         Calendar c = Calendar.getInstance();
         File errorReport = new File(folder.getPath()
-                + "Exception "
+                + "/Exception "
                 + c.get(Calendar.HOUR_OF_DAY)
                 + c.get(Calendar.MINUTE)
                 + c.get(Calendar.SECOND)
