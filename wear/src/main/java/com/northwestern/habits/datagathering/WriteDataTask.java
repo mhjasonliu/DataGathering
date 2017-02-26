@@ -22,7 +22,7 @@ import java.util.Map;
  * Created by William on 2/25/2017.
  */
 
-public class WriteDataTask extends AsyncTask {
+public class WriteDataTask extends AsyncTask<Void,Void,Void> {
     private static final String TAG = "WriteDataTask";
 
     DataAccumulator mAccumulator;
@@ -36,8 +36,7 @@ public class WriteDataTask extends AsyncTask {
     }
 
     @Override
-    protected Object doInBackground(Object[] objects) {
-
+    protected Void doInBackground(Void... voids) {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "permission denied");
@@ -67,7 +66,6 @@ public class WriteDataTask extends AsyncTask {
                 }
 
                 writeDataSeries(writer, series, properties);
-                Log.v(TAG, "Wrote file: " + csv.getPath());
 
             } catch (ConcurrentModificationException | IOException e) {
                 e.printStackTrace();

@@ -114,8 +114,9 @@ public class DataService extends WearableListenerService {
         private void handleFullAccumulator(DataAccumulator accumulator) {
             // Check if connected to phone
             Log.v(TAG, "Accumulator was full");
+            new WriteDataTask(getBaseContext(), accumulator, "Accelerometer").execute();
+
             new SendDataTask(getBaseContext()).execute();
-//            new WriteDataTask(getBaseContext(), accumulator, "Accelerometer").execute();
         }
     };
 

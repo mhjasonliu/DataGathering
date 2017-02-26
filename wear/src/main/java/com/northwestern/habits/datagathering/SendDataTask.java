@@ -17,10 +17,12 @@ import java.util.concurrent.TimeUnit;
  * Sends a bunch of bytes on the google API client
  * Created by William on 1/29/2017.
  */
-public class SendDataTask extends AsyncTask {
+public class SendDataTask extends AsyncTask<Void,Void,Void> {
     private Context mContext;
     private GoogleApiClient mGoogleApiClient;
     private String nodeId;
+
+    public static boolean isSendingData = false;
 
     private static final String TAG = "SendDataTask";
 
@@ -36,16 +38,19 @@ public class SendDataTask extends AsyncTask {
     }
 
     @Override
-    protected Object doInBackground(Object[] objects) {
-        Log.v(TAG, "nodid " + nodeId);
-        if (nodeId == null) return null;
+    protected Void doInBackground(Void... voids) {
+        if (!isSendingData) { // Do not risk trying to send deleted files and vice versa
+            isSendingData = true;
+            Log.v(TAG, "nodid " + nodeId);
+            if (nodeId == null) return null;
 
-        // Top level file
-        File dir = new File(mContext.getExternalFilesDir(null).getPath() + "/WearData/");
-        Log.v(TAG, "dir: " + dir.getPath());
-        sendChildren(dir);
+            // Top level file
+            File dir = new File(mContext.getExternalFilesDir(null).getPath() + "/WearData/");
+            Log.v(TAG, "dir: " + dir.getPath());
+            sendChildren(dir);
 
-
+            isSendingData = false;
+        }
         return null;
     }
 
@@ -66,13 +71,17 @@ public class SendDataTask extends AsyncTask {
         Log.v(TAG, "Opening channel...");
         ChannelApi.OpenChannelResult result =
                 Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId,
-                        "/WearData/" + file.getPath()).await(5, TimeUnit.SECONDS);
+                        file.getPath().substring(
+                                mContext.getExternalFilesDir(null).getPath().length() + 1)
+                ).await(5, TimeUnit.SECONDS);
 
         if (result.getStatus().isSuccess()) {
             Channel channel = result.getChannel();
             Log.v(TAG, "Sending file...");
-            channel.sendFile(mGoogleApiClient, Uri.fromFile(file));
+            channel.sendFile(mGoogleApiClient, Uri.fromFile(file)).await(1, TimeUnit.SECONDS);
             Log.v(TAG, "File sent.");
+            if (file.delete()) Log.v(TAG, "File successfully deleted");
+
         } else {
             Log.v(TAG, "Channel failed. " + result.getStatus().toString());
         }
