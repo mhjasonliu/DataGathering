@@ -1,7 +1,9 @@
 package com.northwestern.habits.datagathering.weardata;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -9,6 +11,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
+import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
@@ -17,6 +20,7 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.io.File;
 import java.util.List;
 
 public class WearDataService extends WearableListenerService implements GoogleApiClient.ConnectionCallbacks {
@@ -43,13 +47,13 @@ public class WearDataService extends WearableListenerService implements GoogleAp
                     // Request accel
                     Log.v(TAG, "Accel requested for " + nodeID);
                     Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
-                            DATA_REQUEST_PATH, (ACCEL+"1").getBytes());
+                            DATA_REQUEST_PATH, (ACCEL + "1").getBytes());
 
                 } else {
                     // Request stop accel
                     Log.v(TAG, "Accel un-requested for " + nodeID);
                     Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
-                            DATA_REQUEST_PATH, (ACCEL+"0").getBytes());
+                            DATA_REQUEST_PATH, (ACCEL + "0").getBytes());
                 }
             } else {
                 Log.e(TAG, "Request received without a node id");
@@ -91,6 +95,7 @@ public class WearDataService extends WearableListenerService implements GoogleAp
 
         Wearable.CapabilityApi.addCapabilityListener(googleApiClient, this, "fetch_timeentry_data_capability");
         Wearable.DataApi.addListener(googleApiClient, this);
+        Wearable.ChannelApi.addListener(googleApiClient, this);
     }
 
     @Override
@@ -104,6 +109,7 @@ public class WearDataService extends WearableListenerService implements GoogleAp
         Log.v(TAG, "Capability changed");
         determineNodeForDataRetrieval(capabilityInfo.getNodes());
     }
+
     private void determineNodeForDataRetrieval(Iterable<Node> nodes) {
         Log.v(TAG, "determining nodes");
         Node nodeToUse = null;
@@ -116,7 +122,7 @@ public class WearDataService extends WearableListenerService implements GoogleAp
             nodeToUse = node;
         }
 
-        if(nodeToUse == null) {
+        if (nodeToUse == null) {
             Log.v(TAG, "Nodenull");
             nodeForTimeEntry = null;
         } else {
@@ -160,5 +166,18 @@ public class WearDataService extends WearableListenerService implements GoogleAp
             }
 
         }
+    }
+
+    @Override
+    public void onChannelOpened(Channel channel) {
+        Log.v(TAG, "Channel event!");
+
+        File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/WEARDATA" + channel.getPath());
+
+        if (!folder.exists()) Log.v(TAG, "mkdirs result: " + folder.mkdirs());
+
+        File file = new File(folder.getPath() + "/test.txt");
+        Log.v(TAG, "File path: " + file.getPath());
+        channel.receiveFile(googleApiClient, Uri.fromFile(file), false);
     }
 }

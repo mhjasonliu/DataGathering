@@ -120,9 +120,14 @@
                 <action android:name="com.google.android.gms.wearable.CAPABILITY_CHANGED" />
                 <action android:name="com.google.android.gms.wearable.CHANNEL_EVENT" />
 
+                <!--<data-->
+                    <!--android:host="*"-->
+                    <!--android:pathPrefix="/timeEntry"-->
+                    <!--android:scheme="wear" />-->
+
                 <data
                     android:host="*"
-                    android:pathPrefix="/timeEntry"
+                    android:pathPrefix="/WearData"
                     android:scheme="wear" />
             </intent-filter>
         </service>

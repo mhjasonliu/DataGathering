@@ -98,7 +98,7 @@ public class DataService extends WearableListenerService {
         private void handleFullAccumulator(DataAccumulator accumulator) {
             // Check if connected to phone
             Log.v(TAG, "Accumulator was full");
-            new SendDataTask(accumulator.getAsBytes(), DataService.this).execute();
+            new SendDataTask(accumulator, DataService.this).execute();
         }
     };
 
