@@ -70,13 +70,13 @@ public class WearDataService extends WearableListenerService implements GoogleAp
     public void onCreate() {
         super.onCreate();
         //googleApiClient is defined as a class member variable
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .build();
-        Log.v(TAG, "Connecting...");
-        googleApiClient.connect();
-        Log.v(TAG, "Passed connect");
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Wearable.API)
+                    .addConnectionCallbacks(this)
+                    .build();
+            googleApiClient.connect();
+        }
     }
 
     @Override

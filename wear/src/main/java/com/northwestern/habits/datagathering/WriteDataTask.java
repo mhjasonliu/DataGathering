@@ -60,14 +60,14 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
                 writeDataSeries(writer, series, properties);
 
             } catch (ConcurrentModificationException | IOException e) {
-                e.printStackTrace();
+                writeError(e, mContext);
             } finally {
                 if (writer != null) {
                     try {
                         writer.flush();
                         writer.close();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        writeError(e, mContext);
                     }
                 }
             }
@@ -135,7 +135,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         }
     }
 
-    public static void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
+    private void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
                                        List<String> properties) {
         boolean newLine = true;
         for (Map<String, Object> datum :
@@ -146,13 +146,51 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
                     if (!newLine) csvWriter.append(",");
                     csvWriter.append(datum.get(property).toString());
                     newLine = false;
-                } catch (IOException e) {e.printStackTrace();}
+                } catch (IOException e) {writeError(e, mContext);}
             }
             try {
                 csvWriter.append("\n");
                 newLine = true;
             } catch (IOException e) {
-                e.printStackTrace();
+                writeError(e, mContext);
+            }
+        }
+    }
+
+    public static void writeError(Exception e, Context context) {
+        Log.e(TAG, "WRITING ERROR TO DISK: \n");
+        e.printStackTrace();
+
+        String PATH = context.getExternalFilesDir(null) + "/WearData/ERRORS/";
+        File folder = new File(PATH);
+        if (!folder.exists()) folder.mkdirs();
+
+        Calendar c = Calendar.getInstance();
+        File errorReport = new File(folder.getPath()
+                + "Exception "
+                + c.get(Calendar.HOUR_OF_DAY)
+                + c.get(Calendar.MINUTE)
+                + c.get(Calendar.SECOND)
+                + ".txt");
+
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(errorReport);
+            writer.write(e.toString());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.flush();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                try {
+                    writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
         }
     }
