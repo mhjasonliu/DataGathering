@@ -11,13 +11,14 @@ import com.google.android.gms.wearable.ChannelApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.File;
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Sends a bunch of bytes on the google API client
  * Created by William on 1/29/2017.
  */
-public class SendDataTask extends AsyncTask<Void,Void,Void> {
+public class SendDataTask extends AsyncTask<Void, Void, Void> {
     private Context mContext;
     private GoogleApiClient mGoogleApiClient;
     private String nodeId;
@@ -46,7 +47,6 @@ public class SendDataTask extends AsyncTask<Void,Void,Void> {
 
             // Top level file
             File dir = new File(mContext.getExternalFilesDir(null).getPath() + "/WearData/");
-            Log.v(TAG, "dir: " + dir.getPath());
             sendChildren(dir);
 
             isSendingData = false;
@@ -68,22 +68,31 @@ public class SendDataTask extends AsyncTask<Void,Void,Void> {
     }
 
     private void sendFile(File file, File directory) {
-        Log.v(TAG, "Opening channel...");
-        ChannelApi.OpenChannelResult result =
-                Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId,
-                        file.getPath().substring(
-                                mContext.getExternalFilesDir(null).getPath().length() + 1)
-                ).await(5, TimeUnit.SECONDS);
 
-        if (result.getStatus().isSuccess()) {
-            Channel channel = result.getChannel();
-            Log.v(TAG, "Sending file...");
-            channel.sendFile(mGoogleApiClient, Uri.fromFile(file)).await(1, TimeUnit.SECONDS);
-            Log.v(TAG, "File sent.");
-            if (file.delete()) Log.v(TAG, "File successfully deleted");
+        // Delete only if the file name is not the current hour:minute
+        Calendar c = Calendar.getInstance();
+        String currentcsv = Integer.toString(c.get(Calendar.HOUR_OF_DAY))
+                + ":" + Integer.toString(c.get(Calendar.MINUTE)) + ".csv";
+        if (!file.getName().equals(currentcsv)) {
+            Log.v(TAG, "Opening channel...");
+            ChannelApi.OpenChannelResult result =
+                    Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId,
+                            file.getPath().substring(
+                                    mContext.getExternalFilesDir(null).getPath().length() + 1)
+                    ).await(5, TimeUnit.SECONDS);
 
+            if (result.getStatus().isSuccess()) {
+                Channel channel = result.getChannel();
+                channel.sendFile(mGoogleApiClient, Uri.fromFile(file)).await(1, TimeUnit.SECONDS);
+
+                if (file.delete()) Log.v(TAG, "File successfully deleted");
+
+
+            } else {
+                Log.v(TAG, "Channel failed. " + result.getStatus().toString());
+            }
         } else {
-            Log.v(TAG, "Channel failed. " + result.getStatus().toString());
+            Log.v(TAG, "Current csv " + currentcsv + " equals " + file.getName());
         }
     }
 }

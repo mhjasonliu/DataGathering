@@ -4,10 +4,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
@@ -39,7 +42,7 @@ public class WearDataService extends WearableListenerService implements GoogleAp
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Bundle extras = intent.getExtras();
+        Bundle extras = (intent != null) ? intent.getExtras() : null;
         if (extras != null) {
             String nodeID = extras.getString(NODE_ID);
             if (nodeID != null) {
@@ -172,12 +175,19 @@ public class WearDataService extends WearableListenerService implements GoogleAp
     public void onChannelOpened(Channel channel) {
         Log.v(TAG, "Channel event!");
 
-        File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
+//        File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
+//
+//        if (!folder.exists()) Log.v(TAG, "mkdirs result: " + folder.mkdirs());
 
-        if (!folder.exists()) Log.v(TAG, "mkdirs result: " + folder.mkdirs());
-
-        File file = new File(folder.getPath());
+        File file = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
+        if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
         Log.v(TAG, "File path: " + file.getPath());
-        channel.receiveFile(googleApiClient, Uri.fromFile(file), false);
+        PendingResult<Status> result = channel.receiveFile(googleApiClient, Uri.fromFile(file), false);
+        result.setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(@NonNull Status status) {
+                Log.v(TAG, "Status: " + status);
+            }
+        });
     }
 }

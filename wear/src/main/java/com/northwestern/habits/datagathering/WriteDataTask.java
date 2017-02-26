@@ -1,12 +1,9 @@
 package com.northwestern.habits.datagathering;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.File;
@@ -37,10 +34,6 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "permission denied");
-        }
 
         long firstPointTime = mAccumulator.getFirstEntry();
 
@@ -50,7 +43,6 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         File csv = getCsv(folder, firstPointTime);
 
         Map<Integer, List<Map<String, Object>>> dataSplit = mAccumulator.splitIntoMinutes();
-        Calendar c = Calendar.getInstance();
 
         for (List<Map<String, Object>> series : dataSplit.values()){
             Map<String, Object> firstPoint = series.get(0);
@@ -88,7 +80,6 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         // Date for use in the folder path
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(timestamp);
-        Log.v(TAG, "Calendar date: " + date.toString());
         int day = date.get(Calendar.DAY_OF_MONTH);
         int month = date.get(Calendar.MONTH) + 1;
         int year = date.get(Calendar.YEAR);
