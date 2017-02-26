@@ -1,8 +1,6 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -42,7 +40,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         // Make csv
         File csv = getCsv(folder, firstPointTime);
 
-        Map<Integer, List<Map<String, Object>>> dataSplit = mAccumulator.splitIntoMinutes();
+        Map<Integer, List<Map<String, Object>>> dataSplit = mAccumulator.splitIntoMinutes(mContext);
 
         for (List<Map<String, Object>> series : dataSplit.values()){
             Map<String, Object> firstPoint = series.get(0);
@@ -52,7 +50,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
             FileWriter writer = null;
             try {
                 if (!csv.exists()) {
-                    writer = writeProperties(properties, csv, mContext);
+                    writer = writeProperties(properties, csv);
                 } else {
                     writer = new FileWriter(csv, true);
                 }
@@ -108,16 +106,16 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         return new File(folder.getPath(), fName);
     }
 
-    private static FileWriter writeProperties(List<String> properties, File csv, Context context)
+    private FileWriter writeProperties(List<String> properties, File csv)
             throws IOException {
         if (!csv.exists()) {
             // Make the file
             if (!csv.createNewFile()) {
-                throw new IOException();
+                writeError(new IOException("Failed to create csv " + csv.toString()), mContext);
             }
-            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            intent.setData(Uri.fromFile(csv));
-            context.sendBroadcast(intent);
+//            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+//            intent.setData(Uri.fromFile(csv));
+//            context.sendBroadcast(intent);
 
 
             FileWriter csvWriter = new FileWriter(csv.getPath(), true);

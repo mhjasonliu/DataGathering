@@ -1,5 +1,7 @@
 package com.northwestern.habits.datagathering;
 
+import android.content.Context;
+
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,12 +58,24 @@ public class DataAccumulator {
         return dataSoFar;
     }
 
-    public Map<Integer, List<Map<String, Object>>> splitIntoMinutes() {
+    public Map<Integer, List<Map<String, Object>>> splitIntoMinutes(Context con) {
         int minute;
         Calendar c = Calendar.getInstance();
         Map<Integer, List<Map<String, Object>>> split = new HashMap<>();
         for (Map datum : dataArray) {
-            c.setTimeInMillis((long) datum.get("Time"));
+            try {
+                Object time = datum.get("Time");
+                if (time instanceof String) {
+                    time = Long.valueOf((String) time);
+                    WriteDataTask.writeError(
+                            new Exception("The time was a string rather than a long: "
+                                    + time.toString()), con);
+                }
+
+                c.setTimeInMillis((long) datum.get("Time"));
+            } catch (ClassCastException e) {
+                WriteDataTask.writeError(e, con);
+            }
             minute = c.get(Calendar.MINUTE);
             if (!split.containsKey(minute)) {
                 split.put(minute, new LinkedList<Map<String, Object>>());
