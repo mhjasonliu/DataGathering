@@ -88,6 +88,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         // Date for use in the folder path
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(timestamp);
+        Log.v(TAG, "Calendar date: " + date.toString());
         int day = date.get(Calendar.DAY_OF_MONTH);
         int month = date.get(Calendar.MONTH) + 1;
         int year = date.get(Calendar.YEAR);

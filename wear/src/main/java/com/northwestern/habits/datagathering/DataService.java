@@ -13,6 +13,7 @@ import android.util.Log;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -84,11 +85,20 @@ public class DataService extends WearableListenerService {
             // Handle new accel value
             if (event == null) return;
 
+            event.timestamp = System.currentTimeMillis();
+
             Map<String, Object> dataPoint = new HashMap<>();
             dataPoint.put("Time", event.timestamp);
             dataPoint.put("accX", event.values[0]);
             dataPoint.put("accY", event.values[1]);
             dataPoint.put("accZ", event.values[2]);
+
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(event.timestamp);
+            Log.v(TAG, "Month: " + (c.get(Calendar.MONTH)+1)
+                    + " Day: " + c.get(Calendar.DAY_OF_MONTH)
+                    + " YEar: " + c.get(Calendar.YEAR));
+
 
             if (mAccelAccumulator.putDataPoint(dataPoint, event.timestamp)) {
                 // Accumulator is full
