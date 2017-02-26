@@ -9,8 +9,15 @@ import android.content.Intent;
  */
 
 public class Receiver extends BroadcastReceiver {
+    private static final String TAG = "habitsReceiver";
+
     @Override
     public void onReceive(Context context, Intent intent) {
 
+        String action = intent.getAction();
+        if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
+            Intent i = new Intent(context, DataService.class);
+            context.startService(i);
+        }
     }
 }
