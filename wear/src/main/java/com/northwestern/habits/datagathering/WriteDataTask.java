@@ -175,7 +175,8 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
 
         FileWriter writer = null;
         try {
-            writer = new FileWriter(errorReport);
+            writer = new FileWriter(errorReport, true);
+            writer.write("\n\n-----------------BEGINNING OF EXCEPTION-----------------\n\n");
             writer.write(e.toString());
         } catch (IOException e1) {
             e1.printStackTrace();
