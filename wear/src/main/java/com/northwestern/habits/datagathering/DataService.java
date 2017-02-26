@@ -13,7 +13,10 @@ import android.util.Log;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 public class DataService extends WearableListenerService {
@@ -56,7 +59,7 @@ public class DataService extends WearableListenerService {
     // Sensor related fields
     private SensorManager mManager;
     private Sensor mAccel;
-    private DataAccumulator mAccumulator;
+    private DataAccumulator mAccelAccumulator;
     /**
      * Maintains accelerometer registration state.
      * Update every time you register/unregister outside of
@@ -67,7 +70,7 @@ public class DataService extends WearableListenerService {
     private void initSensors() {
         mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mAccel = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccumulator = new DataAccumulator();
+        mAccelAccumulator = new DataAccumulator("Accelerometer", 100);
     }
 
     /**
@@ -79,12 +82,25 @@ public class DataService extends WearableListenerService {
         @Override
         public void onSensorChanged(SensorEvent event) {
             // Handle new accel value
-            if (mAccumulator.addEvent(event)) {
-                // Passed the time interval
+            if (event == null) return;
+
+            Map<String, Object> dataPoint = new HashMap<>();
+            dataPoint.put("Time", event.timestamp);
+            dataPoint.put("accX", event.values[0]);
+            dataPoint.put("accY", event.values[1]);
+            dataPoint.put("accZ", event.values[2]);
+
+            if (mAccelAccumulator.putDataPoint(dataPoint, event.timestamp)) {
+                // Accumulator is full
 
                 // Start a fresh accumulator, preserving the old
-                DataAccumulator accumulator = mAccumulator;
-                mAccumulator = new DataAccumulator();
+                Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
+                mAccelAccumulator = new DataAccumulator("Accelerometer", 100);
+                DataAccumulator accumulator = new DataAccumulator("Accelerometer", mAccelAccumulator.getCount());
+                while (oldDataIter.hasNext()) {
+                    Map<String, Object> point = oldDataIter.next();
+                    accumulator.putDataPoint(point, (long) point.get("Time"));
+                }
 
                 handleFullAccumulator(accumulator);
             }
@@ -98,7 +114,8 @@ public class DataService extends WearableListenerService {
         private void handleFullAccumulator(DataAccumulator accumulator) {
             // Check if connected to phone
             Log.v(TAG, "Accumulator was full");
-            new SendDataTask(accumulator, DataService.this).execute();
+            new SendDataTask(getBaseContext()).execute();
+//            new WriteDataTask(getBaseContext(), accumulator, "Accelerometer").execute();
         }
     };
 

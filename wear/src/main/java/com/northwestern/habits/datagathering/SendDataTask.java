@@ -11,8 +11,6 @@ import com.google.android.gms.wearable.ChannelApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,57 +18,63 @@ import java.util.concurrent.TimeUnit;
  * Created by William on 1/29/2017.
  */
 public class SendDataTask extends AsyncTask {
-    DataAccumulator mAccumulator;
-    Context mContext;
+    private Context mContext;
+    private GoogleApiClient mGoogleApiClient;
+    private String nodeId;
 
     private static final String TAG = "SendDataTask";
 
-    public SendDataTask(DataAccumulator accumulator, Context context) {
-        mAccumulator = accumulator;
+    public SendDataTask(Context context) {
         mContext = context;
+
+        mGoogleApiClient = new GoogleApiClient.Builder(mContext)
+                .addApi(Wearable.API)
+                .build();
+        mGoogleApiClient.connect();
+        nodeId = mContext.getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
+                .getString(Preferences.KEY_PHONE_ID, null);
     }
 
     @Override
     protected Object doInBackground(Object[] objects) {
-        String nodeId = mContext.getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
-                .getString(Preferences.KEY_PHONE_ID, null);
         Log.v(TAG, "nodid " + nodeId);
         if (nodeId == null) return null;
 
-        File folder = new File(mContext.getExternalFilesDir(null) + "/Bandv2");
-        if (!folder.exists()) Log.v(TAG, "Result of mkdirs: " + folder.mkdirs());
+        // Top level file
+        File dir = new File(mContext.getExternalFilesDir(null).getPath() + "/WearData/");
+        Log.v(TAG, "dir: " + dir.getPath());
+        sendChildren(dir);
 
-        File testFile = new File(folder.getPath() + "/test.txt");
 
-        try {
-            testFile.createNewFile();
-            FileOutputStream outputStream = new FileOutputStream(testFile);
-            outputStream.write("hello!\n".getBytes());
-            outputStream.flush();
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        return null;
+    }
+
+    private void sendChildren(File dir) {
+        if (dir.exists()) {
+            File[] files = dir.listFiles();
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    sendChildren(file);
+                } else {
+                    sendFile(file, dir);
+                }
+            }
         }
+    }
 
-
-        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(mContext)
-                .addApi(Wearable.API)
-                .build();
-        googleApiClient.connect();
-
+    private void sendFile(File file, File directory) {
         Log.v(TAG, "Opening channel...");
         ChannelApi.OpenChannelResult result =
-                Wearable.ChannelApi.openChannel(googleApiClient, nodeId, "/WearData/asdf").await(5, TimeUnit.SECONDS);
+                Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId,
+                        "/WearData/" + file.getPath()).await(5, TimeUnit.SECONDS);
 
         if (result.getStatus().isSuccess()) {
             Channel channel = result.getChannel();
             Log.v(TAG, "Sending file...");
-            channel.sendFile(googleApiClient, Uri.fromFile(testFile));
+            channel.sendFile(mGoogleApiClient, Uri.fromFile(file));
             Log.v(TAG, "File sent.");
         } else {
             Log.v(TAG, "Channel failed. " + result.getStatus().toString());
         }
-
-        return null;
     }
 }
