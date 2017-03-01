@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class DataService extends WearableListenerService {
+public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
 
     public DataService() {
@@ -28,6 +28,7 @@ public class DataService extends WearableListenerService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Starting service...");
+        Thread.setDefaultUncaughtExceptionHandler(this);
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle("Data Gathering Wear Data")
                 .setContentText("Gathering wear data in foreground service").build();
@@ -165,5 +166,10 @@ public class DataService extends WearableListenerService {
                 Log.v(TAG, getSharedPreferences(Preferences.PREFERENCE_NAME, 0).getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()).toString());
             }
         }
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        WriteDataTask.writeError(e, getBaseContext());
     }
 }

@@ -7,6 +7,7 @@ import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
 
     private TextView mTextView;
 
@@ -24,5 +25,6 @@ public class MainActivity extends Activity {
 
         Intent i = new Intent(this, DataService.class);
         startService(i);
+
     }
 }

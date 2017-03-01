@@ -17,7 +17,7 @@ import java.util.Map;
  * Created by William on 2/25/2017.
  */
 
-public class WriteDataTask extends AsyncTask<Void,Void,Void> {
+public class WriteDataTask extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "WriteDataTask";
 
     DataAccumulator mAccumulator;
@@ -42,7 +42,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
 
         Map<Integer, List<Map<String, Object>>> dataSplit = mAccumulator.splitIntoMinutes(mContext);
 
-        for (List<Map<String, Object>> series : dataSplit.values()){
+        for (List<Map<String, Object>> series : dataSplit.values()) {
             Map<String, Object> firstPoint = series.get(0);
 
             LinkedList<String> properties = new LinkedList<String>();
@@ -90,6 +90,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
                 + Integer.toString(year);
 
         String PATH = mContext.getExternalFilesDir(null) + "/WearData/" + type + "/" + dateString + "/" + hourst;
+
         File folder = new File(PATH);
         if (!folder.exists()) {
             Log.v(TAG, "directory " + folder.getPath() + " Succeeded " + folder.mkdirs());
@@ -134,7 +135,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
     }
 
     private void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
-                                       List<String> properties) {
+                                 List<String> properties) {
         boolean newLine = true;
         for (Map<String, Object> datum :
                 dataList) {
@@ -144,7 +145,9 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
                     if (!newLine) csvWriter.append(",");
                     csvWriter.append(datum.get(property).toString());
                     newLine = false;
-                } catch (IOException e) {writeError(e, mContext);}
+                } catch (IOException e) {
+                    writeError(e, mContext);
+                }
             }
             try {
                 csvWriter.append("\n");
@@ -155,7 +158,7 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
         }
     }
 
-    public static void writeError(Exception e, Context context) {
+    public static void writeError(Throwable e, Context context) {
         Log.e(TAG, "WRITING ERROR TO DISK: \n");
         e.printStackTrace();
 
@@ -192,5 +195,8 @@ public class WriteDataTask extends AsyncTask<Void,Void,Void> {
                 }
             }
         }
+
     }
+
+
 }

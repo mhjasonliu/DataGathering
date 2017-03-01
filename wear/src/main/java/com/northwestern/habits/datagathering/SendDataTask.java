@@ -57,6 +57,8 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
     private void sendChildren(File dir) {
         if (dir.exists()) {
             File[] files = dir.listFiles();
+            if (files == null) return;
+
             for (File file : files) {
                 if (file.isDirectory()) {
                     sendChildren(file);
