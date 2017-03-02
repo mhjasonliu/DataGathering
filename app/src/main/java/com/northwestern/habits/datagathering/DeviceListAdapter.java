@@ -334,6 +334,8 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
             case WEAR:
                 rootView = infalInflater.inflate(R.layout.item_phone_sensors, null);
                 rootView.findViewById(R.id.accelBox).setEnabled(true);
+                rootView.findViewById(R.id.gyroBox).setEnabled(true);
+                rootView.findViewById(R.id.heartRateBox).setEnabled(true);
                 setSensorsInGrid(rootView, device);
                 return rootView;
 
@@ -593,7 +595,21 @@ public class DeviceListAdapter extends BaseExpandableListAdapter {
                         case "Distance":
                         case "GSR":
                         case "Gyroscope":
+                            if (isChecked) {
+                                sensors.add(Preferences.GYRO);
+                            } else {
+                                sensors.remove(Preferences.GYRO);
+                            }
+                            i.putExtra(WearDataService.GYRO, isChecked);
+                            break;
                         case "Heart Rate":
+                            if (isChecked) {
+                                sensors.add(Preferences.HEART);
+                            } else {
+                                sensors.remove(Preferences.HEART);
+                            }
+                            i.putExtra(WearDataService.HEART, isChecked);
+                            break;
                         case "Pedometer":
                         case "Skin Temp.":
                         case "UV":

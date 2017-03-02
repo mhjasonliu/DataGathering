@@ -39,6 +39,8 @@ public class WearDataService extends WearableListenerService implements GoogleAp
     public static final String NODE_ID = "Nodeid";
 
     public static final String ACCEL = "Accelerometer";
+    public static final String GYRO = "Gyroscope";
+    public static final String HEART = "HeartRate";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -46,18 +48,49 @@ public class WearDataService extends WearableListenerService implements GoogleAp
         if (extras != null) {
             String nodeID = extras.getString(NODE_ID);
             if (nodeID != null) {
-                if (extras.getBoolean(ACCEL)) {
-                    // Request accel
-                    Log.v(TAG, "Accel requested for " + nodeID);
-                    Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
-                            DATA_REQUEST_PATH, (ACCEL + "1").getBytes());
-
-                } else {
-                    // Request stop accel
-                    Log.v(TAG, "Accel un-requested for " + nodeID);
-                    Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
-                            DATA_REQUEST_PATH, (ACCEL + "0").getBytes());
+                if (intent.hasExtra(ACCEL)) {
+                    if (extras.getBoolean(ACCEL)) {
+                        // Request accel
+                        Log.v(TAG, "Accel requested for " + nodeID);
+                        Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                                DATA_REQUEST_PATH, (ACCEL + "1").getBytes());
+                    } else {
+                        // Request stop accel
+                        Log.v(TAG, "Accel un-requested for " + nodeID);
+                        Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                                DATA_REQUEST_PATH, (ACCEL + "0").getBytes());
+                    }
                 }
+
+                if (intent.hasExtra(GYRO)) {
+                    if (extras.getBoolean(GYRO)) {
+                        // Request accel
+                        Log.v(TAG, "Accel requested for " + nodeID);
+                        Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                                DATA_REQUEST_PATH, (GYRO + "1").getBytes());
+                    } else {
+                        // Request stop accel
+                        Log.v(TAG, "Accel un-requested for " + nodeID);
+                        Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                                DATA_REQUEST_PATH, (GYRO + "0").getBytes());
+                    }
+                }
+
+                if (intent.hasExtra(HEART)) {
+                    if (extras.getBoolean(HEART)) {
+                        // Request accel
+                        Log.v(TAG, "Accel requested for " + nodeID);
+                        Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                                DATA_REQUEST_PATH, (HEART + "1").getBytes());
+                    } else {
+                        // Request stop accel
+                        Log.v(TAG, "Accel un-requested for " + nodeID);
+                        Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
+                                DATA_REQUEST_PATH, (HEART + "0").getBytes());
+                    }
+                }
+
+
             } else {
                 Log.e(TAG, "Request received without a node id");
             }

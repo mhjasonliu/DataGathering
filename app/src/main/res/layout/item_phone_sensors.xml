@@ -20,16 +20,6 @@
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gyro"
-            android:id="@+id/gyroBox"
-            android:layout_row="1"
-            android:layout_column="0"
-            android:checked="false"
-            android:enabled="false"/>
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:text="Temp (ambient)"
             android:id="@+id/tempBox"
             android:checked="false"
@@ -44,6 +34,16 @@
             android:id="@+id/gravBox"
             android:layout_row="0"
             android:layout_column="2"
+            android:checked="false"
+            android:enabled="false"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gyroscope"
+            android:id="@+id/gyroBox"
+            android:layout_row="1"
+            android:layout_column="0"
             android:checked="false"
             android:enabled="false"/>
 
@@ -126,6 +126,18 @@
             android:layout_column="2"
             android:checked="false"
             android:enabled="false"/>
+
+        <CheckBox
+            android:text="Heart Rate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/heartRateBox"
+            android:enabled="false"
+            android:layout_row="4"
+            android:layout_column="0"/>
+
     </GridLayout>
+
+
 
 </LinearLayout>

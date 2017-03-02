@@ -13,6 +13,8 @@ public class Preferences {
     public static final String KEY_ACTIVE_SENSORS = "Active sensors";
 
     public static final String SENSOR_ACCEL = "accel";
+    public static final String SENSOR_GYRO = "gyro";
+    public static final String SENSOR_HEART = "heart";
 
 
 }

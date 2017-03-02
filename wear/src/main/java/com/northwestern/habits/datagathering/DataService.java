@@ -3,20 +3,17 @@ package com.northwestern.habits.datagathering;
 import android.app.Notification;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
+import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListener;
+import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
+import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
@@ -25,6 +22,8 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     public DataService() {
     }
 
+    private static final int SERVICE_ID = 5345;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Starting service...");
@@ -32,7 +31,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle("Data Gathering Wear Data")
                 .setContentText("Gathering wear data in foreground service").build();
-        startForeground(1, notification);
+        startForeground(SERVICE_ID, notification);
 
         initSensors();
         registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
@@ -45,10 +44,13 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         for (String sensor : sensors) {
             switch (sensor) {
                 case Preferences.SENSOR_ACCEL:
-                    if (!accelIsRegistered) {
-                        mManager.registerListener(accelListener, mAccel, SensorManager.SENSOR_DELAY_NORMAL);
-                        accelIsRegistered = true;
-                    }
+                        mAccelListener.registerListener();
+                    break;
+                case Preferences.SENSOR_GYRO:
+                        mGyroListener.registerListener();
+                    break;
+                case Preferences.SENSOR_HEART:
+                        mHeartListener.registerListener();
                     break;
                 default:
                     Log.e(TAG, "Unknown sensor requested: " + sensor);
@@ -59,69 +61,27 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     /* *************************** DATA HANDLING ***************************** */
     // Sensor related fields
     private SensorManager mManager;
-    private Sensor mAccel;
-    private DataAccumulator mAccelAccumulator;
     /**
      * Maintains accelerometer registration state.
      * Update every time you register/unregister outside of
      * activity lifecycle
      */
-    private boolean accelIsRegistered = false;
 
     private void initSensors() {
         mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mAccel = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccelAccumulator = new DataAccumulator("Accelerometer", 100);
+
+        mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+        mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
+        mHeartListener = new HeartRateListener(getBaseContext(), mManager);
     }
 
     /**
      * Custom implementation of SensorEventListener specific to what we want to do with
      * accelerometer data.
      */
-    private SensorEventListener accelListener = new SensorEventListener() {
-
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            // Handle new accel value
-            if (event == null) return;
-
-            event.timestamp = System.currentTimeMillis();
-
-            Map<String, Object> dataPoint = new HashMap<>();
-            dataPoint.put("Time", event.timestamp);
-            dataPoint.put("accX", event.values[0]);
-            dataPoint.put("accY", event.values[1]);
-            dataPoint.put("accZ", event.values[2]);
-
-            if (mAccelAccumulator.putDataPoint(dataPoint, event.timestamp)) {
-                // Accumulator is full
-
-                // Start a fresh accumulator, preserving the old
-                Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
-                mAccelAccumulator = new DataAccumulator("Accelerometer", 100);
-                DataAccumulator accumulator = new DataAccumulator("Accelerometer", mAccelAccumulator.getCount());
-                while (oldDataIter.hasNext()) {
-                    Map<String, Object> point = oldDataIter.next();
-                    accumulator.putDataPoint(point, (long) point.get("Time"));
-                }
-
-                handleFullAccumulator(accumulator);
-            }
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-            // Handle change of accuracy if necessary
-        }
-
-        private void handleFullAccumulator(DataAccumulator accumulator) {
-            // Check if connected to phone
-            Log.v(TAG, "Accumulator was full");
-            new WriteDataTask(getBaseContext(), accumulator, "Accelerometer").execute();
-
-            new SendDataTask(getBaseContext()).execute();
-        }
-    };
+    private AccelerometerListener mAccelListener;
+    private GyroscopeListener mGyroListener;
+    private HeartRateListener mHeartListener;
 
 
     /* ***************** MESSAGE RECEIVING *********************** */
@@ -140,19 +100,33 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 switch (action) {
                     case "Accelerometer1":
                         Log.v(TAG, "Start accel requested.");
-                        if (!accelIsRegistered) {
-                            mManager.registerListener(accelListener, mAccel, SensorManager.SENSOR_DELAY_NORMAL);
-                            accelIsRegistered = true;
-                        }
+                        mAccelListener.registerListener();
                         activeSensors.add(Preferences.SENSOR_ACCEL);
                         break;
                     case "Accelerometer0":
                         Log.v(TAG, "Stop accel requested.");
-                        if (accelIsRegistered) {
-                            mManager.unregisterListener(accelListener, mAccel);
-                            accelIsRegistered = true;
-                        }
+                        mAccelListener.unRegisterListener();
                         activeSensors.remove(Preferences.SENSOR_ACCEL);
+                        break;
+                    case "Gyroscope1":
+                        Log.v(TAG, "Start gyro requested.");
+                        mGyroListener.registerListener();
+                        activeSensors.add(Preferences.SENSOR_GYRO);
+                        break;
+                    case "Gyroscope0":
+                        Log.v(TAG, "Stop accel requested.");
+                        mGyroListener.unRegisterListener();
+                        activeSensors.remove(Preferences.SENSOR_GYRO);
+                        break;
+                    case "HeartRate1":
+                        Log.v(TAG, "Start gyro requested.");
+                        mHeartListener.registerListener();
+                        activeSensors.add(Preferences.SENSOR_HEART);
+                        break;
+                    case "HeartRate0":
+                        Log.v(TAG, "Stop accel requested.");
+                        mHeartListener.unRegisterListener();
+                        activeSensors.remove(Preferences.SENSOR_HEART);
                         break;
                     default:
                         Log.w(TAG, "Unknown action received" + action);
