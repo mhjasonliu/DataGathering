@@ -35,7 +35,9 @@ public class HeartRateListener implements SensorEventListener {
         mAccumulator = new DataAccumulator("HeartRate", 100);
     }
 
-    public boolean isRegistered() { return isRegistered; }
+    public boolean isRegistered() {
+        return isRegistered;
+    }
 
     public void registerListener() {
         if (!isRegistered) {
@@ -43,6 +45,7 @@ public class HeartRateListener implements SensorEventListener {
             isRegistered = true;
         }
     }
+
     public void unRegisterListener() {
         if (isRegistered) {
             mManager.unregisterListener(this);
