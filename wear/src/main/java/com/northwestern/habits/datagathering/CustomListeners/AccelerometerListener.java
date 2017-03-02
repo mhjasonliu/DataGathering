@@ -11,6 +11,7 @@ import com.northwestern.habits.datagathering.DataAccumulator;
 import com.northwestern.habits.datagathering.SendDataTask;
 import com.northwestern.habits.datagathering.WriteDataTask;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -56,7 +57,8 @@ public class AccelerometerListener implements SensorEventListener {
         // Handle new accel value
         if (event == null) return;
 
-        event.timestamp = System.currentTimeMillis();
+        event.timestamp = (new Date()).getTime()
+                + (event.timestamp - System.nanoTime()) / 1000000L;
 
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);

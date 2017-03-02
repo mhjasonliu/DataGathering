@@ -11,6 +11,7 @@ import com.northwestern.habits.datagathering.DataAccumulator;
 import com.northwestern.habits.datagathering.SendDataTask;
 import com.northwestern.habits.datagathering.WriteDataTask;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class HeartRateListener implements SensorEventListener {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 100);
+        mAccumulator = new DataAccumulator("HeartRate", 10);
     }
 
     public boolean isRegistered() {
@@ -59,7 +60,9 @@ public class HeartRateListener implements SensorEventListener {
         // Handle new HEART value
         if (event == null) return;
 
-        event.timestamp = System.currentTimeMillis();
+        Log.v(TAG, event.toString());
+        event.timestamp = (new Date()).getTime()
+                + (event.timestamp - System.nanoTime()) / 1000000L;
 
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
