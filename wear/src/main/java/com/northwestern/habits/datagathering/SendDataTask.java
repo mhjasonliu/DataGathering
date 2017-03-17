@@ -92,10 +92,6 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
 
             } else {
                 Log.v(TAG, "Channel failed. " + result.getStatus().toString());
-                WriteDataTask.writeError(new Exception("Channel failed. " +
-                                result.getStatus().toString() +
-                        "\n" + file.getPath()),
-                        mContext);
             }
         } else {
             Log.v(TAG, "Current csv " + currentcsv + " equals " + file.getName());
