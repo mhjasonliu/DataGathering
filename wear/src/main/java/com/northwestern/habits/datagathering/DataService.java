@@ -1,6 +1,9 @@
 package com.northwestern.habits.datagathering;
 
+import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.SensorManager;
@@ -27,6 +30,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG, "Starting service...");
+
+        if (intent != null) {
+            startIntent = PendingIntent.getActivity(getBaseContext(), 0,
+                    new Intent(intent), flags);
+        }
         Thread.setDefaultUncaughtExceptionHandler(this);
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle("Data Gathering Wear Data")
@@ -142,8 +150,15 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         }
     }
 
+    private PendingIntent startIntent;
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         WriteDataTask.writeError(e, getBaseContext());
+
+        if (startIntent != null) {
+            AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 2000, startIntent);
+        }
+        System.exit(2);
     }
 }
