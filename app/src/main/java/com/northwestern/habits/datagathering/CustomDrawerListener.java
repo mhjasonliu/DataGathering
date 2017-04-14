@@ -140,7 +140,6 @@ public class CustomDrawerListener
                 }
             });
 
-
             this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
     }

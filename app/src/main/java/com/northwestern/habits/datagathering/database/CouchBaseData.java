@@ -62,7 +62,6 @@ public class CouchBaseData {
         } catch (CouchbaseLiteException | IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public static Document getLabelDocument(String userID, Context context) throws CouchbaseLiteException, IOException {
@@ -108,8 +107,6 @@ public class CouchBaseData {
         return d;
     }
 
-
-
     public static Database getOldestDatabase(Context c) throws IOException, CouchbaseLiteException {
         c = c.getApplicationContext();
         Manager m = getManager(c);
@@ -118,7 +115,6 @@ public class CouchBaseData {
         Collections.sort(names);
         names.remove(LABEL_DB_NAME);
         Log.d(TAG, "List of names: " + names);
-
 
         Database db = null;
         int i = 0;

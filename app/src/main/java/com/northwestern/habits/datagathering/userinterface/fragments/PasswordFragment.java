@@ -3,11 +3,14 @@ package com.northwestern.habits.datagathering.userinterface.fragments;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -25,6 +28,7 @@ import android.widget.Toast;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
+import com.northwestern.habits.datagathering.webapi.WebAPIManager;
 
 import java.util.List;
 
@@ -64,6 +68,7 @@ public class PasswordFragment extends Fragment {
         super.onCreate(savedInstanceState);
 //        if (getArguments() != null) {
 //        }
+//        new UserIdAsyncTask( getActivity(), "", "o", "n" ).execute();
     }
 
     private CheckBox oldPasswordBox;
@@ -81,18 +86,30 @@ public class PasswordFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_password, container, false);
 
         finishButton = (Button) rootView.findViewById(R.id.button_finish_advanced);
-        finishButton.setOnClickListener(finishClickListener);
         changePasswordButton = (Button) rootView.findViewById(R.id.button_change_password);
-        changePasswordButton.setOnClickListener(changePasswordListener);
 
         oldPasswordBox = (CheckBox) rootView.findViewById(R.id.old_password_checkbox);
         newPasswordBox = (CheckBox) rootView.findViewById(R.id.comparison_checkbox);
-        oldPasswordBox.setOnCheckedChangeListener(checkedChangeListener);
-        newPasswordBox.setOnCheckedChangeListener(checkedChangeListener);
 
         oldPword = (EditText) rootView.findViewById(R.id.old_password_field);
         newPwd = (EditText) rootView.findViewById(R.id.new_password_field);
         confirmPwd = (EditText) rootView.findViewById(R.id.confirm_password_field);
+
+//        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams
+//                .SOFT_INPUT_STATE_VISIBLE|WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        finishButton.setOnClickListener(finishClickListener);
+        changePasswordButton.setOnClickListener(changePasswordListener);
+
+        oldPasswordBox.setOnCheckedChangeListener(checkedChangeListener);
+        newPasswordBox.setOnCheckedChangeListener(checkedChangeListener);
 
         oldPword.setOnFocusChangeListener(editTextFocusListener);
         newPwd.setOnFocusChangeListener(editTextFocusListener);
@@ -101,7 +118,7 @@ public class PasswordFragment extends Fragment {
 
         // Set up the checkbox to change when correct old password is set
         oldPword.addTextChangedListener(new TextWatcher() {
-            private final String pwd = PreferenceManager.getDefaultSharedPreferences(getContext())
+            private final String pwd = PreferenceManager.getDefaultSharedPreferences(getActivity())
                     .getString(Preferences.PASSWORD, "");
 
             @Override
@@ -115,29 +132,25 @@ public class PasswordFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 oldPasswordBox.setChecked(s.toString()
-                        .equals(PreferenceManager.getDefaultSharedPreferences(getContext())
+                        .equals(PreferenceManager.getDefaultSharedPreferences(getActivity())
                                 .getString(Preferences.PASSWORD, "")));
             }
         });
 
+        // store/update user on remote server
+//        new UserIdAsyncTask( getActivity(), "", "o", "n" ).execute();
 
         // Set up the checkbox to change when the new passwords match
         newPwd.addTextChangedListener(newPasswordWatcher);
         confirmPwd.addTextChangedListener(newPasswordWatcher);
 
-
-        if (PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Preferences.PASSWORD, "")
+        if (PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.PASSWORD, "")
                 .equals("")) {
             oldPasswordBox.setChecked(true);
             oldPword.setEnabled(false);
             finishButton.setEnabled(false);
-
         }
 
-//        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams
-//                .SOFT_INPUT_STATE_VISIBLE|WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-
-        return rootView;
     }
 
     @Override
@@ -147,7 +160,7 @@ public class PasswordFragment extends Fragment {
             mListener = (OnPasswordFragmentInterractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnPasswordFragmentInterractionListener");
+                    + " must implement OnPasswordFragmentInteractionListener");
         }
     }
 
@@ -207,25 +220,23 @@ public class PasswordFragment extends Fragment {
     private View.OnClickListener changePasswordListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
-            editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
-            editor.apply();
-
-            oldPword.setText("");
-            newPwd.setText("");
-            confirmPwd.setText("");
             InputMethodManager mgr = (InputMethodManager) (v.getContext()
                     .getSystemService(Context.INPUT_METHOD_SERVICE));
             mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
 
-            // Enable things that were disabled before
-            finishButton.setEnabled(true);
-            oldPword.setEnabled(true);
+            String flag = "";
+            if (oldPword.getText().toString().trim().length() == 0) {
+                flag = "login";
+            } else {
+                flag = "reset";
+            }
 
-            // Alert the user that password changed
-            Toast.makeText(getContext(), "Password changed",
-                    Toast.LENGTH_SHORT).show();
-
+            String url = "http://192.168.100.166/lumen/public/" + flag;
+            Log.e("URL login: ", url);
+            String uname = PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.USER_ID, "");
+            Object obj = new String[] { uname, newPwd.getText().toString(), oldPword.getText().toString() };
+            UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask( url, flag, obj );
+            userIdAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     };
 
@@ -262,20 +273,76 @@ public class PasswordFragment extends Fragment {
         @Override
         public void onClick(View v) {
 
-            ActivityManager mngr = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager mngr = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
 
             List<ActivityManager.AppTask> taskList = mngr.getAppTasks();
 
             if (getActivity().isTaskRoot()) {
                 // This is the only activity shown, start new UserActivity and finish this one
-                Intent i = new Intent(getContext(), UserActivity.class);
+                Intent i = new Intent(getActivity(), UserActivity.class);
                 startActivity(i);
                 getActivity().finish();
             } else {
                 getActivity().onBackPressed();
-
             }
         }
     };
 
+    // asynk task
+    private class UserIdAsyncTask extends AsyncTask<Void, Void, String> {
+
+        private String url = "";
+        private Object mObject = null;
+        private String mFlag = "";
+        private ProgressDialog dialog;
+
+        public UserIdAsyncTask( String url, String flag, Object obj ) {
+            this.url = url;
+            this.mObject = obj;
+            this.mFlag = flag;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = ProgressDialog.show(getActivity(), "", "Please wait...");
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            String str = "";
+            try {
+                str = WebAPIManager.httpPOSTRequest(this.url, this.mObject, this.mFlag );
+                return str;
+            } catch (Exception e) {
+                Log.e(UserIDFragment.class.toString(), e.getMessage(), e);
+            }
+            return str;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+            dialog.dismiss();
+
+            if (response.equalsIgnoreCase("fail") || response.equalsIgnoreCase("failed")) {
+                Toast.makeText(getActivity(), "" + response + " to reset password.", Toast.LENGTH_SHORT).show();
+            } else {
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
+                editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
+                editor.apply();
+
+                oldPword.setText("");
+                newPwd.setText("");
+                confirmPwd.setText("");
+
+                // Enable things that were disabled before
+                finishButton.setEnabled(true);
+                oldPword.setEnabled(true);
+
+                // Alert the user that password changed
+                Toast.makeText(getActivity(), "Password changed", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }

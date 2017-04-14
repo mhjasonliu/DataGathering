@@ -18,9 +18,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class CrashActivity extends Activity implements View.OnClickListener {
-    //crash report
     private static final String TAG = "CrashActivity ";
-
     @Override
     public void onCreate(Bundle savedInstanceState)
     {

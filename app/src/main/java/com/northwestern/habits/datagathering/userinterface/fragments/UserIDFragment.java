@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.userinterface.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +27,9 @@ import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.banddata.sensors.BandDataService;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -227,7 +232,7 @@ public class UserIDFragment extends Fragment {
             String hostname = "107.170.25.202";
             int port = 3000;
 
-            Socket socket = null;
+            /*Socket socket = null;
 //                PrintWriter writer = null;
             BufferedReader reader = null;
             BufferedWriter wr = null;
@@ -289,15 +294,21 @@ public class UserIDFragment extends Fragment {
                 }
             }
 
-
             if (success) {
-                getContext().sendBroadcast(
+                getActivity().sendBroadcast(
                         new Intent(BandDataService.ACTION_USER_ID)
                                 .putExtra(BandDataService.USER_ID_EXTRA, id));
                 // Set user id preference in this process
                 PreferenceManager.getDefaultSharedPreferences(context).edit()
                         .putString(Preferences.USER_ID, id).apply();
-            }
+            }*/
+            /*success = true;
+            getActivity().sendBroadcast(
+                    new Intent(BandDataService.ACTION_USER_ID)
+                            .putExtra(BandDataService.USER_ID_EXTRA, id));
+            // Set user id preference in this process
+            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                    .putString(Preferences.USER_ID, id).apply();*/
             return null;
         }
 
@@ -334,14 +345,14 @@ public class UserIDFragment extends Fragment {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     scrollLockRequest(false);
-                                    getContext().sendBroadcast(
+                                    getActivity().sendBroadcast(
                                             new Intent(BandDataService.ACTION_USER_ID)
                                                     .putExtra(BandDataService.USER_ID_EXTRA, id));
                                     // Set user id preference in this process
                                     PreferenceManager.getDefaultSharedPreferences(context).edit()
                                             .putString(Preferences.USER_ID, id).apply();
 
-                                    Toast.makeText(getContext(), "User ID set to " + id,
+                                    Toast.makeText(getActivity(), "User ID set to " + id,
                                             Toast.LENGTH_SHORT).show();
                                     v.setText("User Id is: " + id);
                                     v.setVisibility(View.VISIBLE);
@@ -373,7 +384,7 @@ public class UserIDFragment extends Fragment {
                     // Unlock
                     scrollLockRequest(false);
 
-                    getContext().sendBroadcast(
+                    getActivity().sendBroadcast(
                             new Intent(BandDataService.ACTION_USER_ID)
                                     .putExtra(BandDataService.USER_ID_EXTRA, id));
                     // Set user id preference in this process
@@ -386,9 +397,9 @@ public class UserIDFragment extends Fragment {
 
     private void requestUserID(final List<View> hideViews, final List<View> enableViews) {
 
-        if (MyReceiver.isWifiConnected(getContext())) {
-            android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getContext());
-            final EditText input = new EditText(getContext());
+        if (MyReceiver.isWifiConnected(getActivity())) {
+            android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getActivity());
+            final EditText input = new EditText(getActivity());
             builder
                     .setTitle("User ID")
                     .setMessage("Give the user a unique ID\nPlease make sure you are connected to the internet")
@@ -398,24 +409,24 @@ public class UserIDFragment extends Fragment {
                         public void onClick(DialogInterface dialog, int which) {
                             String value = input.getText().toString();
                             if (input.getText().toString().trim().length() == 0) {
-                                Toast.makeText(getContext(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "Empty User ID not acceptable", Toast.LENGTH_SHORT).show();
                             } else {
                                 // Verify with server
-                                new IdVerificationTask(hideViews, enableViews, value).execute();
-
+//                                new IdVerificationTask(hideViews, enableViews, value).execute();
+                                // added method to store user id in the preference
+                                changeUserID(hideViews, enableViews, value);
                             }
                             // Close keyboard and dialog
-                            InputMethodManager imm = (InputMethodManager) getContext()
+                            InputMethodManager imm = (InputMethodManager) getActivity()
                                     .getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
                             dialog.dismiss();
-
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 
                         public void onClick(DialogInterface dialog, int which) {
-                            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
                             dialog.dismiss();
                         }
@@ -424,11 +435,11 @@ public class UserIDFragment extends Fragment {
 
             builder.show();
             input.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
         } else {
             // No wifi
-            new AlertDialog.Builder(getContext()).setTitle("No Wifi")
+            new AlertDialog.Builder(getActivity()).setTitle("No Wifi")
                     .setMessage("Please connect to wifi before requesting a new study id")
                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         @Override
@@ -437,6 +448,107 @@ public class UserIDFragment extends Fragment {
                         }
                     })
                     .show();
+        }
+    }
+
+    private void changeUserID(List<View> hideViews, List<View> enableViews, final String id) {
+
+//        List<View> hideViews, enableViews;
+        final boolean success = false;
+        final String message = "";
+        final boolean skipButtonPreviousEnabled;
+
+        final TextView sButton = ((TextView) UserIDFragment.this.getView().findViewById(R.id.skip_button));
+        skipButtonPreviousEnabled = sButton.isEnabled();
+        sButton.setEnabled(false);
+        // Hide views
+        for (View v : hideViews) {
+            v.setVisibility(View.VISIBLE);
+        }
+
+        rButton.setEnabled(false);
+
+        // Disable swiping
+        scrollLockRequest(true);
+
+        ((TextView) getView().findViewById(R.id.text_user_id)).setText("Requesting id...");
+        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+
+        // Hide views
+        for (View v : hideViews) {
+            if (v != null) v.setVisibility(View.INVISIBLE);
+        }
+
+        final TextView v = ((TextView) UserIDFragment.this.getView().findViewById(R.id.text_user_id));
+        final Button skipbutton = (Button) UserIDFragment.this.getView().findViewById(R.id.skip_button);
+        v.setVisibility(View.VISIBLE);
+
+        rButton.setEnabled(true);
+        if (success) {
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+            Toast.makeText(getActivity(), "User ID set to " + id,
+                    Toast.LENGTH_SHORT).show();
+            v.setText("User Id is: " + id);
+            v.setVisibility(View.VISIBLE);
+            skipbutton.setEnabled(true);
+
+            // Unlock
+            scrollLockRequest(false);
+        } else {
+            if (Objects.equals(message, "User name already exists")) {
+                // Launch a warning dialog that allows them to continue
+                Log.v(TAG, "duplicate id detected");
+                new AlertDialog.Builder(getActivity()).setTitle("WARNING")
+                        .setMessage(message)
+                        .setPositiveButton("Continue with " + id, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                scrollLockRequest(false);
+                                getActivity().sendBroadcast(
+                                        new Intent(BandDataService.ACTION_USER_ID)
+                                                .putExtra(BandDataService.USER_ID_EXTRA, id));
+                                // Set user id preference in this process
+                                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                                        .putString(Preferences.USER_ID, id).apply();
+
+                                Toast.makeText(getActivity(), "User ID set to " + id,
+                                        Toast.LENGTH_SHORT).show();
+                                v.setText("User Id is: " + id);
+                                v.setVisibility(View.VISIBLE);
+                                skipbutton.setEnabled(true);
+
+                                // Unlock
+                                scrollLockRequest(false);
+                                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                                v.setText(message + id);
+                                scrollLockRequest(skipButtonPreviousEnabled);
+                            }
+                        }).create().show();
+            } else {
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                v.setText(message);
+                skipbutton.setEnabled(skipButtonPreviousEnabled);
+                scrollLockRequest(skipButtonPreviousEnabled);
+                v.setText("User Id is: " + id);
+                v.setVisibility(View.VISIBLE);
+                skipbutton.setEnabled(true);
+
+                // Unlock
+                scrollLockRequest(false);
+
+                getActivity().sendBroadcast(
+                        new Intent(BandDataService.ACTION_USER_ID)
+                                .putExtra(BandDataService.USER_ID_EXTRA, id));
+                // Set user id preference in this process
+                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                        .putString(Preferences.USER_ID, id).apply();
+            }
         }
     }
 }

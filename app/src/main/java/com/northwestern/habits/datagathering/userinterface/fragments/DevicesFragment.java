@@ -110,7 +110,7 @@ public class DevicesFragment extends Fragment {
 
         // Create an adapter with a list of devices
         HashMap<DeviceListItem, List<String>> children = DeviceListAdapter.createChildren(devices);
-        mAdapter = new DeviceListAdapter(getContext(), devices, children);
+        mAdapter = new DeviceListAdapter(getActivity(), devices, children);
     }
 
     private boolean isBound = false;
@@ -225,7 +225,7 @@ public class DevicesFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             if (client == null) {
-                client = new GoogleApiClient.Builder(getContext())
+                client = new GoogleApiClient.Builder(getActivity())
                         .addApi(Wearable.API)
                         .build();
             }

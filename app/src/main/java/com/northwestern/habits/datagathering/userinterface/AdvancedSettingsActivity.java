@@ -88,6 +88,7 @@ public class AdvancedSettingsActivity extends Activity
             );
         }
     }
+
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -146,6 +147,42 @@ public class AdvancedSettingsActivity extends Activity
     @Override
     public void advanceScrollRequest() {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+    }
+
+    // asynk task
+    private class UserIdAsyncTask extends AsyncTask<Void, Void, String> {
+
+        private String url = "";
+        private String id = "";
+        private ProgressDialog dialog;
+
+        public UserIdAsyncTask( String url, String val ) {
+            this.url = url;
+            this.id = val;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = ProgressDialog.show(AdvancedSettingsActivity.this, "", "");
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                String str = "sss";
+                return str;
+            } catch (Exception e) {
+                Log.e(UserIDFragment.class.toString(), e.getMessage(), e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+            dialog.dismiss();
+        }
     }
 
     public void retreatScroll() {
@@ -376,8 +413,8 @@ public class AdvancedSettingsActivity extends Activity
         public void onPageScrollStateChanged(int state) {
             AdvancedSettingsActivity outerThis = AdvancedSettingsActivity.this;
             // If we are scrolling, we don't want any keyboards up
-            InputMethodManager mgr = (InputMethodManager) (outerThis
-                    .getSystemService(Context.INPUT_METHOD_SERVICE));
+            InputMethodManager mgr = (InputMethodManager) outerThis
+                    .getSystemService(Context.INPUT_METHOD_SERVICE);
             mgr.hideSoftInputFromWindow(outerThis.getWindow().getDecorView().getWindowToken(),
                     InputMethodManager.HIDE_NOT_ALWAYS);
         }
