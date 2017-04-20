@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.webapi;
 
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -15,6 +16,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Y.Misal on 4/10/2017.
@@ -44,10 +47,9 @@ public class WebAPIManager {
         }
 
         try {
-
-            DataOutputStream outputStream = new DataOutputStream(conn.getOutputStream());
             JSONObject jsonObject = null;
             jsonObject = DecodeResponseData.encodeData( flag, val );
+            DataOutputStream outputStream = new DataOutputStream(conn.getOutputStream());
 
             if (jsonObject == null)
                 return "fail";
@@ -69,13 +71,12 @@ public class WebAPIManager {
         int resCode = -1;
         try {
             // get response
-
             resCode = conn.getResponseCode();
             String msg = conn.getResponseMessage();
             Log.e("WebAPIManager: ", flag + ": response_code" + resCode);
             Log.e("WebAPIManager: ", flag + ": response_msg" + msg);
 
-            if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_CREATED || msg.equalsIgnoreCase("Created")) {
+            if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_ACCEPTED || resCode == HttpURLConnection.HTTP_CREATED || msg.equalsIgnoreCase("Created")) {
                 InputStream responseStream = new BufferedInputStream(conn.getInputStream());
                 BufferedReader responseStreamReader = new BufferedReader(new InputStreamReader(responseStream));
                 String line = "";
@@ -87,6 +88,12 @@ public class WebAPIManager {
 
                 String response = stringBuilder.toString();
                 JSONObject jsonObject = DecodeResponseData.decodeData(response);
+//                Map<String,List<String>> mHeaders = conn.getHeaderFields();
+                try { // "Authorization" -> " size = 1"
+                    jsonObject.put("auth", conn.getHeaderField("Authorization"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 if (jsonObject == null)
                     return "fail";
                 responseString = jsonObject.toString();

@@ -15,13 +15,10 @@ import java.io.UnsupportedEncodingException;
 public class DecodeResponseData {
 
     public static JSONObject encodeData(String flag, Object value) {
-
 //        String[] inFlag = flag.split("_");
-
         // json data
         JSONObject jsonObject = new JSONObject();
         try {
-
             if ( flag.equalsIgnoreCase("login") ) {
                 String[] values = (String[]) value;
                 jsonObject.put( "username", values[0] );
@@ -46,13 +43,11 @@ public class DecodeResponseData {
                 jsonObject.put("data", par_base64);
                 Log.d("DecodeJSONData Data: ", flag + ": " + jsonObject);
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
         return jsonObject;
     }
 

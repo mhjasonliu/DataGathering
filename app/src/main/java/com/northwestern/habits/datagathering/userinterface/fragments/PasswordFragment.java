@@ -25,10 +25,14 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
 import com.northwestern.habits.datagathering.webapi.WebAPIManager;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -231,11 +235,13 @@ public class PasswordFragment extends Fragment {
                 flag = "reset";
             }
 
+            String url_st = "http://14.141.176.221:8082/habits/public/" + flag;
+
             String url = "http://192.168.100.166/lumen/public/" + flag;
             Log.e("URL login: ", url);
             String uname = PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.USER_ID, "");
             Object obj = new String[] { uname, newPwd.getText().toString(), oldPword.getText().toString() };
-            UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask( url, flag, obj );
+            UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask( url_st, flag, obj );
             userIdAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     };
@@ -325,23 +331,52 @@ public class PasswordFragment extends Fragment {
         protected void onPostExecute(String response) {
             dialog.dismiss();
 
-            if (response.equalsIgnoreCase("fail") || response.equalsIgnoreCase("failed")) {
-                Toast.makeText(getActivity(), "" + response + " to reset password.", Toast.LENGTH_SHORT).show();
+//            {"status":"success","data":{"user_id":3},"message":"User Login successful"}
+//            {"status":"success","data":{"user_id":5},"message":"User Login successful","auth":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9oYWJpdHMub3JnIiwiYXVkIjoiaHR0cDpcL1wvaGFiaXRzLmNvbSIsImlhdCI6MTQ5MjYwMjI3NywidXNlcm5hbWUiOiJ0ZXN0MSJ9.IUdUq1X2gYOnScwMtanDK36SPfQMBWV-Yugwf7cxhMA"}
+
+            /*SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
+            editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
+            editor.apply();
+
+            oldPword.setText("");
+            newPwd.setText("");
+            confirmPwd.setText("");
+
+            // Enable things that were disabled before
+            finishButton.setEnabled(true);
+            oldPword.setEnabled(true);
+
+            // Alert the user that password changed
+            Toast.makeText(getActivity(), "Password changed", Toast.LENGTH_SHORT).show();*/
+
+           if (response.equalsIgnoreCase("fail") || response.equalsIgnoreCase("failed") || response.equalsIgnoreCase("error")) {
+               String msg = "Failed to login the user.";
+               if (this.mFlag.equalsIgnoreCase("reset")) {
+                   msg = "Failed to reset the password.";
+               }
+                Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
             } else {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
-                editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
-                editor.apply();
+               try {
+                   JSONObject jsonObject = new JSONObject(response);
+                   SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
+                   editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
+                   editor.putString(Preferences.AUTH, jsonObject.optString("auth"));
+                   editor.putString(Preferences.USER_ID1, jsonObject.optString("user_id"));
+                   editor.apply();
 
-                oldPword.setText("");
-                newPwd.setText("");
-                confirmPwd.setText("");
+                   oldPword.setText("");
+                   newPwd.setText("");
+                   confirmPwd.setText("");
 
-                // Enable things that were disabled before
-                finishButton.setEnabled(true);
-                oldPword.setEnabled(true);
+                   // Enable things that were disabled before
+                   finishButton.setEnabled(true);
+                   oldPword.setEnabled(true);
 
-                // Alert the user that password changed
-                Toast.makeText(getActivity(), "Password changed", Toast.LENGTH_SHORT).show();
+                   // Alert the user that password changed
+                   Toast.makeText(getActivity(), "Password changed", Toast.LENGTH_SHORT).show();
+               } catch (JSONException e) {
+                   e.printStackTrace();
+               }
             }
         }
     }
