@@ -103,7 +103,7 @@ public class WriteDataTask extends AsyncTask<Void, Void, Void> {
         c.setTimeInMillis(timestamp);
         String hourst = Integer.toString(c.get(Calendar.HOUR_OF_DAY));
         int minute = c.get(Calendar.MINUTE);
-        String fName = hourst.concat(":" + Integer.toString(minute) + ".csv");
+        String fName = hourst.concat("_" + Integer.toString(minute) + ".csv");
         return new File(folder.getPath(), fName);
     }
 

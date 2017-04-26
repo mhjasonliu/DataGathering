@@ -74,7 +74,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
         // Delete only if the file name is not the current hour:minute
         Calendar c = Calendar.getInstance();
         String currentcsv = Integer.toString(c.get(Calendar.HOUR_OF_DAY))
-                + ":" + Integer.toString(c.get(Calendar.MINUTE)) + ".csv";
+                + "_" + Integer.toString(c.get(Calendar.MINUTE)) + ".csv";
         if (!file.getName().equals(currentcsv)) {
             Log.v(TAG, "Opening channel...");
             ChannelApi.OpenChannelResult result =
