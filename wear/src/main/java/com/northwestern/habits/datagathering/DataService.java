@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.SensorManager;
+import android.os.Binder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -143,7 +144,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 editor.putString(Preferences.KEY_PHONE_ID, messageEvent.getSourceNodeId());
                 editor.putStringSet(Preferences.KEY_ACTIVE_SENSORS, activeSensors);
                 Log.v(TAG, "Active sensors: " + activeSensors);
-                editor.commit();
+                editor.apply();
 
                 Log.v(TAG, getSharedPreferences(Preferences.PREFERENCE_NAME, 0).getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()).toString());
             }
