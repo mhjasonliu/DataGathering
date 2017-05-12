@@ -9,7 +9,9 @@ public class Preferences {
 
     // Preference fields
     public static final String USER_ID = "userID";
+    public static final String USER_ID1 = "user_id";
     public static final String PASSWORD = "password";
+    public static final String AUTH = "api_auth";
     @Deprecated
     public static final String CURRENT_DOCUMENT = "documentID";
     public static final String LABEL = "";
