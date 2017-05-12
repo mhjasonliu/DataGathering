@@ -59,7 +59,7 @@ public class CsvWriter {
         c.setTimeInMillis(timestamp);
         String hourst = Integer.toString(c.get(Calendar.HOUR_OF_DAY));
         int minute = c.get(Calendar.MINUTE);
-        String fName = hourst.concat(":" + Integer.toString(minute) + ".csv");
+        String fName = hourst.concat("_" + Integer.toString(minute) + ".csv");
         return new File(folder.getPath(), fName);
     }
 
@@ -80,7 +80,6 @@ public class CsvWriter {
             Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             intent.setData(Uri.fromFile(csv));
             context.sendBroadcast(intent);
-
 
             FileWriter csvWriter = new FileWriter(csv.getPath(), true);
             for (int i = 0; i < properties.size(); i++) {
