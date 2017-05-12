@@ -50,6 +50,94 @@ public class WebAPIManager {
             JSONObject jsonObject = null;
             jsonObject = DecodeResponseData.encodeData( flag, val );
             DataOutputStream outputStream = new DataOutputStream(conn.getOutputStream());
+            if (jsonObject == null)
+                return "fail";
+
+            // what should I write here to output stream to post params to server ?
+            outputStream.writeBytes(jsonObject.toString());
+            Log.d("WebAPIManager Data: ", flag + ": " + jsonObject.toString());
+            outputStream.flush();
+            outputStream.close();
+
+            conn.connect();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String responseString = "";
+        int resCode = -1;
+        try {
+            // get response
+            resCode = conn.getResponseCode();
+            String msg = conn.getResponseMessage();
+            Log.e("WebAPIManager: ", flag + ": response_code" + resCode);
+            Log.e("WebAPIManager: ", flag + ": response_msg" + msg);
+
+            if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_ACCEPTED || resCode == HttpURLConnection.HTTP_CREATED || msg.equalsIgnoreCase("Created")) {
+                InputStream responseStream = new BufferedInputStream(conn.getInputStream());
+                BufferedReader responseStreamReader = new BufferedReader(new InputStreamReader(responseStream));
+                String line = "";
+                StringBuilder stringBuilder = new StringBuilder();
+                while ((line = responseStreamReader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                responseStreamReader.close();
+
+                String response = stringBuilder.toString();
+                JSONObject jsonObject = DecodeResponseData.decodeData(response);
+//                Map<String,List<String>> mHeaders = conn.getHeaderFields();
+                try { // "Authorization" -> " size = 1"
+                    jsonObject.put("auth", conn.getHeaderField("Authorization"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                if (jsonObject == null)
+                    return "fail";
+                responseString = jsonObject.toString();
+                responseString = responseString  + "~" + flag;
+                Log.e("WebAPIManager: ", flag + ": response_str" + responseString);
+
+            } else {
+                responseString = "fail";
+            }
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            responseString = "fail";
+        } catch (IOException e) {
+            e.printStackTrace();
+            responseString = "fail";
+        }
+        return responseString;
+    }
+
+    // fetch data from remote server with flag
+    public static String httpPOSTUploadRequest(String urlStr, Object val, String path, String flag) {
+        Log.e("WebAPIManager URL: ", flag + ": " + urlStr);
+        HttpURLConnection conn = null;
+        try {
+            URL url1 = new URL(urlStr);
+            conn = (HttpURLConnection) url1.openConnection();
+            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            JSONObject jsonObject = null;
+            jsonObject = DecodeResponseData.encodeData( flag, val );
+            DataOutputStream outputStream = new DataOutputStream(conn.getOutputStream());
 
             if (jsonObject == null)
                 return "fail";
