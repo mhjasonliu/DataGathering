@@ -42,6 +42,16 @@ public class DecodeResponseData {
                 jsonObject = new JSONObject();
                 jsonObject.put("data", par_base64);
                 Log.d("DecodeJSONData Data: ", flag + ": " + jsonObject);
+            } else if ( flag.equalsIgnoreCase("fileupload") ) {
+                String values = (String) value;
+                jsonObject.put( "username", values );
+                Log.e("DecodeJSONData Data: ", flag + ": " + jsonObject);
+                byte[] param = jsonObject.toString().getBytes("UTF-8");
+                String par_base64 = Base64.encodeToString(param, Base64.DEFAULT);
+
+                jsonObject = new JSONObject();
+                jsonObject.put("data", par_base64);
+                Log.d("DecodeJSONData Data: ", flag + ": " + jsonObject);
             }
         } catch (JSONException e) {
             e.printStackTrace();
