@@ -2,12 +2,16 @@ package com.northwestern.habits.datagathering;
 
 import android.*;
 import android.app.ProgressDialog;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -22,6 +26,12 @@ import android.widget.Toast;
 import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.database.LabelManager;
 import com.northwestern.habits.datagathering.userinterface.SplashActivity;
+import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
+import com.northwestern.habits.datagathering.webapi.PhoneJobService;
+import com.northwestern.habits.datagathering.webapi.WebAPIManager;
+
+import net.gotev.uploadservice.MultipartUploadRequest;
+import net.gotev.uploadservice.UploadNotificationConfig;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -35,23 +45,30 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
+import static com.couchbase.lite.Manager.getUserAgent;
 
 /**
  * Created by William on 7/11/2016
  */
 public class MyReceiver extends BroadcastReceiver {
+
     private static final String TAG = "BroadcastReceiver";
     public static final String ACTION_LABEL = "com.northwestern.habits.datagathering.action.LABEL";
     public static final String LABEL_EXTRA = "Label";
     public static final String USER_ID_EXTRA = "UserID";
     public static final String TIMESTAMP_EXTRA = "timestamp";
 
+    private int kJobId = 1;
     /**
      * Returns whether or not the wifi is accessable
      * @param c context from which to access the wifi service
@@ -79,9 +96,131 @@ public class MyReceiver extends BroadcastReceiver {
         return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
     }
 
-
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (intent != null) {
+            Intent i = null;
+            ComponentName serviceComponent = new ComponentName(context, PhoneJobService.class);
+            JobInfo.Builder builder = new JobInfo.Builder(kJobId++, serviceComponent);
+//            builder.setPeriodic(5000);
+//            builder.setPersisted(true);
+            builder.setMinimumLatency(5 * 1000); // wait at least
+            builder.setOverrideDeadline(50 * 1000); // maximum delay
+            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
+            builder.setRequiresDeviceIdle(true); // device should be idle
+            builder.setRequiresCharging(true); // device requires charging for this job
+            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+            jobScheduler.schedule(builder.build());
+
+            switch (intent.getAction()) {
+                /*case Intent.ACTION_POWER_CONNECTED:
+                    Log.v(TAG, "Power connected action received.");
+
+                    // Power connected, start backup if wifi connected
+                    if (isWifiConnected(context)) {
+                        // start database backup
+                        i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_BACKUP);
+                        context.startService(i);
+                    }
+                    break;
+                case WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION:
+                    Toast.makeText(context, "HAbits:SUPPLICANT_CONNECTION_CHANGE_ACTION", Toast.LENGTH_SHORT).show();
+                    Log.v(TAG, "Wifi action received");
+                    if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
+                            false)) {
+                        // Wifi is connected, start backup if power connected
+                        if (isCharging(context)) {
+                            i = new Intent(context, DataManagementService.class);
+                            i.setAction(DataManagementService.ACTION_BACKUP);
+                            context.startService(i);
+                        }
+                    } else {
+                        // Wifi disconnected, stop backup if it is running
+                        i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_STOP_BACKUP);
+                        context.startService(i);
+                    }
+                    break;
+                case WifiManager.NETWORK_STATE_CHANGED_ACTION:
+                    Toast.makeText(context, "HAbits:NETWORK_STATE_CHANGED_ACTION", Toast.LENGTH_SHORT).show();
+                    Log.v(TAG, "Wifi action received");
+                    if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
+                            false)) {
+                        // Wifi is connected, start backup if power connected
+                        if (isCharging(context)) {
+                            i = new Intent(context, DataManagementService.class);
+                            i.setAction(DataManagementService.ACTION_BACKUP);
+                            context.startService(i);
+                        }
+                    } else {
+                        // Wifi disconnected, stop backup if it is running
+                        i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_STOP_BACKUP);
+                        context.startService(i);
+                    }
+                    //net connectivity change action check
+                    if(intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                        NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                        if(networkInfo.isConnected()) {
+                            // Wifi is connected
+                            Log.d(TAG, "Wifi is connected: " + String.valueOf(networkInfo));
+                            i = new Intent(context, DataManagementService.class);
+                            i.setAction(DataManagementService.ACTION_BACKUP);
+                            context.startService(i);
+                            new ZipCSVsAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        }
+                    }
+                    break;
+                case ConnectivityManager.CONNECTIVITY_ACTION:
+                    Log.v(TAG, "Wifi action received");
+                    // Wifi is connected, start backup if power connected
+                    if (isCharging(context) && isWifiConnected(context)) {
+                        Toast.makeText(context, "HAbits:CONNECTIVITY_ACTION", Toast.LENGTH_SHORT).show();
+                        i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_BACKUP);
+                        context.startService(i);
+                        // upload csv task
+                        new ZipCSVsAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    } else {
+                        // Wifi disconnected, stop backup if it is running
+                        i = new Intent(context, DataManagementService.class);
+                        i.setAction(DataManagementService.ACTION_STOP_BACKUP);
+                        context.startService(i);
+                    }
+                    break;*/
+                case Intent.ACTION_POWER_DISCONNECTED:
+                    Log.v(TAG, "Power disconnected action received.");
+
+                    // Power disconnected. stop backup if it is running
+                    i = new Intent(context, DataManagementService.class);
+                    i.setAction(DataManagementService.ACTION_STOP_BACKUP);
+                    context.startService(i);
+                    break;
+                case Intent.ACTION_BOOT_COMPLETED:
+                    SplashActivity.onStartup(context);
+                    break;
+                case ACTION_LABEL:
+                    // Hand it off to the LabelManager
+                    int labelExtra = intent.getIntExtra(LABEL_EXTRA, 0);
+                    long timestamp = intent.getLongExtra(TIMESTAMP_EXTRA, 0);
+                    PreferenceManager.getDefaultSharedPreferences(context)
+                            .edit().putInt(Preferences.LABEL, labelExtra)
+                            .putBoolean(Preferences.IS_EATING,
+                                    labelExtra == DataManagementService.L_EATING)
+                            .apply();
+                    String userID = PreferenceManager
+                            .getDefaultSharedPreferences(context)
+                            .getString(Preferences.USER_ID, "");
+                    LabelManager.addLabelChange(userID, context, Integer.toString(labelExtra), timestamp);
+                    break;
+                default:
+                    Log.e(TAG, "Unknown type sent to receiver: " + intent.getAction());
+            }
+        }
+    }
+
+    public void onReceive1(Context context, Intent intent) {
         if (intent != null) {
             switch (intent.getAction()) {
                 case Intent.ACTION_POWER_CONNECTED:
@@ -104,7 +243,7 @@ public class MyReceiver extends BroadcastReceiver {
                     context.startService(i);
                 break;
                 case WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION:
-                    Toast.makeText(context, "HAbits:NETWORK CHANGED1", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "HAbits:SUPPLICANT_CONNECTION_CHANGE_ACTION", Toast.LENGTH_SHORT).show();
                     Log.v(TAG, "Wifi action received");
                     if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
                             false)) {
@@ -122,7 +261,7 @@ public class MyReceiver extends BroadcastReceiver {
                     }
                     break;
                 case WifiManager.NETWORK_STATE_CHANGED_ACTION:
-                    Toast.makeText(context, "HAbits:NETWORK CHANGED2", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "HAbits:NETWORK_STATE_CHANGED_ACTION", Toast.LENGTH_SHORT).show();
                     Log.v(TAG, "Wifi action received");
                     if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED,
                             false)) {
@@ -138,17 +277,29 @@ public class MyReceiver extends BroadcastReceiver {
                         i.setAction(DataManagementService.ACTION_STOP_BACKUP);
                         context.startService(i);
                     }
+                    //net connectivity change action check
+                    if(intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                        NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                        if(networkInfo.isConnected()) {
+                            // Wifi is connected
+                            Log.d(TAG, "Wifi is connected: " + String.valueOf(networkInfo));
+                            i = new Intent(context, DataManagementService.class);
+                            i.setAction(DataManagementService.ACTION_BACKUP);
+                            context.startService(i);
+                            new ZipCSVsAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        }
+                    }
                     break;
                 case ConnectivityManager.CONNECTIVITY_ACTION:
                     Log.v(TAG, "Wifi action received");
                     // Wifi is connected, start backup if power connected
                     if (isCharging(context) && isWifiConnected(context)) {
-                        Toast.makeText(context, "HAbits:NETWORK CHANGED3", Toast.LENGTH_SHORT).show();
-                        /*i = new Intent(context, DataManagementService.class);
+                        Toast.makeText(context, "HAbits:CONNECTIVITY_ACTION", Toast.LENGTH_SHORT).show();
+                        i = new Intent(context, DataManagementService.class);
                         i.setAction(DataManagementService.ACTION_BACKUP);
-                        context.startService(i);*/
+                        context.startService(i);
                         // upload csv task
-                        new UploadCSVsAsyncTask(context).execute();
+                        new ZipCSVsAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     } else {
                         // Wifi disconnected, stop backup if it is running
                         i = new Intent(context, DataManagementService.class);
@@ -181,15 +332,14 @@ public class MyReceiver extends BroadcastReceiver {
 
     //upload csv if available to the remote server
     // asynk task
-    private class UploadCSVsAsyncTask extends AsyncTask<Void, Void, String> {
+    private class ZipCSVsAsyncTask extends AsyncTask<Void, Void, String> {
 
         private String url = "";
-        private Object mObject = null;
-        private String mFlag = "";
+        private ArrayList<String> mPath = null;
         private ProgressDialog dialog;
         private Context mContext = null;
 
-        public UploadCSVsAsyncTask(Context context) {
+        public ZipCSVsAsyncTask(Context context) {
             this.mContext = context;
         }
 
@@ -208,11 +358,11 @@ public class MyReceiver extends BroadcastReceiver {
                 Log.e(TAG, "permission denied");
             }
             String userID = PreferenceManager.getDefaultSharedPreferences(this.mContext).getString(Preferences.USER_ID, "");
-            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/" +
-                    userID + "/" ;
+            String PATH = Environment.getExternalStorageDirectory() + "/Bandv2/"; // + userID + "/" ;
             File folder = new File(PATH);
             Date dt = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy_HH:mm:ss", Locale.US);
+            mPath = new ArrayList<>();
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy_HHmmss", Locale.US);
             String time1 = sdf.format(dt);
             Log.v(TAG, "time " +time1 );
 
@@ -223,13 +373,27 @@ public class MyReceiver extends BroadcastReceiver {
                     for (int i = 0; i < listFile.length; i++) {
                         s[i] = listFile[i].getPath();
                         File file = new File(s[i]);
-                        if (file.exists()) {
-                            String zname = file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/"));
-                            zname = zname.replace("/", "");
-                            String zipname = file.getParent() + "/" + zname + "_" + time1 + ".zip";
-                            Log.v(TAG, "Zip location " + zipname);
-                            zipFiles(file, new File(zipname));
-                            deleteDir(file);
+                        if (file.getAbsolutePath().contains(".zip")) {
+                            ZipFile zf= null;
+                            try {
+                                zf = new ZipFile(file.getAbsoluteFile());
+                                int si =  zf.size();
+                                mPath.add(file.getAbsolutePath());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                deleteDir(file);
+                            }
+                        } else {
+                            if (file.exists()) {
+                                String zname = file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/"));
+                                zname = zname.replace("/", "");
+                                zname = zname.replace(" ", "_");
+                                String zipname = file.getParent() + "/" + zname + "_" + time1 + ".zip";
+                                Log.v(TAG, "Zip location " + zipname);
+                                mPath.add(zipname);
+                                zipFiles(file, new File(zipname));
+                                deleteDir(file);
+                            }
                         }
                     }
                 }
@@ -274,6 +438,85 @@ public class MyReceiver extends BroadcastReceiver {
 
         @Override
         protected void onPostExecute(String response) {
+            uploadFileToServer(mContext, mPath);
+//            new UploadZipAsyncTask(mContext, mPath).execute();
+        }
+    }
+
+    private void uploadFileToServer(Context mContext, ArrayList<String> filePath) {
+        //getting the actual path of the image
+//        String path = getPath(filePath);
+        //Uploading code
+        for (int i = 0; i < filePath.size(); i++) {
+            try {
+                String uploadId = UUID.randomUUID().toString();
+
+                String url = "http://14.141.176.221:8082/habits/public/upload";
+                Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.AUTH, ""));
+                Log.e(TAG, "F: " + filePath.get(i));
+                //Creating a multi part request
+                new MultipartUploadRequest(mContext, uploadId, url)
+                        .setMethod("POST")
+                        .addHeader("Authorization", PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.AUTH, ""))
+                        //Adding file
+                        .addFileToUpload(filePath.get(i), "fileToUpload")
+                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.USER_ID1, ""))
+                        //Adding text parameter to the request
+                        .setNotificationConfig(new UploadNotificationConfig())
+                        .setAutoDeleteFilesAfterSuccessfulUpload(true)
+                        .setUsesFixedLengthStreamingMode(true)
+                        .setMaxRetries(3)
+                        //Starting the upload
+                        .startUpload();
+            } catch (Exception exc) {
+                Toast.makeText(mContext, exc.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    private class UploadZipAsyncTask extends AsyncTask<Void, Void, String> {
+
+        private String path = null;
+        private Object mObject = null;
+        private String mFlag = "";
+        private ProgressDialog dialog;
+        private Context mContext = null;
+
+        private UploadZipAsyncTask(Context context, String path) {
+            this.mContext = context;
+            this.path = path;
+            mFlag = "fileupload";
+            mObject = PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.USER_ID, "");
+        }
+
+        @Override
+        protected void onPreExecute() {
+//            dialog = ProgressDialog.show( this.mContext, "", "Please wait..." );
+//            dialog.setCanceledOnTouchOutside(false);
+//            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+
+            if (ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "permission denied");
+            }
+            String str = "";
+            try {
+                String url_st = "http://14.141.176.221:8082/habits/public/" + "fileToUpload";
+                str = WebAPIManager.httpPOSTUploadRequest(url_st, this.mObject, this.path, this.mFlag );
+                return str;
+            } catch (Exception e) {
+                Log.e(UserIDFragment.class.toString(), e.getMessage(), e);
+            }
+            return str;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
         }
     }
 
@@ -293,19 +536,6 @@ public class MyReceiver extends BroadcastReceiver {
         return dir.delete();
     }
 
-    private void deleteFiles(File dir) {
-        Log.v(TAG, "deleting " + dir.getAbsolutePath());
-        if (dir.isDirectory())
-        {
-            String[] children = dir.list();
-            for (int i = 0; i < children.length; i++)
-            {
-                new File(dir, children[i]).delete();
-            }
-        }
-//        file.deleteOnExit();
-    }
-
     public static void zipFiles(File directory, File zipfile) {
         URI base = directory.toURI();
         Deque<File> queue = new LinkedList<File>();
@@ -318,16 +548,22 @@ public class MyReceiver extends BroadcastReceiver {
             res = zout;
             while (!queue.isEmpty()) {
                 directory = queue.pop();
-                for (File kid : directory.listFiles()) {
-                    String name = base.relativize(kid.toURI()).getPath();
-                    if (kid.isDirectory()) {
-                        queue.push(kid);
-                        name = name.endsWith("/") ? name : name + "/";
-                        zout.putNextEntry(new ZipEntry(name));
-                    } else {
-                        zout.putNextEntry(new ZipEntry(name));
-                        copy(kid, zout);
-                        zout.closeEntry();
+                if (directory != null) {
+                    if (directory.listFiles() != null) {
+                        for (File kid : directory.listFiles()) {
+                            if (kid != null) {
+                                String name = base.relativize(kid.toURI()).getPath();
+                                if (kid.isDirectory()) {
+                                    queue.push(kid);
+                                    name = name.endsWith("/") ? name : name + "/";
+                                    zout.putNextEntry(new ZipEntry(name));
+                                } else {
+                                    zout.putNextEntry(new ZipEntry(name));
+                                    copy(kid, zout);
+                                    zout.closeEntry();
+                                }
+                            }
+                        }
                     }
                 }
             }
