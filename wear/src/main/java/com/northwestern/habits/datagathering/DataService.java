@@ -30,7 +30,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(TAG, "Starting service...");
+        Log.d(TAG, "Starting service...");
 
         if (intent != null) {
             startIntent = PendingIntent.getActivity(getBaseContext(), 0,
@@ -50,7 +50,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     }
 
     private void registerSensors(Set<String> sensors) {
+        Log.d(TAG, "registerSensors count..." + sensors.size());
         for (String sensor : sensors) {
+            Log.d(TAG, "registerSensors service..." + sensor);
             switch (sensor) {
                 case Preferences.SENSOR_ACCEL:
                         mAccelListener.registerListener();
@@ -96,6 +98,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     /* ***************** MESSAGE RECEIVING *********************** */
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
+        Log.d(TAG, "onMessageReceived " + messageEvent.getSourceNodeId());
         if (mManager == null) {
             initSensors();
         }
@@ -108,32 +111,32 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 String action = new String(messageEvent.getData());
                 switch (action) {
                     case "Accelerometer1":
-                        Log.v(TAG, "Start accel requested.");
+                        Log.d(TAG, "Start accel requested.");
                         mAccelListener.registerListener();
                         activeSensors.add(Preferences.SENSOR_ACCEL);
                         break;
                     case "Accelerometer0":
-                        Log.v(TAG, "Stop accel requested.");
+                        Log.e(TAG, "Stop accel requested.");
                         mAccelListener.unRegisterListener();
                         activeSensors.remove(Preferences.SENSOR_ACCEL);
                         break;
                     case "Gyroscope1":
-                        Log.v(TAG, "Start gyro requested.");
+                        Log.d(TAG, "Start gyro requested.");
                         mGyroListener.registerListener();
                         activeSensors.add(Preferences.SENSOR_GYRO);
                         break;
                     case "Gyroscope0":
-                        Log.v(TAG, "Stop accel requested.");
+                        Log.e(TAG, "Stop gyro requested.");
                         mGyroListener.unRegisterListener();
                         activeSensors.remove(Preferences.SENSOR_GYRO);
                         break;
                     case "HeartRate1":
-                        Log.v(TAG, "Start gyro requested.");
+                        Log.d(TAG, "Start HeartRate1 requested.");
                         mHeartListener.registerListener();
                         activeSensors.add(Preferences.SENSOR_HEART);
                         break;
                     case "HeartRate0":
-                        Log.v(TAG, "Stop accel requested.");
+                        Log.e(TAG, "Stop HeartRate1 requested.");
                         mHeartListener.unRegisterListener();
                         activeSensors.remove(Preferences.SENSOR_HEART);
                         break;
