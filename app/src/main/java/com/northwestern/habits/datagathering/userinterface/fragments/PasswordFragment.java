@@ -358,10 +358,11 @@ public class PasswordFragment extends Fragment {
             } else {
                try {
                    JSONObject jsonObject = new JSONObject(response);
+                   JSONObject jsonObject1 = jsonObject.getJSONObject("data");
                    SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
                    editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
                    editor.putString(Preferences.AUTH, jsonObject.optString("auth"));
-                   editor.putString(Preferences.USER_ID1, jsonObject.optString("user_id"));
+                   editor.putString(Preferences.USER_ID1, jsonObject1.optString("user_id"));
                    editor.apply();
 
                    oldPword.setText("");
