@@ -1,11 +1,15 @@
 package com.northwestern.habits.datagathering.database;
 
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -17,16 +21,28 @@ import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.replicator.ReplicationState;
 import com.northwestern.habits.datagathering.DataGatheringApplication;
 import com.northwestern.habits.datagathering.MyReceiver;
+import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
+import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
+import com.northwestern.habits.datagathering.webapi.WebAPIManager;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * The purpose of this service is to:
@@ -112,6 +128,7 @@ public class DataManagementService extends Service {
 //                }
                 break;
             case ACTION_BACKUP:
+
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -147,29 +164,23 @@ public class DataManagementService extends Service {
                             if (r != null) r.stop();
                         }
                     }
-
-
                     // Stop label replication
                 } catch (CouchbaseLiteException | IOException | NullPointerException e) {
                     e.printStackTrace();
                 }
-
-
                 break;
             default:
                 Log.e(TAG, "Non-existant action requested " + intent.getAction());
         }
-
         return START_REDELIVER_INTENT;
     }
-
 
     private boolean isReplicating = false;
     private Replication push;
 
-
     private void startOneShotRep() {
-        // Only start a replication if another is not running
+
+        /*// Only start a replication if another is not running
         if (!isReplicating) {
             isReplicating = true;
 
@@ -216,7 +227,7 @@ public class DataManagementService extends Service {
             } catch (CouchbaseLiteException | IOException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
     private class restartAsync extends AsyncTask<Void, Void, Void> {
