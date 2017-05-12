@@ -71,7 +71,6 @@ public class DataSeries {
     }
 
     public void exportCSV(Context c, String userID) {
-
         Log.e("DataSeries", "Data array size: " + this.dataArray.size());
         new ExportCsvTask(c, userID, this.dataArray, type).execute();
     }
