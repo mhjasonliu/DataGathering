@@ -29,6 +29,7 @@ public class AccelerometerListener implements SensorEventListener {
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccelAccumulator;
+    private int SENSOR_DELAY_16HZ = 63;
 
     public AccelerometerListener(Context context, SensorManager manager) {
         mContext = context;
@@ -41,7 +42,7 @@ public class AccelerometerListener implements SensorEventListener {
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            mManager.registerListener(this, mSensor, SENSOR_DELAY_16HZ);
             isRegistered = true;
         }
     }
