@@ -1,11 +1,8 @@
 package com.northwestern.habits.datagathering;
 
-import android.*;
 import android.app.ProgressDialog;
-import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,7 +24,6 @@ import com.northwestern.habits.datagathering.database.DataManagementService;
 import com.northwestern.habits.datagathering.database.LabelManager;
 import com.northwestern.habits.datagathering.userinterface.SplashActivity;
 import com.northwestern.habits.datagathering.userinterface.fragments.UserIDFragment;
-import com.northwestern.habits.datagathering.webapi.PhoneJobService;
 import com.northwestern.habits.datagathering.webapi.WebAPIManager;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
@@ -54,8 +50,6 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-
-import static com.couchbase.lite.Manager.getUserAgent;
 
 /**
  * Created by William on 7/11/2016
@@ -100,17 +94,17 @@ public class MyReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (intent != null) {
             Intent i = null;
-            ComponentName serviceComponent = new ComponentName(context, PhoneJobService.class);
-            JobInfo.Builder builder = new JobInfo.Builder(kJobId++, serviceComponent);
+//            ComponentName serviceComponent = new ComponentName(context, PhoneJobService.class);
+//            JobInfo.Builder builder = new JobInfo.Builder(kJobId++, serviceComponent);
 //            builder.setPeriodic(5000);
 //            builder.setPersisted(true);
-            builder.setMinimumLatency(5 * 1000); // wait at least
-            builder.setOverrideDeadline(50 * 1000); // maximum delay
-            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
-            builder.setRequiresDeviceIdle(true); // device should be idle
-            builder.setRequiresCharging(true); // device requires charging for this job
+//            builder.setMinimumLatency(5 * 1000); // wait at least
+//            builder.setOverrideDeadline(50 * 1000); // maximum delay
+//            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
+//            builder.setRequiresDeviceIdle(true); // device should be idle
+//            builder.setRequiresCharging(true); // device requires charging for this job
             JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-            jobScheduler.schedule(builder.build());
+//            jobScheduler.schedule(builder.build());
 
             switch (intent.getAction()) {
                 /*case Intent.ACTION_POWER_CONNECTED:
