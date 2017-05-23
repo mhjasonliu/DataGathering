@@ -65,12 +65,12 @@ public class WearDataService extends WearableListenerService implements GoogleAp
                 if (intent.hasExtra(GYRO)) {
                     if (extras.getBoolean(GYRO)) {
                         // Request accel
-                        Log.v(TAG, "Accel requested for " + nodeID);
+                        Log.v(TAG, "GYRO requested for " + nodeID);
                         Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
                                 DATA_REQUEST_PATH, (GYRO + "1").getBytes());
                     } else {
                         // Request stop accel
-                        Log.v(TAG, "Accel un-requested for " + nodeID);
+                        Log.v(TAG, "GYRO un-requested for " + nodeID);
                         Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
                                 DATA_REQUEST_PATH, (GYRO + "0").getBytes());
                     }
@@ -79,23 +79,20 @@ public class WearDataService extends WearableListenerService implements GoogleAp
                 if (intent.hasExtra(HEART)) {
                     if (extras.getBoolean(HEART)) {
                         // Request accel
-                        Log.v(TAG, "Accel requested for " + nodeID);
+                        Log.v(TAG, "HEART requested for " + nodeID);
                         Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
                                 DATA_REQUEST_PATH, (HEART + "1").getBytes());
                     } else {
                         // Request stop accel
-                        Log.v(TAG, "Accel un-requested for " + nodeID);
+                        Log.v(TAG, "HEART un-requested for " + nodeID);
                         Wearable.MessageApi.sendMessage(googleApiClient, nodeID,
                                 DATA_REQUEST_PATH, (HEART + "0").getBytes());
                     }
                 }
-
-
             } else {
                 Log.e(TAG, "Request received without a node id");
             }
         }
-
         return START_STICKY;
     }
 
