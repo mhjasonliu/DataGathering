@@ -5,13 +5,18 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.ChannelApi;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.File;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -40,21 +45,31 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-        if (!isSendingData) { // Do not risk trying to send deleted files and vice versa
-            isSendingData = true;
-            Log.v(TAG, "nodid " + nodeId);
-            if (nodeId == null) return null;
+        if (mGoogleApiClient.isConnected()) {
+            Log.e(TAG, "mGoogleApiClient.isConnected()");
+            List<Node> mNodeList = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await().getNodes();
+            for (Node node : mNodeList) {
+                if (node.isNearby()) {
+                    if (!isSendingData) { // Do not risk trying to send deleted files and vice versa
+                        isSendingData = true;
+                        Log.v(TAG, "nodid " + nodeId);
+                        if (nodeId == null) return null;
 
-            // Top level file
-            File dir = new File(mContext.getExternalFilesDir(null).getPath() + "/WearData/");
-            sendChildren(dir);
+                        // Top level file
+                        File dir = new File(mContext.getExternalFilesDir(null).getPath() + "/WearData/");
+                        sendChildren(dir);
 
-            isSendingData = false;
+                        isSendingData = false;
+                    }
+                }
+            }
+        } else {
+            Log.e(TAG, "mGoogleApiClient.isConnected() false");
         }
         return null;
     }
 
-    private void sendChildren(File dir) {
+    private synchronized void sendChildren(File dir) {
         if (dir.exists()) {
             File[] files = dir.listFiles();
             if (files == null) return;
@@ -69,7 +84,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    private void sendFile(File file, File directory) {
+    private synchronized void sendFile(File file, File directory) {
 
         // Delete only if the file name is not the current hour:minute
         Calendar c = Calendar.getInstance();
@@ -81,20 +96,20 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
                     Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId,
                             file.getPath().substring(
                                     mContext.getExternalFilesDir(null).getPath().length() + 1)
-                    ).await(5, TimeUnit.SECONDS);
+                    ).await(10, TimeUnit.SECONDS);
 
             if (result.getStatus().isSuccess()) {
                 Channel channel = result.getChannel();
                 channel.sendFile(mGoogleApiClient, Uri.fromFile(file)).await(1, TimeUnit.SECONDS);
-
+                Log.v(TAG, "Sending csv " + file.getName());
+                Log.v(TAG, " for path " + file.getAbsolutePath());
                 if (file.delete()) Log.v(TAG, "File successfully deleted");
-
-
             } else {
                 Log.v(TAG, "Channel failed. " + result.getStatus().toString());
             }
         } else {
             Log.v(TAG, "Current csv " + currentcsv + " equals " + file.getName());
+            Log.v(TAG, " for path " + file.getAbsolutePath());
         }
     }
 }
