@@ -35,14 +35,14 @@ public class GyroscopeListener implements SensorEventListener {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 100);
+        mAccumulator = new DataAccumulator("Gyroscope", 450);
     }
 
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener(this, mSensor, SENSOR_DELAY_16HZ);
+            mManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_GAME);
             isRegistered = true;
         }
     }
@@ -74,7 +74,7 @@ public class GyroscopeListener implements SensorEventListener {
 
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("Gyroscope", 100);
+            mAccumulator = new DataAccumulator("Gyroscope", 450);
             DataAccumulator accumulator = new DataAccumulator("Gyroscope", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();

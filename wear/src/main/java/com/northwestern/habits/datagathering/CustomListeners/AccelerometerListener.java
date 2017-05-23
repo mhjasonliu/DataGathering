@@ -35,23 +35,23 @@ public class AccelerometerListener implements SensorEventListener {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccelAccumulator = new DataAccumulator("Accelerometer", 100);
+        mAccelAccumulator = new DataAccumulator("Accelerometer", 450);
     }
 
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener(this, mSensor, SENSOR_DELAY_16HZ);
+            mManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_GAME);
             isRegistered = true;
         }
     }
+
     public void unRegisterListener() {
         if (isRegistered) {
             mManager.unregisterListener(this);
             isRegistered = false;
         }
-
     }
 
     @Override
@@ -74,7 +74,7 @@ public class AccelerometerListener implements SensorEventListener {
 
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
-            mAccelAccumulator = new DataAccumulator("Accelerometer", 100);
+            mAccelAccumulator = new DataAccumulator("Accelerometer", 450);
             DataAccumulator accumulator = new DataAccumulator("Accelerometer", mAccelAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();

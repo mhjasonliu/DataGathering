@@ -34,7 +34,7 @@ public class HeartRateListener implements SensorEventListener {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 10);
+        mAccumulator = new DataAccumulator("HeartRate", 30);
     }
 
     public boolean isRegistered() {
