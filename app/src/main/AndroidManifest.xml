@@ -141,6 +141,10 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
+        <service
+            android:name=".webapi.PhoneJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
     </application>
 
 </manifest>
