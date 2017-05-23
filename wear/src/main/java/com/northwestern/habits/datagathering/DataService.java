@@ -16,6 +16,7 @@ import com.google.android.gms.wearable.WearableListenerService;
 import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListener;
 import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
 import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
+import com.northwestern.habits.datagathering.filewriteservice.SingletonFileWriter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -157,7 +158,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     private PendingIntent startIntent;
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        WriteDataTask.writeError(e, getBaseContext());
+        SingletonFileWriter.getInstance(getBaseContext()).writeError(e, getBaseContext());
 
         if (startIntent != null) {
             AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);

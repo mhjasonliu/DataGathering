@@ -22,7 +22,7 @@ public class Receiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        ComponentName serviceComponent = new ComponentName(context, WearJobService.class);
+        /*ComponentName serviceComponent = new ComponentName(context, WearJobService.class);
         JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
         builder.setPeriodic(1000);
 //        builder.setMinimumLatency(1000); // wait at least
@@ -31,9 +31,9 @@ public class Receiver extends BroadcastReceiver {
         builder.setRequiresDeviceIdle(true); // device should be idle
         builder.setRequiresCharging(false); // we don't care if the device is charging or not
         JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        jobScheduler.schedule(builder.build());
+        jobScheduler.schedule(builder.build());*/
 
-        /*String action = intent.getAction();
+        String action = intent.getAction();
         if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
             Intent i = new Intent(context, DataService.class);
             context.startService(i);
@@ -48,6 +48,6 @@ public class Receiver extends BroadcastReceiver {
                 localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 5000, localPendingIntent);
             }
         };
-        handler.postDelayed(r, 5000);*/
+        handler.postDelayed(r, 100);
     }
 }
