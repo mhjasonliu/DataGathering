@@ -235,13 +235,13 @@ public class PasswordFragment extends Fragment {
                 flag = "reset";
             }
 
-            String url_st = "http://14.141.176.221:8082/habits/public/" + flag;
+            String url = WebAPIManager.URL + flag;
 
-            String url = "http://192.168.100.166/lumen/public/" + flag;
+            String url1 = "http://192.168.100.166/lumen/public/" + flag;
             Log.e("URL login: ", url);
             String uname = PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.USER_ID, "");
             Object obj = new String[] { uname, newPwd.getText().toString(), oldPword.getText().toString() };
-            UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask( url_st, flag, obj );
+            UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask( url, flag, obj );
             userIdAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     };

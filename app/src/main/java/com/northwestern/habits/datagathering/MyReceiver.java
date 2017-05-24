@@ -451,7 +451,7 @@ public class MyReceiver extends BroadcastReceiver {
             try {
                 String uploadId = UUID.randomUUID().toString();
 
-                String url = "http://14.141.176.221:8082/habits/public/upload";
+                String url = WebAPIManager.URL + "upload";
                 Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.AUTH, ""));
                 Log.e(TAG, "F: " + filePath.get(i));
                 //Creating a multi part request
@@ -506,7 +506,7 @@ public class MyReceiver extends BroadcastReceiver {
             }
             String str = "";
             try {
-                String url_st = "http://14.141.176.221:8082/habits/public/" + "fileToUpload";
+                String url_st = WebAPIManager.URL + "fileToUpload";
                 str = WebAPIManager.httpPOSTUploadRequest(url_st, this.mObject, this.path, this.mFlag );
                 return str;
             } catch (Exception e) {

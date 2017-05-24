@@ -248,7 +248,7 @@ public class PhoneJobService extends JobService {
                     File file1 = new File(name);
                     file1.mkdirs();
                 }*/
-                String url = "http://14.141.176.221:8082/habits/public/upload";
+                String url = WebAPIManager.URL + "upload";
                 Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.AUTH, ""));
                 Log.e(TAG, "F: " + filePath.get(i));
                 //Creating a multi part request

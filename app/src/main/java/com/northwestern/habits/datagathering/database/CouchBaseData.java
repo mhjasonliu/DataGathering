@@ -10,6 +10,7 @@ import com.couchbase.lite.Manager;
 import com.couchbase.lite.android.AndroidContext;
 import com.couchbase.lite.replicator.Replication;
 import com.northwestern.habits.datagathering.BluetoothConnectionLayer;
+import com.northwestern.habits.datagathering.webapi.WebAPIManager;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -29,7 +30,7 @@ import java.util.Objects;
 public class CouchBaseData {
 
     private static Replication replication = null;
-    public static final String URL_STRING = "http://107.170.25.202:4984/db/";
+    public static final String URL_STRING = WebAPIManager.URL_STRING_CB;
 
     public static final String DB_NAME_BASE = "data_gathering_db";
     public static final String LABEL_DB_NAME = "label_db";
