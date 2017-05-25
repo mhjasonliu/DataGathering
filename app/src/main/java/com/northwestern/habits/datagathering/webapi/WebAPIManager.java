@@ -25,8 +25,8 @@ import java.util.Map;
 
 public class WebAPIManager {
 
-    public static String URL_O = "http://14.141.176.221:8082/habits/public/";
-    public static String URL = "http://174.138.56.143/habits/public/";
+    public static String URL_H = "http://14.141.176.221:8082/habits/public/";
+    public static String URL = "http://174.138.56.143/public/";
     public static final String URL_STRING_CB = "http://174.138.56.143/db/";
 
     // fetch data from remote server with flag
