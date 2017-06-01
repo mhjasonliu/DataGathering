@@ -12,6 +12,8 @@ public class Preferences {
     public static final String USER_ID1 = "user_id";
     public static final String PASSWORD = "password";
     public static final String AUTH = "api_auth";
+    public static final String IS_ALLOW_KEEP = "allow_keep_files";
+
     @Deprecated
     public static final String CURRENT_DOCUMENT = "documentID";
     public static final String LABEL = "";
