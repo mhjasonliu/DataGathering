@@ -234,7 +234,9 @@ public class PhoneJobService extends JobService {
         }
     }
 
-    private void uploadFileToServer(Context mContext, ArrayList<String> filePath) {
+    private void uploadFileToServer(Context context, ArrayList<String> filePath) {
+        //check if user wants to keep the copy of local files
+        final boolean isChecked = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Preferences.IS_ALLOW_KEEP, false);
         //getting the actual path of the image
 //        String path = getPath(filePath);
         //Uploading code
@@ -249,24 +251,24 @@ public class PhoneJobService extends JobService {
                     file1.mkdirs();
                 }*/
                 String url = WebAPIManager.URL + "upload";
-                Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.AUTH, ""));
+                Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.AUTH, ""));
                 Log.e(TAG, "F: " + filePath.get(i));
                 //Creating a multi part request
-                new MultipartUploadRequest(mContext, uploadId, url)
+                new MultipartUploadRequest(context, uploadId, url)
                         .setMethod("POST")
-                        .addHeader("Authorization", PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.AUTH, ""))
+                        .addHeader("Authorization", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.AUTH, ""))
                         //Adding file
                         .addFileToUpload(filePath.get(i), "fileToUpload")
-                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.USER_ID1, ""))
+                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID1, ""))
                         //Adding text parameter to the request
                         .setNotificationConfig(new UploadNotificationConfig())
-                        .setAutoDeleteFilesAfterSuccessfulUpload(true)
+                        .setAutoDeleteFilesAfterSuccessfulUpload(isChecked)
                         .setUsesFixedLengthStreamingMode(true)
                         .setMaxRetries(3)
                         //Starting the upload
                         .startUpload();
             } catch (Exception exc) {
-                Toast.makeText(mContext, exc.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, exc.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }
