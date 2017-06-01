@@ -17,6 +17,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.northwestern.habits.datagathering.userinterface.AdvancedSettingsActivity;
+import com.northwestern.habits.datagathering.userinterface.SettingsActivity;
 
 /**
  * Created by William on 6/14/2016.
@@ -50,13 +51,19 @@ public class CustomDrawerListener
         } else if (id == R.id.eating_probability) {
 
         } else if (id == R.id.settings) {
-
+            //show settings menu
+            startSettingsActivity(mContext);
         } else if (id == R.id.feedback) {
 
         }
 
         mDrawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void startSettingsActivity(Context context) {
+        Intent i = new Intent(context, SettingsActivity.class);
+        context.startActivity(i);
     }
 
     private void promptAdminPassword() {
