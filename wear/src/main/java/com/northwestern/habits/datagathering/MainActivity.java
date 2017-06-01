@@ -49,10 +49,9 @@ public class MainActivity extends Activity {
         final Handler handler = new Handler();
         final Runnable r = new Runnable() {
             public void run() {
-                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 5000, localPendingIntent);
+                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 70000, localPendingIntent);
             }
         };
-        handler.postDelayed(r, 100);
-
+        handler.postDelayed(r, 6000);
     }
 }

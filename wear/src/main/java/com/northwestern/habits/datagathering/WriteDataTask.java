@@ -14,6 +14,7 @@ import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * Created by William on 2/25/2017.
@@ -22,9 +23,11 @@ import java.util.Map;
 public class WriteDataTask extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "WriteDataTask";
 
-    DataAccumulator mAccumulator;
-    Context mContext;
-    String mType;
+    private DataAccumulator mAccumulator;
+    private Context mContext;
+    private String mType;
+    private Queue<Map<String, Object>> mapQueue = null;
+
 
     public WriteDataTask(Context context, DataAccumulator accumulator, String type) {
         mAccumulator = accumulator;

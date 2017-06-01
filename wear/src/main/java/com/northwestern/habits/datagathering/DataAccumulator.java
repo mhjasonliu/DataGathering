@@ -2,7 +2,7 @@ package com.northwestern.habits.datagathering;
 
 import android.content.Context;
 
-import com.northwestern.habits.datagathering.filewriteservice.SingletonFileWriter;
+import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -69,14 +69,14 @@ public class DataAccumulator {
                 Object time = datum.get("Time");
                 if (time instanceof String) {
                     time = Long.valueOf((String) time);
-                    SingletonFileWriter.getInstance(con).writeError(
+                    WriteDataThread.writeError(
                             new Exception("The time was a string rather than a long: "
                                     + time.toString()), con);
                 }
 
                 c.setTimeInMillis((long) datum.get("Time"));
             } catch (ClassCastException e) {
-                SingletonFileWriter.getInstance(con).writeError(e, con);
+                WriteDataThread.writeError(e, con);
             }
             minute = c.get(Calendar.MINUTE);
             if (!split.containsKey(minute)) {

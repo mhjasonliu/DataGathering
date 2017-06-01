@@ -201,7 +201,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    public void writeError(Throwable e, Context context) {
+    public static void writeError(Throwable e, Context context) {
         Log.e(TAG, "WRITING ERROR TO DISK: \n");
         e.printStackTrace();
 
