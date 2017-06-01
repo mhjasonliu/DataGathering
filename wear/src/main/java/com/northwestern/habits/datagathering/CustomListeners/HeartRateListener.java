@@ -9,8 +9,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
-import com.northwestern.habits.datagathering.SendDataTask;
-import com.northwestern.habits.datagathering.WriteDataTask;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -30,13 +28,14 @@ public class HeartRateListener implements SensorEventListener {
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_16HZ = 62000;
-    private int SENSOR_DELAY_5HZ = 200;
+    private int SENSOR_DELAY_5HZ  = 200000;
+    private long prevtimestamp= 0;
 
     public HeartRateListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 30);
+        mAccumulator = new DataAccumulator("HeartRate", 10);
     }
 
     public boolean isRegistered() {
@@ -61,11 +60,13 @@ public class HeartRateListener implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         // Handle new HEART value
         if (event == null) return;
-        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        if(prevtimestamp ==event.timestamp) return;
+        prevtimestamp = event.timestamp;
+//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis()
                 + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
-        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
         dataPoint.put("Accuracy", event.accuracy);
@@ -76,7 +77,7 @@ public class HeartRateListener implements SensorEventListener {
 
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("HeartRate", 110);
+            mAccumulator = new DataAccumulator("HeartRate", 10);
             DataAccumulator accumulator = new DataAccumulator("HeartRate", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
@@ -86,7 +87,12 @@ public class HeartRateListener implements SensorEventListener {
             handleFullAccumulator(accumulator);
         }
     }
-
+    private WriteDataThread mWriteDataThread = null;
+    public void setWDT(WriteDataThread wdt)
+    {
+        mWriteDataThread =wdt;
+    }
+    
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Handle change of accuracy if necessary
@@ -95,8 +101,8 @@ public class HeartRateListener implements SensorEventListener {
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
         Log.v(TAG, "HR+Accumulator was full " + accumulator.getCount());
-        new WriteDataTask(mContext, accumulator, "HeartRate").execute();
-
-        new SendDataTask(mContext).execute();
+        //new WriteDataTask(mContext, accumulator, "HeartRate").execute();
+        accumulator.type="HeartRate";
+        mWriteDataThread.SaveToFile(accumulator);
     }
 }
