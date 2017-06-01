@@ -29,6 +29,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.northwestern.habits.datagathering.BuildConfig;
 import com.northwestern.habits.datagathering.CustomDrawerListener;
 import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
@@ -71,6 +72,11 @@ public class UserActivity extends AppCompatActivity {
         }
         if (!labelUpdateReceiver.isRegistered()) labelUpdateReceiver.register();
         if (!dataReceiver.isRegistered()) dataReceiver.register();
+
+        TextView tvVersion = ((TextView) findViewById(R.id.tvVersion));
+        int versionCode = BuildConfig.VERSION_CODE;
+        String versionName = BuildConfig.VERSION_NAME;
+        tvVersion.setText("" + versionName);
 
         TextView t = ((TextView) findViewById(R.id.db_status_Text));
         if (t != null) {
