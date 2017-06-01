@@ -22,7 +22,7 @@ public class DataAccumulator {
     private LinkedList<Map<String, Object>> dataArray = new LinkedList<>();
     private long firstEntry;
     private long lastEntry;
-    private String type;
+    public String type;
 
     public DataAccumulator(String type, int capacity) {
         super();

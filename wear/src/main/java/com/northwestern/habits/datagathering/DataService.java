@@ -7,7 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -16,8 +18,10 @@ import com.google.android.gms.wearable.WearableListenerService;
 import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListener;
 import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
 import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
+import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 import com.northwestern.habits.datagathering.filewriteservice.SingletonFileWriter;
 
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,6 +51,15 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                 .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
 
+        /*final Handler handler = new Handler();
+        final Runnable r = new Runnable() {
+            public void run() {
+//                new SendDataTask(getBaseContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new SendDataTask(getBaseContext()).execute();
+            }
+        };
+        handler.postDelayed(r, 10000);*/
+        new SendDataTask(getBaseContext()).execute();
         return START_STICKY;
     }
 
@@ -78,13 +91,23 @@ public class DataService extends WearableListenerService implements Thread.Uncau
      * Update every time you register/unregister outside of
      * activity lifecycle
      */
-
+    static boolean FirstTime= true;
     private void initSensors() {
-        mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-
-        mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
-        mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-        mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+        if(FirstTime) {
+            FirstTime= false;
+            Log.d(TAG, "************************* INIT SENSORS CALLED... *************************");
+            mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+            WriteDataThread wdt = new WriteDataThread(getBaseContext());
+            mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+            mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
+            mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+            mAccelListener.setWDT(wdt);
+            mGyroListener.setWDT(wdt);
+            mHeartListener.setWDT(wdt);
+            wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//            SendDataTask sendDataTask = new SendDataTask(getBaseContext());
+//            sendDataTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     /**
