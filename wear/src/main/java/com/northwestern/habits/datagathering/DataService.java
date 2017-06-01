@@ -8,8 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
-import android.os.Binder;
-import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -19,9 +17,7 @@ import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListen
 import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
 import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
 import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
-import com.northwestern.habits.datagathering.filewriteservice.SingletonFileWriter;
 
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -181,7 +177,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     private PendingIntent startIntent;
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        SingletonFileWriter.getInstance(getBaseContext()).writeError(e, getBaseContext());
+        WriteDataThread.writeError(e, getBaseContext());
 
         if (startIntent != null) {
             AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);

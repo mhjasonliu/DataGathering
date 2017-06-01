@@ -2,14 +2,12 @@ package com.northwestern.habits.datagathering;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.northwestern.habits.datagathering.filewriteservice.SingletonFileWriter;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
