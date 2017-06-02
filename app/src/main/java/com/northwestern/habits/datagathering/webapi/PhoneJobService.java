@@ -46,7 +46,7 @@ import java.util.zip.ZipOutputStream;
 
 public class PhoneJobService extends JobService {
 
-    private static final String TAG = "JobService";
+    private static final String TAG = "PhoneJobService";
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -252,7 +252,7 @@ public class PhoneJobService extends JobService {
                 }*/
                 String url = WebAPIManager.URL + "upload";
                 Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.AUTH, ""));
-                Log.e(TAG, "F: " + filePath.get(i));
+                Log.e(TAG, "F: " + filePath.get(i) + " ALLOW: " + !isChecked);
                 //Creating a multi part request
                 new MultipartUploadRequest(context, uploadId, url)
                         .setMethod("POST")
@@ -262,7 +262,7 @@ public class PhoneJobService extends JobService {
                         .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID1, ""))
                         //Adding text parameter to the request
                         .setNotificationConfig(new UploadNotificationConfig())
-                        .setAutoDeleteFilesAfterSuccessfulUpload(isChecked)
+                        .setAutoDeleteFilesAfterSuccessfulUpload(!isChecked)
                         .setUsesFixedLengthStreamingMode(true)
                         .setMaxRetries(3)
                         //Starting the upload
