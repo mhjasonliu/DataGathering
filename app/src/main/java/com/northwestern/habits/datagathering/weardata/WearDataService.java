@@ -208,7 +208,10 @@ public class WearDataService extends WearableListenerService implements GoogleAp
 //        File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
 //
 //        if (!folder.exists()) Log.v(TAG, "mkdirs result: " + folder.mkdirs());
+        channelDataOpened( channel );
+    }
 
+    private synchronized void channelDataOpened(Channel channel) {
         File file = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
         if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
         Log.v(TAG, "File path: " + file.getPath());

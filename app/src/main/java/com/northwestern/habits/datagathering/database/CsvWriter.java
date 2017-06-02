@@ -25,7 +25,7 @@ public class CsvWriter {
      * @param type The type of data to be contained int he folder
      * @return File with the path of the folder
      */
-    public static File getFolder(long timestamp, String userID, String type) {
+    public static synchronized File getFolder(long timestamp, String userID, String type) {
         // Date for use in the folder path
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(timestamp);
@@ -54,7 +54,7 @@ public class CsvWriter {
      * @param timestamp timestamp of a datum to be contained in the csv
      * @return the file representing the csv
      */
-    public static File getCsv(File folder, long timestamp) {
+    public static synchronized File getCsv(File folder, long timestamp) {
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(timestamp);
         String hourst = Integer.toString(c.get(Calendar.HOUR_OF_DAY));
@@ -70,7 +70,7 @@ public class CsvWriter {
      * @return FileWriter for the csv CLOSE TO AVOID MEMORY LEAK
      * @throws IOException
      */
-    public static FileWriter writeProperties(List<String> properties, File csv, Context context)
+    public static synchronized FileWriter writeProperties(List<String> properties, File csv, Context context)
             throws IOException {
         if (!csv.exists()) {
             // Make the file
@@ -101,7 +101,7 @@ public class CsvWriter {
      * @param dataList List of data to be written
      * @param properties List of headers of the csv (in the order of the csv)
      */
-    public static void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
+    public static synchronized void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
                                        List<String> properties) {
         boolean newLine = true;
         for (Map<String, Object> datum :
