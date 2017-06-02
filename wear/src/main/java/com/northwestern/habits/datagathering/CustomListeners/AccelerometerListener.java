@@ -36,7 +36,7 @@ public class AccelerometerListener implements SensorEventListener {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccelAccumulator = new DataAccumulator("Accelerometer", 160);
+        mAccelAccumulator = new DataAccumulator("Accelerometer", 192);
     }
 
     public void setWDT(WriteDataThread wdt)
@@ -83,7 +83,7 @@ public class AccelerometerListener implements SensorEventListener {
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
             // change check is full
-            mAccelAccumulator = new DataAccumulator("Accelerometer", 160); // 1200
+            mAccelAccumulator = new DataAccumulator("Accelerometer", 192); // 1200
             DataAccumulator accumulator = new DataAccumulator("Accelerometer", mAccelAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
