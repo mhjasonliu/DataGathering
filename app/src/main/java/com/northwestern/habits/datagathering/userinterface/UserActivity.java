@@ -76,7 +76,7 @@ public class UserActivity extends AppCompatActivity {
         TextView tvVersion = ((TextView) findViewById(R.id.tvVersion));
         int versionCode = BuildConfig.VERSION_CODE;
         String versionName = BuildConfig.VERSION_NAME;
-        tvVersion.setText("" + versionName);
+        tvVersion.setText("Version " + versionName);
 
         TextView t = ((TextView) findViewById(R.id.db_status_Text));
         if (t != null) {

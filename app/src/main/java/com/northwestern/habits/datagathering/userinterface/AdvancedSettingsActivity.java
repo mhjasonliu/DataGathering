@@ -110,8 +110,6 @@ public class AdvancedSettingsActivity extends Activity
         verifyStoragePermissions(this);
     }
 
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
