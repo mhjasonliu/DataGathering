@@ -8,8 +8,8 @@ import com.microsoft.band.sensors.SampleRate;
 public class Preferences {
 
     // Preference fields
-    public static final String USER_ID = "userID";
-    public static final String USER_ID1 = "user_id";
+    public static final String USER_ID = "userID"; // local id
+    public static final String USER_ID1 = "user_id"; // server assigned id
     public static final String PASSWORD = "password";
     public static final String AUTH = "api_auth";
     public static final String IS_ALLOW_KEEP = "allow_keep_files";

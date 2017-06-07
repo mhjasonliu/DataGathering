@@ -16,9 +16,15 @@ import android.widget.Toast;
 import com.northwestern.habits.datagathering.MyReceiver;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.database.DataManagementService;
+import com.northwestern.habits.datagathering.database.SQLiteDBManager;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
+import net.gotev.uploadservice.ServerResponse;
+import net.gotev.uploadservice.UploadInfo;
 import net.gotev.uploadservice.UploadNotificationConfig;
+import net.gotev.uploadservice.UploadStatusDelegate;
+
+import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.File;
@@ -142,7 +148,11 @@ public class PhoneJobService extends JobService {
                             }
                         }
                     }
+                } else {
+                    Log.e(TAG, "files not available for zip.");
                 }
+            } else {
+                Log.e(TAG, "file not exists.");
             }
 
             String str = "";
@@ -151,7 +161,9 @@ public class PhoneJobService extends JobService {
 
         @Override
         protected void onPostExecute(String response) {
-            uploadFileToServer(mContext, mPath);
+            String uid = PreferenceManager.getDefaultSharedPreferences(mContext).getString(Preferences.USER_ID, "");
+            SQLiteDBManager.getInstance(mContext).addUploadStatus(uid, mPath, 0, "uploadID");
+            uploadFileToServer(mContext);
         }
     }
 
@@ -234,11 +246,14 @@ public class PhoneJobService extends JobService {
         }
     }
 
-    private void uploadFileToServer(Context context, ArrayList<String> filePath) {
+    private void uploadFileToServer(Context context) {
         //check if user wants to keep the copy of local files
         final boolean isChecked = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Preferences.IS_ALLOW_KEEP, false);
         //getting the actual path of the image
 //        String path = getPath(filePath);
+        String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+        ArrayList<String> filePath = SQLiteDBManager.getInstance(context).getUploadStatusData(uid);
+
         //Uploading code
         for (int i = 0; i < filePath.size(); i++) {
             try {
@@ -259,12 +274,54 @@ public class PhoneJobService extends JobService {
                         .addHeader("Authorization", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.AUTH, ""))
                         //Adding file
                         .addFileToUpload(filePath.get(i), "fileToUpload")
-                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID1, ""))
+                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, ""))
                         //Adding text parameter to the request
                         .setNotificationConfig(new UploadNotificationConfig())
                         .setAutoDeleteFilesAfterSuccessfulUpload(!isChecked)
                         .setUsesFixedLengthStreamingMode(true)
                         .setMaxRetries(3)
+                        .setDelegate(new UploadStatusDelegate() {
+                            @Override
+                            public void onProgress(Context context, UploadInfo uploadInfo) {
+                                // your code here
+                            }
+
+                            @Override
+                            public void onError(Context context, UploadInfo uploadInfo, Exception exception) {
+                                // your code here
+                                String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+                                String uploadId = uploadInfo.getUploadId();
+                                ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
+                                SQLiteDBManager.getInstance(context).updateUploadStatusData(uid, ufStrings, 0);
+                            }
+
+                            @Override
+                            public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
+                                // your code here
+                                // if you have mapped your server response to a POJO, you can easily get it:
+                                // YourClass obj = new Gson().fromJson(serverResponse.getBodyAsString(), YourClass.class);
+                                if (isChecked) {
+                                    String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+                                    String uploadId = uploadInfo.getUploadId();
+                                    ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
+                                    SQLiteDBManager.getInstance(context).updateUploadStatusData(uid, ufStrings, 1);
+                                } else {
+                                    String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+                                    String uploadId = uploadInfo.getUploadId();
+                                    ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
+                                    SQLiteDBManager.getInstance(context).deleteUploadedFile(uid, ufStrings, 1);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(Context context, UploadInfo uploadInfo) {
+                                // your code here
+                                String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+                                String uploadId = uploadInfo.getUploadId();
+                                ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
+                                SQLiteDBManager.getInstance(context).updateUploadStatusData(uid, ufStrings, 0);
+                            }
+                        })
                         //Starting the upload
                         .startUpload();
             } catch (Exception exc) {
