@@ -24,6 +24,7 @@ import net.gotev.uploadservice.UploadInfo;
 import net.gotev.uploadservice.UploadNotificationConfig;
 import net.gotev.uploadservice.UploadStatusDelegate;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Closeable;
@@ -266,6 +267,7 @@ public class PhoneJobService extends JobService {
                     file1.mkdirs();
                 }*/
                 String url = WebAPIManager.URL + "upload";
+                Log.e(TAG, "user_id: " + PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID1, ""));
                 Log.e(TAG, "H: " + PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.AUTH, ""));
                 Log.e(TAG, "F: " + filePath.get(i) + " ALLOW: " + !isChecked);
                 //Creating a multi part request
@@ -274,10 +276,10 @@ public class PhoneJobService extends JobService {
                         .addHeader("Authorization", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.AUTH, ""))
                         //Adding file
                         .addFileToUpload(filePath.get(i), "fileToUpload")
-                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, ""))
+                        .addParameter("user_id", PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID1, ""))
                         //Adding text parameter to the request
                         .setNotificationConfig(new UploadNotificationConfig())
-                        .setAutoDeleteFilesAfterSuccessfulUpload(!isChecked)
+//                        .setAutoDeleteFilesAfterSuccessfulUpload(!isChecked)
                         .setUsesFixedLengthStreamingMode(true)
                         .setMaxRetries(3)
                         .setDelegate(new UploadStatusDelegate() {
@@ -300,16 +302,36 @@ public class PhoneJobService extends JobService {
                                 // your code here
                                 // if you have mapped your server response to a POJO, you can easily get it:
                                 // YourClass obj = new Gson().fromJson(serverResponse.getBodyAsString(), YourClass.class);
-                                if (isChecked) {
+                                Log.e(TAG, "Response: " + serverResponse.getBodyAsString());
+                                if (serverResponse.getHttpCode() == 422 || serverResponse.getHttpCode() == 500) {
+                                    try {
+                                        JSONObject jsonObject = new JSONObject(serverResponse.getBodyAsString());
+//                                        {"status":"error","data":null,"message":"Invalid inputs","error":
+//                                              {"user_id":["The selected user id is invalid."]}}
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    Toast.makeText(context, "Failed to upload the file.", Toast.LENGTH_SHORT).show();
                                     String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
                                     String uploadId = uploadInfo.getUploadId();
                                     ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
-                                    SQLiteDBManager.getInstance(context).updateUploadStatusData(uid, ufStrings, 1);
+                                    SQLiteDBManager.getInstance(context).updateUploadStatusData(uid, ufStrings, 0);
                                 } else {
-                                    String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
-                                    String uploadId = uploadInfo.getUploadId();
-                                    ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
-                                    SQLiteDBManager.getInstance(context).deleteUploadedFile(uid, ufStrings, 1);
+                                    if (isChecked) {
+                                        String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+                                        String uploadId = uploadInfo.getUploadId();
+                                        ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
+                                        SQLiteDBManager.getInstance(context).deleteUploadedFile(uid, ufStrings, 1);
+                                    } else {
+                                        ArrayList<String> ufStrings = uploadInfo.getSuccessfullyUploadedFiles();
+                                        for (String fpath : ufStrings) {
+                                            File file = new File(fpath);
+                                            deleteDir(file);
+                                        }
+                                        String uid = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.USER_ID, "");
+                                        String uploadId = uploadInfo.getUploadId();
+                                        SQLiteDBManager.getInstance(context).updateUploadStatusData(uid, ufStrings, 1);
+                                    }
                                 }
                             }
 
