@@ -358,6 +358,10 @@ public class PasswordFragment extends Fragment {
             } else {
                try {
                    JSONObject jsonObject = new JSONObject(response);
+                   if (jsonObject.getString("status").equalsIgnoreCase("error")) {
+                       Toast.makeText(getActivity(), "Failed to login the user.", Toast.LENGTH_SHORT).show();
+                       return;
+                   }
                    JSONObject jsonObject1 = jsonObject.getJSONObject("data");
                    SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
                    editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
