@@ -8,13 +8,9 @@ package com.northwestern.habits.datagathering;
 
 public class Preferences {
     public static final String PREFERENCE_NAME = "com.northwestern.habits.wear.preferences";
-
     public static final String KEY_PHONE_ID = "phone id";
     public static final String KEY_ACTIVE_SENSORS = "Active sensors";
-
     public static final String SENSOR_ACCEL = "accel";
     public static final String SENSOR_GYRO = "gyro";
     public static final String SENSOR_HEART = "heart";
-
-
 }
