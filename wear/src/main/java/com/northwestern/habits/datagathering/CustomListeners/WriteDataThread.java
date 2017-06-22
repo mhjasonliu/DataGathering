@@ -41,14 +41,14 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         synchronized (obj)
         {
             mQueue.add(acc);
-            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
+//            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
         }
 
     }
 
     private void SaveAccumulator(DataAccumulator accumulator)
     {
-        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
+//        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
         long firstPointTime = accumulator.getFirstEntry();
 
         File folder = getFolder(firstPointTime, accumulator.type);
@@ -64,6 +64,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
             LinkedList<String> properties = new LinkedList<String>();
             properties.addAll(firstPoint.keySet());
             FileWriter writer = null;
+            Log.v(TAG, "writing to : " + csv.getAbsolutePath());
             try {
                 if (!csv.exists()) {
                     writer = writeProperties(properties, csv);
@@ -97,7 +98,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
                 synchronized (obj)
                 {
                     first= mQueue.remove();
-                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
+//                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
                 }
                 //process first.
                 SaveAccumulator(first);
@@ -132,10 +133,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         if (bret) {
             //folder.mkdirs();
             Log.v(TAG, "directory " + folder.getPath() + " Succeeded ");
-        }
-        else
-        {
-            Log.v(TAG, "----------------- directory creattion FAILED --------------");
+        } else {
             Log.v(TAG, "directory " + folder.getPath() + " FAILED ");
         }
         return folder;
@@ -152,15 +150,12 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
 
     public FileWriter writeProperties(List<String> properties, File csv)
             throws IOException {
+//        Log.v(TAG, "writing to not exist: " + csv.getName());
         if (!csv.exists()) {
             // Make the file
             if (!csv.createNewFile()) {
                 writeError(new IOException("Failed to create csv " + csv.toString()), mContext);
             }
-//            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//            intent.setData(Uri.fromFile(csv));
-//            context.sendBroadcast(intent);
-
 
             FileWriter csvWriter = new FileWriter(csv.getPath(), true);
             for (int i = 0; i < properties.size(); i++) {
@@ -180,6 +175,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
     public void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
                                 List<String> properties) {
         boolean newLine = true;
+//        Log.v(TAG, "writing to existing: " + csvWriter.toString());
         for (Map<String, Object> datum :
                 dataList) {
             for (String property :
