@@ -22,26 +22,25 @@ import java.util.Map;
 public class GyroscopeListener implements SensorEventListener {
     private static final String TAG = "GyroscopeListener";
 
-    private Context mContext;
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_16HZ = 62000;
-    private int SENSOR_DELAY_20HZ = 20000;
     private long prevtimestamp= 0;
 
     public GyroscopeListener(Context context, SensorManager manager) {
-        mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 160);
+        mAccumulator = new DataAccumulator("Gyroscope", 144);
     }
+
     private WriteDataThread mWriteDataThread = null;
     public void setWDT(WriteDataThread wdt)
     {
         mWriteDataThread = wdt;
     }
+
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
@@ -56,6 +55,12 @@ public class GyroscopeListener implements SensorEventListener {
             mManager.unregisterListener(this);
             isRegistered = false;
         }
+    }
+
+    public void unRegisterListener1() {
+        Log.v(TAG, "unregisterListenerG...");
+        mManager.unregisterListener(this);
+        isRegistered = false;
     }
 
     @Override
@@ -77,16 +82,14 @@ public class GyroscopeListener implements SensorEventListener {
 
         if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
             // Accumulator is full
-
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("Gyroscope", 160);
+            mAccumulator = new DataAccumulator("Gyroscope", 144);
             DataAccumulator accumulator = new DataAccumulator("Gyroscope", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
                 accumulator.putDataPoint(point, (long) point.get("Time"));
             }
-
             handleFullAccumulator(accumulator);
         }
     }
@@ -98,11 +101,7 @@ public class GyroscopeListener implements SensorEventListener {
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        Log.v(TAG, "Gyro+Accumulator was full " + accumulator.getCount());
-        //new WriteDataTask(mContext, accumulator, "Gyroscope").execute();
         accumulator.type="Gyroscope";
         mWriteDataThread.SaveToFile(accumulator);
-
-//        new SendDataTask(mContext).execute();
     }
 }

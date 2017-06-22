@@ -22,20 +22,17 @@ import java.util.Map;
 public class HeartRateListener implements SensorEventListener {
     private static final String TAG = "HeartRateListener";
 
-    private Context mContext;
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
-    private int SENSOR_DELAY_16HZ = 62000;
     private int SENSOR_DELAY_5HZ  = 200000;
     private long prevtimestamp= 0;
 
     public HeartRateListener(Context context, SensorManager manager) {
-        mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 10);
+        mAccumulator = new DataAccumulator("HeartRate", 20);
     }
 
     public boolean isRegistered() {
@@ -56,6 +53,12 @@ public class HeartRateListener implements SensorEventListener {
         }
     }
 
+    public void unRegisterListener1() {
+        Log.v(TAG, "unregisterListenerH...");
+        mManager.unregisterListener(this);
+        isRegistered = false;
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Handle new HEART value
@@ -74,25 +77,23 @@ public class HeartRateListener implements SensorEventListener {
 
         if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
             // Accumulator is full
-
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("HeartRate", 10);
+            mAccumulator = new DataAccumulator("HeartRate", 20);
             DataAccumulator accumulator = new DataAccumulator("HeartRate", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
                 accumulator.putDataPoint(point, (long) point.get("Time"));
             }
-
             handleFullAccumulator(accumulator);
         }
     }
     private WriteDataThread mWriteDataThread = null;
     public void setWDT(WriteDataThread wdt)
     {
-        mWriteDataThread =wdt;
+        mWriteDataThread = wdt;
     }
-    
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Handle change of accuracy if necessary
@@ -100,9 +101,7 @@ public class HeartRateListener implements SensorEventListener {
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        Log.v(TAG, "HR+Accumulator was full " + accumulator.getCount());
-        //new WriteDataTask(mContext, accumulator, "HeartRate").execute();
-        accumulator.type="HeartRate";
+        accumulator.type = "HeartRate";
         mWriteDataThread.SaveToFile(accumulator);
     }
 }

@@ -22,18 +22,15 @@ import java.util.Map;
 public class AccelerometerListener implements SensorEventListener {
     private static final String TAG = "AccelerometerListener";
 
-    private Context mContext;
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccelAccumulator;
     private int SENSOR_DELAY_16HZ = 62000;
-    private int SENSOR_DELAY_20HZ = 20000;
     private long prevtimestamp= 0;
     private WriteDataThread mWriteDataThread = null;
 
     public AccelerometerListener(Context context, SensorManager manager) {
-        mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mAccelAccumulator = new DataAccumulator("Accelerometer", 192);
@@ -43,6 +40,7 @@ public class AccelerometerListener implements SensorEventListener {
     {
         mWriteDataThread = wdt;
     }
+
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
@@ -57,6 +55,12 @@ public class AccelerometerListener implements SensorEventListener {
             mManager.unregisterListener(this);
             isRegistered = false;
         }
+    }
+
+    public void unRegisterListener1() {
+        Log.v(TAG, "unregisterListenerA...");
+        mManager.unregisterListener(this);
+        isRegistered = false;
     }
 
     @Override
@@ -79,7 +83,6 @@ public class AccelerometerListener implements SensorEventListener {
 
         if (mAccelAccumulator.putDataPoint(dataPoint, event.timestamp)) { // change
             // Accumulator is full
-
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
             // change check is full
@@ -89,7 +92,6 @@ public class AccelerometerListener implements SensorEventListener {
                 Map<String, Object> point = oldDataIter.next();
                 accumulator.putDataPoint(point, (long) point.get("Time"));
             }
-
             handleFullAccumulator(accumulator);
         }
     }
@@ -101,11 +103,7 @@ public class AccelerometerListener implements SensorEventListener {
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        Log.v(TAG, "Accel+Accumulator was full " + accumulator.getCount());
-        //new WriteDataTask(mContext, accumulator, "Accelerometer").execute();
-        accumulator.type="Accelerometer";
+        accumulator.type = "Accelerometer";
         mWriteDataThread.SaveToFile(accumulator);
-
-//        new SendDataTask(mContext).execute(); // decouple from here every 1 second
     }
 }
