@@ -9,6 +9,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.util.Log;
+import android.widget.Toast;
 
 import java.util.Calendar;
 
@@ -17,37 +20,16 @@ import java.util.Calendar;
  */
 
 public class Receiver extends BroadcastReceiver {
-    private static final String TAG = "habitsReceiver";
+    private static final String TAG = "Wear+Receiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-        /*ComponentName serviceComponent = new ComponentName(context, WearJobService.class);
-        JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-        builder.setPeriodic(1000);
-//        builder.setMinimumLatency(1000); // wait at least
-//        builder.setOverrideDeadline(5 * 1000); // maximum delay
-        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
-        builder.setRequiresDeviceIdle(true); // device should be idle
-        builder.setRequiresCharging(false); // we don't care if the device is charging or not
-        JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        jobScheduler.schedule(builder.build());*/
+        Log.d(TAG, "Starting BroadcastReceiver...");
 
         String action = intent.getAction();
-        if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
-            Intent i = new Intent(context, DataService.class);
-            context.startService(i);
+        if (action.equals(Intent.ACTION_POWER_CONNECTED)) { // power connected 1
+            Log.d(TAG, "1ACTION_POWER_CONNECTED...BFR");
+            context.startActivity(new Intent(context, MainActivity.class));
         }
-
-        final PendingIntent localPendingIntent = PendingIntent.getService(context, 0, new Intent(context, DataService.class), 0);
-        final AlarmManager localAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
-        final Handler handler = new Handler();
-        final Runnable r = new Runnable() {
-            public void run() {
-                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 5000, localPendingIntent);
-            }
-        };
-        handler.postDelayed(r, 100);
     }
 }
