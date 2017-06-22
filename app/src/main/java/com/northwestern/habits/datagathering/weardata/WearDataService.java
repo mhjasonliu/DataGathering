@@ -1,16 +1,15 @@
 package com.northwestern.habits.datagathering.weardata;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
@@ -24,6 +23,9 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 public class WearDataService extends WearableListenerService implements GoogleApiClient.ConnectionCallbacks {
@@ -197,30 +199,95 @@ public class WearDataService extends WearableListenerService implements GoogleAp
             } else {
                 Log.v(TAG, "Type other than changed: " + event.toString());
             }
-
         }
     }
 
     @Override
-    public void onChannelOpened(Channel channel) {
-        Log.v(TAG, "Channel event!");
-
-//        File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
-//
-//        if (!folder.exists()) Log.v(TAG, "mkdirs result: " + folder.mkdirs());
-        channelDataOpened( channel );
+    public void onChannelClosed(Channel channel, int i, int i1) {
+        Log.v(TAG, "phone+onChannelClosed");
     }
 
-    private synchronized void channelDataOpened(Channel channel) {
-        File file = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
-        if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
-        Log.v(TAG, "File path: " + file.getPath());
-        PendingResult<Status> result = channel.receiveFile(googleApiClient, Uri.fromFile(file), false);
-        result.setResultCallback(new ResultCallback<Status>() {
+    @Override
+    public void onInputClosed(Channel channel, int i, int i1) {
+        Log.e(TAG, "Phone+onInputClosed " + channel.getPath());
+    }
+
+    @Override
+    public void onOutputClosed(Channel channel, int i, int i1) {
+        Log.e(TAG, "Phone+onOutputClosed " + channel.getPath());
+    }
+
+    @Override
+    public void onChannelOpened(final Channel channel) {
+        new AsyncTask<Void, Void, Void>() {
             @Override
-            public void onResult(@NonNull Status status) {
-                Log.v(TAG, "Status: " + status);
+            protected Void doInBackground( final Void ... params ) {
+                Log.v(TAG, "Channel event!");// + channel.getInputStream(googleApiClient).await().getInputStream());
+                // something you know that will take a few seconds
+//                final File file = new File(getExternalFilesDir(null) + "/WearDataTest/", channel.getPath());
+                final File file = new File(Environment.getExternalStorageDirectory() + "/Bandv2/" + channel.getPath());
+                try {
+                    File file1 = prepareFile(file);
+                    com.google.android.gms.common.api.Status status = channel.receiveFile(googleApiClient, Uri.fromFile(file1), false).await(); //(12, TimeUnit.SECONDS);
+                    if (status.isSuccess()) {
+                        Log.v(TAG, "Status: " + status);
+                        Log.v(TAG, "File path: " + file1.getPath());
+                    }
+                } catch (IOException e) {
+                    writeError(e);
+                }
+                return null;
             }
-        });
+
+            @Override
+            protected void onPostExecute( final Void result ) {  Log.v(TAG, "phone+onPostExecute"); }
+        }.execute();
+    }
+
+    private File prepareFile(File file) throws IOException {
+        if (!file.exists()) {
+            if (!file.createNewFile()) {
+                return null;
+            }
+        }
+        return file;
+    }
+
+    //write error to disk
+    public static void writeError(Throwable e) {
+        Log.e(TAG, "WRITING ERROR TO DISK: \n");
+        e.printStackTrace();
+        final File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/WearData/ERRORS/");
+        if (!folder.exists()) folder.mkdirs();
+
+        Calendar c = Calendar.getInstance();
+        File errorReport = new File(folder.getPath()
+                + "/Exception_"
+                + c.get(Calendar.HOUR_OF_DAY)
+                + c.get(Calendar.MINUTE)
+                + c.get(Calendar.SECOND)
+                + ".txt");
+
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(errorReport, true);
+            writer.write("\n\n-----------------BEGINNING OF EXCEPTION-----------------\n\n");
+            writer.write(e.toString());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.flush();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                try {
+                    writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
     }
 }
