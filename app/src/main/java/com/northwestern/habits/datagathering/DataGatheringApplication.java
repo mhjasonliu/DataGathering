@@ -4,7 +4,9 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Environment;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -24,6 +26,9 @@ public class DataGatheringApplication extends Application implements Thread.Unca
     public void onCreate() {
         super.onCreate();
         ourInstance = this;
+        File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/");
+        if (!folder.exists())
+            folder.mkdirs();
     }
 
     @Override

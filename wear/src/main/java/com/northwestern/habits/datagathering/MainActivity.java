@@ -13,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.Calendar;
 
 public class MainActivity extends Activity {
@@ -20,6 +21,8 @@ public class MainActivity extends Activity {
 
     private TextView mTextView;
     private int REQUEST = 101;
+
+    final Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,10 +35,6 @@ public class MainActivity extends Activity {
                 mTextView = (TextView) stub.findViewById(R.id.text);
             }
         });
-
-        /*Intent i = new Intent(this, DataService.class);
-        startService(i);*/
-
         int permissionCheck = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.BODY_SENSORS);
         if (permissionCheck == -1) {
@@ -43,13 +42,11 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.BODY_SENSORS, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST);
         }
 
-        final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
         final AlarmManager localAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-        final Handler handler = new Handler();
+        final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
         final Runnable r = new Runnable() {
             public void run() {
-                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 70000, localPendingIntent);
+                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 240000, localPendingIntent);
             }
         };
         handler.postDelayed(r, 6000);
