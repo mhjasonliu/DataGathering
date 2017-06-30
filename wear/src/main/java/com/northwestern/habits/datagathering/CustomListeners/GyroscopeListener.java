@@ -32,7 +32,7 @@ public class GyroscopeListener implements SensorEventListener {
     public GyroscopeListener(Context context, SensorManager manager) {
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 144);
+        mAccumulator = new DataAccumulator("Gyroscope", 176);
     }
 
     private WriteDataThread mWriteDataThread = null;
@@ -84,7 +84,7 @@ public class GyroscopeListener implements SensorEventListener {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("Gyroscope", 144);
+            mAccumulator = new DataAccumulator("Gyroscope", 176);
             DataAccumulator accumulator = new DataAccumulator("Gyroscope", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
