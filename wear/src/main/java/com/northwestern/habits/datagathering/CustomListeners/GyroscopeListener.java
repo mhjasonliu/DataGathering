@@ -11,6 +11,7 @@ import android.util.Log;
 import com.northwestern.habits.datagathering.DataAccumulator;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -70,9 +71,11 @@ public class GyroscopeListener implements SensorEventListener {
         if(prevtimestamp ==event.timestamp) return;
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
-        Calendar c = Calendar.getInstance();
+        /*Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
+        event.timestamp = (new Date()).getTime()
+                + (event.timestamp - System.nanoTime()) / 1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);

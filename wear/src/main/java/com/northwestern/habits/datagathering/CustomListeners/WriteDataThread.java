@@ -2,6 +2,7 @@ package com.northwestern.habits.datagathering.CustomListeners;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
@@ -72,7 +73,8 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
                     writer = new FileWriter(csv, true);
                 }
 
-               writeDataSeries(writer, series, properties);
+                writeDataSeries(writer, series, properties);
+                writeLogs( "Writing data to CSV file" + "_" + System.currentTimeMillis(), mContext );
 
             } catch (ConcurrentModificationException | IOException e) {
                 writeError(e, mContext);
@@ -175,7 +177,6 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
     public void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
                                 List<String> properties) {
         boolean newLine = true;
-//        Log.v(TAG, "writing to existing: " + csvWriter.toString());
         for (Map<String, Object> datum :
                 dataList) {
             for (String property :
@@ -193,6 +194,44 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
                 newLine = true;
             } catch (IOException e) {
                 writeError(e, mContext);
+            }
+        }
+    }
+
+    public static void writeLogs(String str, Context context) {
+        String[] message = str.split("_");
+        String PATH = context.getExternalFilesDir(null) + "/WearData/LOGS/";
+        File folder = new File(PATH);
+        if (!folder.exists()) folder.mkdirs();
+
+        Calendar c = Calendar.getInstance();
+        File errorReport = new File(folder.getPath()
+                + "/Logs_"
+                + c.get(Calendar.HOUR_OF_DAY)
+                + c.get(Calendar.MINUTE)
+                + c.get(Calendar.SECOND)
+                + ".txt");
+
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(errorReport, true);
+            String string = "\n\n-----------------" + message[0] + "-----------------\n\n";
+            writer.write(string);
+            writer.write(message[1]);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.flush();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                try {
+                    writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
         }
     }

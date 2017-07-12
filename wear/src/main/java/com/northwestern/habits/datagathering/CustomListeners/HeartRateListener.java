@@ -11,6 +11,7 @@ import android.util.Log;
 import com.northwestern.habits.datagathering.DataAccumulator;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class HeartRateListener implements SensorEventListener {
     public HeartRateListener(Context context, SensorManager manager) {
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 20);
+        mAccumulator = new DataAccumulator("HeartRate", 15);
     }
 
     public boolean isRegistered() {
@@ -66,9 +67,11 @@ public class HeartRateListener implements SensorEventListener {
         if(prevtimestamp ==event.timestamp) return;
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
-        Calendar c = Calendar.getInstance();
+        /*Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
+        event.timestamp = (new Date()).getTime()
+                + (event.timestamp - System.nanoTime()) / 1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
@@ -79,7 +82,7 @@ public class HeartRateListener implements SensorEventListener {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("HeartRate", 20);
+            mAccumulator = new DataAccumulator("HeartRate", 15);
             DataAccumulator accumulator = new DataAccumulator("HeartRate", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();

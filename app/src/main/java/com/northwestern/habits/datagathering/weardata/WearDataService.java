@@ -31,21 +31,20 @@ import java.util.List;
 public class WearDataService extends WearableListenerService implements GoogleApiClient.ConnectionCallbacks {
     private static final String DATA_REQUEST_PATH = "/DataRequest";
 
-    public WearDataService() {
-    }
+    public WearDataService() { }
 
     private static final String TAG = "WearDataService";
-    GoogleApiClient googleApiClient;
-    Node nodeForTimeEntry;
+    GoogleApiClient googleApiClient = null;
+    Node nodeForTimeEntry = null;
 
     public static final String NODE_ID = "Nodeid";
 
     public static final String ACCEL = "Accelerometer";
-    public static final String GYRO = "Gyroscope";
+    public static final String GYRO  = "Gyroscope";
     public static final String HEART = "HeartRate";
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand( Intent intent, int flags, int startId ) {
         Bundle extras = (intent != null) ? intent.getExtras() : null;
         if (extras != null) {
             String nodeID = extras.getString(NODE_ID);
@@ -203,18 +202,33 @@ public class WearDataService extends WearableListenerService implements GoogleAp
     }
 
     @Override
-    public void onChannelClosed(Channel channel, int i, int i1) {
-        Log.v(TAG, "phone+onChannelClosed");
+    public void onChannelClosed(Channel channel, final int closeReason, final int appSpecificErrorCode) {
+        Log.e(TAG, "phone+onChannelClosed" + " i=" + closeReason + " i1=" + appSpecificErrorCode);
+        switch (closeReason) {
+            case CLOSE_REASON_NORMAL:
+                Log.e(TAG, "phone+onChannelClosed" + " i=" + closeReason + " i1=" + appSpecificErrorCode);
+                break;
+        }
     }
 
     @Override
-    public void onInputClosed(Channel channel, int i, int i1) {
-        Log.e(TAG, "Phone+onInputClosed " + channel.getPath());
+    public void onInputClosed(Channel channel, final int closeReason, final int appSpecificErrorCode) {
+        Log.e(TAG, "Phone+onInputClosed " + channel.getPath() + " closereason=" + closeReason + " i1=" + appSpecificErrorCode);
+        switch (closeReason) {
+            case CLOSE_REASON_NORMAL:
+                Log.e(TAG, "Phone+onInputClosed " + channel.getPath() + " closereason=" + closeReason + " i1=" + appSpecificErrorCode);
+                break;
+        }
     }
 
     @Override
-    public void onOutputClosed(Channel channel, int i, int i1) {
-        Log.e(TAG, "Phone+onOutputClosed " + channel.getPath());
+    public void onOutputClosed(Channel channel, final int closeReason, final int appSpecificErrorCode) {
+        Log.e(TAG, "Phone+onOutputClosed " + channel.getPath() + " closeReason=" + closeReason + " appSpecificErrorCode=" + appSpecificErrorCode);
+        switch (closeReason) {
+            case CLOSE_REASON_NORMAL:
+                Log.e(TAG, "Phone+onOutputClosed " + channel.getPath() + " closeReason=" + closeReason + " appSpecificErrorCode=" + appSpecificErrorCode);
+                break;
+        }
     }
 
     @Override
@@ -273,6 +287,43 @@ public class WearDataService extends WearableListenerService implements GoogleAp
             writer = new FileWriter(errorReport, true);
             writer.write("\n\n-----------------BEGINNING OF EXCEPTION-----------------\n\n");
             writer.write(e.toString());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.flush();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                try {
+                    writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void writeLogs(String str) {
+        String[] message = str.split("_");
+        final File folder = new File(Environment.getExternalStorageDirectory() + "/Bandv2/WearData/LOGS/");
+        if (!folder.exists()) folder.mkdirs();
+
+        Calendar c = Calendar.getInstance();
+        File errorReport = new File(folder.getPath()
+                + "/Logs_"
+                + c.get(Calendar.HOUR_OF_DAY)
+                + c.get(Calendar.MINUTE)
+                + c.get(Calendar.SECOND)
+                + ".txt");
+
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(errorReport, true);
+            String string = "\n\n-----------------" + message[0] + "-----------------\n\n";
+            writer.write(string);
+            writer.write(message[1]);
         } catch (IOException e1) {
             e1.printStackTrace();
         } finally {

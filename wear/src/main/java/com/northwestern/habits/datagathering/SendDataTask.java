@@ -7,12 +7,14 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.ChannelApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
+import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 
 import java.io.Closeable;
 import java.io.File;
@@ -50,7 +52,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
     public static boolean isSendingData = false;
 
     private static final String TAG = "SendDataTask";
-    private static final long SLEEP_TIME = 600000;
+    private static final long SLEEP_TIME = 3000;
 
     public SendDataTask(Context context) {
         mContext = context;
@@ -240,22 +242,68 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
         if (file.exists()) {
             String path = file.getPath().substring(mContext.getExternalFilesDir(null).getPath().length() + 1);
             Log.v(TAG, "***************** *********** Opening channel... " + path);
-            ChannelApi.OpenChannelResult result =
-                    Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId, path).await();//(22, TimeUnit.SECONDS);
+            ChannelApi.OpenChannelResult result = Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId, path)
+                    .await();//(22, TimeUnit.SECONDS);
             if (result.getStatus().isSuccess()) {
+                WriteDataThread.writeLogs( "Channel opened for file transmission" + "_" + System.currentTimeMillis(), mContext );
                 final Channel channel = result.getChannel();
                 if (result.getStatus().isSuccess()) {
-                    com.google.android.gms.common.api.Status status = channel.sendFile(mGoogleApiClient, Uri.fromFile(file)).await();//(12, TimeUnit.SECONDS);
+                    channel.addListener(mGoogleApiClient, new MyChannelListener());
+//                    Toast.makeText(mContext, "File transfer start.", Toast.LENGTH_SHORT).show();
+                    com.google.android.gms.common.api.Status status = channel.sendFile(mGoogleApiClient, Uri.fromFile(file))
+                            .await();//(12, TimeUnit.SECONDS);
                     if (status.getStatusCode() == 0) {
                         Log.v(TAG, "Sending csv " + file.getName() + " from ");
                         Log.v(TAG, " for path " + file.getAbsolutePath());
-                        SystemClock.sleep(SLEEP_TIME);
-                        if (file.delete()) Log.v(TAG, "File successfully deleted");
+                        /*SystemClock.sleep(SLEEP_TIME);
+                        if (file.delete()) { Log.v(TAG, "File successfully deleted");
+                            WriteDataThread.writeLogs( "File transferred successfully" + "_" + System.currentTimeMillis(), mContext );
+                        }*/
                         isSendingData = false;
                     }
                 } else {
                     Log.v(TAG, "Channel failed. " + result.getStatus().toString());
                 }
+            }
+        }
+    }
+
+    private class MyChannelListener implements ChannelApi.ChannelListener {
+
+        @Override
+        public void onChannelOpened(Channel channel) {}
+
+        @Override
+        public void onChannelClosed(Channel channel, int closeReason,
+                                    int appSpecificErrorCode) {
+            Log.e(TAG, "Wear+onChannelClosed " + channel.getPath() + " closeReason=" + closeReason + " appSpecificErrorCode=" + appSpecificErrorCode);
+        }
+
+        @Override
+        public void onInputClosed(Channel channel, int closeReason,
+                                  int appSpecificErrorCode) {
+            // File transfer is finished
+            Log.e(TAG, "Wear+onInputClosed " + channel.getPath() + " closeReason=" + closeReason + " appSpecificErrorCode=" + appSpecificErrorCode);
+        }
+
+        @Override
+        public void onOutputClosed(Channel channel, int closeReason,
+                                   int appSpecificErrorCode) {
+            Log.e(TAG, "Wear+onOutputClosed " + channel.getPath() + " closeReason=" + closeReason + " appSpecificErrorCode=" + appSpecificErrorCode);
+            switch (closeReason) {
+                case CLOSE_REASON_NORMAL:
+                    SystemClock.sleep(SLEEP_TIME);
+                    File folder = new File(mContext.getExternalFilesDir(null).getPath()+"/"+channel.getPath());
+                    Log.e(TAG, "File path: " + folder.getAbsolutePath());
+                    if (folder.exists()) {
+                        folder.delete();
+//                        Toast.makeText(mContext, "File sent.", Toast.LENGTH_SHORT).show();
+                        Log.v(TAG, "File successfully deleted " + folder.getAbsolutePath());
+                        WriteDataThread.writeLogs( "File transferred successfully" + "_" + System.currentTimeMillis(), mContext );
+                    } else {
+                        Log.v(TAG, "File not exists " + folder.getAbsolutePath());
+                    }
+                    break;
             }
         }
     }
@@ -298,5 +346,4 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
             }
         }
     }
-
 }

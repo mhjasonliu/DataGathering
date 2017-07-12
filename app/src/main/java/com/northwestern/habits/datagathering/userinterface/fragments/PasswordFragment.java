@@ -7,6 +7,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.wifi.SupplicantState;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -29,6 +32,7 @@ import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.northwestern.habits.datagathering.Preferences;
 import com.northwestern.habits.datagathering.R;
 import com.northwestern.habits.datagathering.userinterface.UserActivity;
+import com.northwestern.habits.datagathering.weardata.WearDataService;
 import com.northwestern.habits.datagathering.webapi.WebAPIManager;
 
 import org.json.JSONException;
@@ -228,21 +232,23 @@ public class PasswordFragment extends Fragment {
                     .getSystemService(Context.INPUT_METHOD_SERVICE));
             mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
 
-            String flag = "";
-            if (oldPword.getText().toString().trim().length() == 0) {
-                flag = "login";
+            if (isWifiConnected(getActivity())) {
+                String flag = "";
+                if (oldPword.getText().toString().trim().length() == 0) {
+                    flag = "login";
+                } else {
+                    flag = "reset";
+                }
+                String url = WebAPIManager.URL + flag;
+                String url1 = "http://192.168.100.166/lumen/public/" + flag;
+                Log.e("URL login: ", url);
+                String uname = PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.USER_ID, "");
+                Object obj = new String[]{uname, newPwd.getText().toString(), oldPword.getText().toString()};
+                UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask(url, flag, obj);
+                userIdAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             } else {
-                flag = "reset";
+                WearDataService.writeLogs("Not connected to WiFi" + "_" + System.currentTimeMillis());
             }
-
-            String url = WebAPIManager.URL + flag;
-
-            String url1 = "http://192.168.100.166/lumen/public/" + flag;
-            Log.e("URL login: ", url);
-            String uname = PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.USER_ID, "");
-            Object obj = new String[] { uname, newPwd.getText().toString(), oldPword.getText().toString() };
-            UserIdAsyncTask userIdAsyncTask = new UserIdAsyncTask( url, flag, obj );
-            userIdAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     };
 
@@ -322,6 +328,7 @@ public class PasswordFragment extends Fragment {
                 str = WebAPIManager.httpPOSTRequest(this.url, this.mObject, this.mFlag );
                 return str;
             } catch (Exception e) {
+                WearDataService.writeError(e);
                 Log.e(UserIDFragment.class.toString(), e.getMessage(), e);
             }
             return str;
@@ -330,36 +337,19 @@ public class PasswordFragment extends Fragment {
         @Override
         protected void onPostExecute(String response) {
             dialog.dismiss();
-
-//            {"status":"success","data":{"user_id":3},"message":"User Login successful"}
-//            {"status":"success","data":{"user_id":5},"message":"User Login successful","auth":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9oYWJpdHMub3JnIiwiYXVkIjoiaHR0cDpcL1wvaGFiaXRzLmNvbSIsImlhdCI6MTQ5MjYwMjI3NywidXNlcm5hbWUiOiJ0ZXN0MSJ9.IUdUq1X2gYOnScwMtanDK36SPfQMBWV-Yugwf7cxhMA"}
-
-            /*SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity()).edit();
-            editor.putString(Preferences.PASSWORD, newPwd.getText().toString());
-            editor.apply();
-
-            oldPword.setText("");
-            newPwd.setText("");
-            confirmPwd.setText("");
-
-            // Enable things that were disabled before
-            finishButton.setEnabled(true);
-            oldPword.setEnabled(true);
-
-            // Alert the user that password changed
-            Toast.makeText(getActivity(), "Password changed", Toast.LENGTH_SHORT).show();*/
-
            if (response.equalsIgnoreCase("fail") || response.equalsIgnoreCase("failed") || response.equalsIgnoreCase("error")) {
                String msg = "Failed to login the user.";
                if (this.mFlag.equalsIgnoreCase("reset")) {
                    msg = "Failed to reset the password.";
                }
-                Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
+               Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
+               WearDataService.writeLogs(msg + "_" + System.currentTimeMillis());
             } else {
                try {
                    JSONObject jsonObject = new JSONObject(response);
                    if (jsonObject.getString("status").equalsIgnoreCase("error")) {
                        Toast.makeText(getActivity(), "Failed to login the user.", Toast.LENGTH_SHORT).show();
+                       WearDataService.writeLogs(jsonObject.getString("status") + " from server_" + System.currentTimeMillis());
                        return;
                    }
                    JSONObject jsonObject1 = jsonObject.getJSONObject("data");
@@ -381,8 +371,23 @@ public class PasswordFragment extends Fragment {
                    Toast.makeText(getActivity(), "Password changed", Toast.LENGTH_SHORT).show();
                } catch (JSONException e) {
                    e.printStackTrace();
+                   WearDataService.writeError(e);
                }
             }
         }
+    }
+
+    /**
+     * Returns whether or not the wifi is accessable
+     * @param c context from which to access the wifi service
+     * @return boolean
+     */
+    public static boolean isWifiConnected(Context c) {
+        SupplicantState supState;
+        WifiManager wifiManager = (WifiManager) c.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        supState = wifiInfo.getSupplicantState();
+        return wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED
+                && supState == SupplicantState.COMPLETED;
     }
 }
