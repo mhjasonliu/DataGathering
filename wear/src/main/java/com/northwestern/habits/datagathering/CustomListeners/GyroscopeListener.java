@@ -74,8 +74,10 @@ public class GyroscopeListener implements SensorEventListener {
         /*Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis()
                 + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
-        event.timestamp = (new Date()).getTime()
-                + (event.timestamp - System.nanoTime()) / 1000000L;
+
+        Calendar c = Calendar.getInstance();
+        event.timestamp = c.getTimeInMillis();
+
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
@@ -87,7 +89,7 @@ public class GyroscopeListener implements SensorEventListener {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("Gyroscope", 176);
+            mAccumulator = new DataAccumulator("Gyroscope", 192);
             DataAccumulator accumulator = new DataAccumulator("Gyroscope", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();

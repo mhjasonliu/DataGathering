@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.google.android.gms.wearable.Wearable;
 import com.northwestern.habits.datagathering.DataAccumulator;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import android.widget.Toast;
 /**
  * Created by Y.Misal on 5/30/2017.
  */
@@ -39,6 +41,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
 
     public synchronized void SaveToFile(DataAccumulator acc)
     {
+        Log.w(TAG, "new buffer is put into queue");
         synchronized (obj)
         {
             mQueue.add(acc);
@@ -49,8 +52,13 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
 
     private void SaveAccumulator(DataAccumulator accumulator)
     {
-//        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
+
+        Log.w(TAG, "Buffer is saving to csv " + accumulator.type+ " count:"+accumulator.getCount());
+
         long firstPointTime = accumulator.getFirstEntry();
+
+        Log.w(TAG, "Timestamp " + firstPointTime);
+
 
         File folder = getFolder(firstPointTime, accumulator.type);
 

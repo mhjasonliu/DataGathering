@@ -76,12 +76,19 @@ public class AccelerometerListener implements SensorEventListener {
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
-        /*Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
-        event.timestamp = (new Date()).getTime()
-                + (event.timestamp - System.nanoTime()) / 1000000L;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        Calendar c = Calendar.getInstance();
+        event.timestamp = c.getTimeInMillis();
+
+//        Log.w(TAG, event.sensor.getName() + "+timestamp before calculation" + event.timestamp);
+//
+//
+//        Log.w(TAG, event.sensor.getName() + "+system nanotime " + System.nanoTime());
+//        Log.w(TAG, event.sensor.getName() + "+system elapsed nanotime " + SystemClock.elapsedRealtimeNanos());
+//
+//        Log.w(TAG, event.sensor.getName() + "+absolute time " + (new Date()).getTime());
+        Log.w(TAG, event.sensor.getName() + "+timestamp after calculation " + event.timestamp);
+
+
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
         dataPoint.put("accX", event.values[0]);

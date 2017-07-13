@@ -104,7 +104,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
             Log.e(TAG, "permission denied");
         }
         File folder = new File(mContext.getExternalFilesDir(null).getPath());
-        Log.e(TAG, "Creating zip " + folder.getAbsolutePath());
+        Log.w(TAG, "Creating zip " + folder.getAbsolutePath());
         Date dt = new Date();
         mPath = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy_HHmmss", Locale.US);
