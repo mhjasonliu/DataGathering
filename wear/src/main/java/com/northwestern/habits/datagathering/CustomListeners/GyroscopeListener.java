@@ -76,7 +76,7 @@ public class GyroscopeListener implements SensorEventListener {
                 + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
 
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
+        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos());
 
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
