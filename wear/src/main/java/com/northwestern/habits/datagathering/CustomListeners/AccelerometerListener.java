@@ -77,7 +77,8 @@ public class AccelerometerListener implements SensorEventListener {
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos());
+        event.timestamp = c.getTimeInMillis()
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos())/ 1000000L;
 
 //        Log.w(TAG, event.sensor.getName() + "+timestamp before calculation" + event.timestamp);
 //

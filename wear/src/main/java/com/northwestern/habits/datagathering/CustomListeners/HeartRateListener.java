@@ -71,7 +71,8 @@ public class HeartRateListener implements SensorEventListener {
         event.timestamp = c.getTimeInMillis()
                 + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos());
+        event.timestamp = c.getTimeInMillis()
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos())/ 1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
