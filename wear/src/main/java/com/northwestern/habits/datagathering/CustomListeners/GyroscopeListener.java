@@ -23,6 +23,8 @@ import java.util.Map;
 public class GyroscopeListener implements SensorEventListener {
     private static final String TAG = "GyroscopeListener";
 
+    private long relative_to_absolute;
+
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
@@ -33,7 +35,7 @@ public class GyroscopeListener implements SensorEventListener {
     public GyroscopeListener(Context context, SensorManager manager) {
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 176);
+        mAccumulator = new DataAccumulator("Gyroscope", 192);
     }
 
     private WriteDataThread mWriteDataThread = null;
@@ -45,6 +47,8 @@ public class GyroscopeListener implements SensorEventListener {
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
+        relative_to_absolute = System.currentTimeMillis() - SystemClock.elapsedRealtimeNanos()/1000000L;
+
         if (!isRegistered) {
             mManager.registerListener( this, mSensor, SENSOR_DELAY_16HZ );
             isRegistered = true;
@@ -71,15 +75,11 @@ public class GyroscopeListener implements SensorEventListener {
         if(prevtimestamp ==event.timestamp) return;
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
-        /*Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
 
-        Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos())/ 1000000L;
+        event.timestamp = event.timestamp/1000000L + relative_to_absolute;
 
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
         dataPoint.put("rotX", event.values[0]);

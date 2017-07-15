@@ -23,6 +23,8 @@ import java.util.Map;
 public class AccelerometerListener implements SensorEventListener {
     private static final String TAG = "AccelerometerListener";
 
+    private long relative_to_absolute;
+
     private Context mContext;
     private Sensor mSensor;
     private SensorManager mManager;
@@ -47,6 +49,7 @@ public class AccelerometerListener implements SensorEventListener {
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
+        relative_to_absolute = System.currentTimeMillis()  - SystemClock.elapsedRealtimeNanos()/1000000L;
         if (!isRegistered) {
             Log.v(TAG, "Accel+registerListener...");
             boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_16HZ);
@@ -74,19 +77,9 @@ public class AccelerometerListener implements SensorEventListener {
         if (event == null) return;
         if(prevtimestamp == event.timestamp) return;
         prevtimestamp = event.timestamp;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
-        Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos())/ 1000000L;
+        event.timestamp = event.timestamp/1000000L + relative_to_absolute;
 
-//        Log.w(TAG, event.sensor.getName() + "+timestamp before calculation" + event.timestamp);
-//
-//
-//        Log.w(TAG, event.sensor.getName() + "+system nanotime " + System.nanoTime());
-//        Log.w(TAG, event.sensor.getName() + "+system elapsed nanotime " + SystemClock.elapsedRealtimeNanos());
-//
-//        Log.w(TAG, event.sensor.getName() + "+absolute time " + (new Date()).getTime());
         Log.w(TAG, event.sensor.getName() + "+timestamp after calculation " + event.timestamp);
 
 
