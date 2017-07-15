@@ -35,7 +35,7 @@ public class GyroscopeListener implements SensorEventListener {
     public GyroscopeListener(Context context, SensorManager manager) {
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 192);
+        mAccumulator = new DataAccumulator("Gyroscope", 176);
     }
 
     private WriteDataThread mWriteDataThread = null;
