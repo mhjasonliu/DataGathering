@@ -17,6 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Created by Y.Misal on 5/30/2017.
  */
@@ -27,25 +29,21 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
     volatile boolean mRunning = true;
     //set mRunning to false when terminating appln
     Queue<DataAccumulator> mQueue;
+//    Queue<DataAccumulator> mQueue;
     Object obj;
     private Context mContext;
 
     public WriteDataThread(Context context)
     {
         mContext = context;
-        mQueue = new LinkedList<DataAccumulator>();
+        mQueue = new ConcurrentLinkedQueue<DataAccumulator>();
         obj= new Object();
     }
 
-    public synchronized void SaveToFile(DataAccumulator acc)
+    public void SaveToFile(DataAccumulator acc)
     {
         Log.w(TAG, "new buffer is put into queue");
-        synchronized (obj)
-        {
-            mQueue.add(acc);
-//            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
-        }
-
+        mQueue.add(acc);
     }
 
     private void SaveAccumulator(DataAccumulator accumulator)
@@ -80,7 +78,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
                 }
 
                 writeDataSeries(writer, series, properties);
-                writeLogs( "Writing data to CSV file" + "_" + System.currentTimeMillis(), mContext );
+                //writeLogs( "Writing data to CSV file" + "_" + System.currentTimeMillis(), mContext );
 
             } catch (ConcurrentModificationException | IOException e) {
                 writeError(e, mContext);
@@ -100,20 +98,11 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... voids) {
         while(mRunning)
         {
-            if(mQueue.size()>0)
-            {
-                DataAccumulator first;
-                synchronized (obj)
-                {
-                    first= mQueue.remove();
-//                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
-                }
-                //process first.
+            DataAccumulator first = mQueue.poll();
+            if (first != null) {
+                Log.w(TAG, "start writing one buffer");
                 SaveAccumulator(first);
-            }
-            else
-            {
-
+                Log.w(TAG, "end writing one buffer");
             }
         }
         return null;
@@ -204,43 +193,43 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    public static void writeLogs(String str, Context context) {
-        String[] message = str.split("_");
-        String PATH = context.getExternalFilesDir(null) + "/WearData/LOGS/";
-        File folder = new File(PATH);
-        if (!folder.exists()) folder.mkdirs();
-
-        Calendar c = Calendar.getInstance();
-        File errorReport = new File(folder.getPath()
-                + "/Logs_"
-                + c.get(Calendar.HOUR_OF_DAY)
-                + c.get(Calendar.MINUTE)
-                + c.get(Calendar.SECOND)
-                + ".txt");
-
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(errorReport, true);
-            String string = "\n\n-----------------" + message[0] + "-----------------\n\n";
-            writer.write(string);
-            writer.write(message[1]);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.flush();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                try {
-                    writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
-    }
+//    public static void writeLogs(String str, Context context) {
+//        String[] message = str.split("_");
+//        String PATH = context.getExternalFilesDir(null) + "/WearData/LOGS/";
+//        File folder = new File(PATH);
+//        if (!folder.exists()) folder.mkdirs();
+//
+//        Calendar c = Calendar.getInstance();
+//        File errorReport = new File(folder.getPath()
+//                + "/Logs_"
+//                + c.get(Calendar.HOUR_OF_DAY)
+//                + c.get(Calendar.MINUTE)
+//                + c.get(Calendar.SECOND)
+//                + ".txt");
+//
+//        FileWriter writer = null;
+//        try {
+//            writer = new FileWriter(errorReport, true);
+//            String string = "\n\n-----------------" + message[0] + "-----------------\n\n";
+//            writer.write(string);
+//            writer.write(message[1]);
+//        } catch (IOException e1) {
+//            e1.printStackTrace();
+//        } finally {
+//            if (writer != null) {
+//                try {
+//                    writer.flush();
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
+//                try {
+//                    writer.close();
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
     public static void writeError(Throwable e, Context context) {
         Log.e(TAG, "WRITING ERROR TO DISK: \n");

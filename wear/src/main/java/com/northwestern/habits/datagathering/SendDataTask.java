@@ -245,7 +245,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
             ChannelApi.OpenChannelResult result = Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId, path)
                     .await();//(22, TimeUnit.SECONDS);
             if (result.getStatus().isSuccess()) {
-                WriteDataThread.writeLogs( "Channel opened for file transmission" + "_" + System.currentTimeMillis(), mContext );
+                //WriteDataThread.writeLogs( "Channel opened for file transmission" + "_" + System.currentTimeMillis(), mContext );
                 final Channel channel = result.getChannel();
                 if (result.getStatus().isSuccess()) {
                     channel.addListener(mGoogleApiClient, new MyChannelListener());
@@ -299,7 +299,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
                         folder.delete();
 //                        Toast.makeText(mContext, "File sent.", Toast.LENGTH_SHORT).show();
                         Log.v(TAG, "File successfully deleted " + folder.getAbsolutePath());
-                        WriteDataThread.writeLogs( "File transferred successfully" + "_" + System.currentTimeMillis(), mContext );
+                        //WriteDataThread.writeLogs( "File transferred successfully" + "_" + System.currentTimeMillis(), mContext );
                     } else {
                         Log.v(TAG, "File not exists " + folder.getAbsolutePath());
                     }

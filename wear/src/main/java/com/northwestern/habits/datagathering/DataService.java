@@ -62,10 +62,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         startForeground(SERVICE_ID, notification);
 
         initSensorsAndRegister();
-        if (isCharging(this)) {
-            Log.v(TAG, "isCharging true" );
-            new SendDataTask(getBaseContext()).execute();
-        }
+//        if (isCharging(this)) {
+//             Log.v(TAG, "isCharging true" );
+//             new SendDataTask(getBaseContext()).execute();
+//        }
         return START_STICKY;
     }
 
@@ -104,11 +104,15 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 }
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-                WriteDataThread wdt = new WriteDataThread(getBaseContext());
-                mAccelListener.setWDT(wdt);
-                mGyroListener.setWDT(wdt);
-                mHeartListener.setWDT(wdt);
-                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                WriteDataThread wdtAccel = new WriteDataThread(getBaseContext());
+                mAccelListener.setWDT(wdtAccel);
+                WriteDataThread wdtGyro = new WriteDataThread(getBaseContext());
+                mGyroListener.setWDT(wdtGyro);
+                WriteDataThread wdtHeart = new WriteDataThread(getBaseContext());
+                mHeartListener.setWDT(wdtHeart);
+                wdtAccel.execute();
+                wdtGyro.execute();
+//                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
     }

@@ -49,7 +49,6 @@ public class AccelerometerListener implements SensorEventListener {
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
-        relative_to_absolute = System.currentTimeMillis()  - SystemClock.elapsedRealtimeNanos()/1000000L;
         if (!isRegistered) {
             Log.v(TAG, "Accel+registerListener...");
             boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_16HZ);
@@ -78,10 +77,7 @@ public class AccelerometerListener implements SensorEventListener {
         if(prevtimestamp == event.timestamp) return;
         prevtimestamp = event.timestamp;
 
-        event.timestamp = event.timestamp/1000000L + relative_to_absolute;
-
-        Log.w(TAG, event.sensor.getName() + "+timestamp after calculation " + event.timestamp);
-
+        event.timestamp = System.currentTimeMillis();
 
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
