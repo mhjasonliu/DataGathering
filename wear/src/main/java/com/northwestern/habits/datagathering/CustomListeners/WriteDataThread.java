@@ -26,7 +26,8 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
 
     volatile boolean mRunning = true;
     //set mRunning to false when terminating appln
-    Queue<DataAccumulator> mQueue;
+
+    private Queue<DataAccumulator> mQueue;
     Object obj;
     private Context mContext;
 
@@ -36,6 +37,8 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         mQueue = new LinkedList<DataAccumulator>();
         obj= new Object();
     }
+
+    public void setBuffer(Queue<DataAccumulator> queue) {mQueue = queue;}
 
     public synchronized void SaveToFile(DataAccumulator acc)
     {

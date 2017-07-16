@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * Created by William on 3/1/2017.
@@ -92,6 +93,7 @@ public class HeartRateListener implements SensorEventListener {
         }
     }
     private WriteDataThread mWriteDataThread = null;
+
     public void setWDT(WriteDataThread wdt)
     {
         mWriteDataThread = wdt;

@@ -11,12 +11,14 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
+import com.northwestern.habits.datagathering.CustomListeners.AccelGyroListener;
 import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListener;
 import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
 import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
@@ -25,9 +27,13 @@ import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
+
+    private Queue<DataAccumulator> mQueue;
 
     public DataService() {
     }
@@ -85,9 +91,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
             isFirstTime = true;
             if (mManager == null) {
                 mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
-                mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+                mAccelGyroListener = new AccelGyroListener(getBaseContext(), mManager);
+//                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+//                mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
+//                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
             }
             unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                     .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
@@ -98,59 +105,63 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 Log.d(TAG, "************************* INIT SENSORS CALLED... *************************");
                 if (mManager == null) {
                     mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-                    mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
-                    mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+                    mAccelGyroListener = new AccelGyroListener(getBaseContext(), mManager);
+//                    mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+//                    mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
+//                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
                 }
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
                 WriteDataThread wdt = new WriteDataThread(getBaseContext());
-                mAccelListener.setWDT(wdt);
-                mGyroListener.setWDT(wdt);
-                mHeartListener.setWDT(wdt);
+                mAccelGyroListener.setWDT(wdt);
+//                mAccelListener.setWDT(wdt);
+//                mGyroListener.setWDT(wdt);
+//                mHeartListener.setWDT(wdt);
                 wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
     }
 
     private void registerSensors(Set<String> sensors) {
-        Log.d(TAG, "registerSensors count..." + sensors.size());
-        for (String sensor : sensors) {
-            Log.d(TAG, "registerSensors service..." + sensor);
-            switch (sensor) {
-                case Preferences.SENSOR_ACCEL:
-                    mAccelListener.registerListener();
-                    break;
-                case Preferences.SENSOR_GYRO:
-                    mGyroListener.registerListener();
-                    break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.registerListener();
-                    break;
-                default:
-                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-            }
-        }
+        mAccelGyroListener.registerListener();
+//        Log.d(TAG, "registerSensors count..." + sensors.size());
+//        for (String sensor : sensors) {
+//            Log.d(TAG, "registerSensors service..." + sensor);
+//            switch (sensor) {
+//                case Preferences.SENSOR_ACCEL:
+//                    mAccelListener.registerListener();
+//                    break;
+//                case Preferences.SENSOR_GYRO:
+//                    mGyroListener.registerListener();
+//                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.registerListener();
+//                    break;
+//                default:
+//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
+//            }
+//        }
     }
 
     private void unRegisterSensors(Set<String> sensors) {
-        Log.d(TAG, "unRegisterSensors count..." + sensors.size());
-        for (String sensor : sensors) {
-            Log.d(TAG, "unRegisterSensors service..." + sensor);
-            switch (sensor) {
-                case Preferences.SENSOR_ACCEL:
-                    mAccelListener.unRegisterListener1();
-                    break;
-                case Preferences.SENSOR_GYRO:
-                    mGyroListener.unRegisterListener1();
-                    break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.unRegisterListener1();
-                    break;
-                default:
-                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-            }
-        }
+        mAccelGyroListener.unRegisterListener1();
+//        Log.d(TAG, "unRegisterSensors count..." + sensors.size());
+//        for (String sensor : sensors) {
+//            Log.d(TAG, "unRegisterSensors service..." + sensor);
+//            switch (sensor) {
+//                case Preferences.SENSOR_ACCEL:
+//                    mAccelListener.unRegisterListener1();
+//                    break;
+//                case Preferences.SENSOR_GYRO:
+//                    mGyroListener.unRegisterListener1();
+//                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.unRegisterListener1();
+//                    break;
+//                default:
+//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
+//            }
+//        }
     }
 
     /**
@@ -160,6 +171,8 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     private AccelerometerListener mAccelListener;
     private GyroscopeListener mGyroListener;
     private HeartRateListener mHeartListener;
+
+    private AccelGyroListener mAccelGyroListener;
 
     /* ***************** MESSAGE RECEIVING *********************** */
     @Override

@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * Created by William on 3/1/2017.
@@ -33,10 +34,11 @@ public class GyroscopeListener implements SensorEventListener {
     public GyroscopeListener(Context context, SensorManager manager) {
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 176);
+        mAccumulator = new DataAccumulator("Gyroscope", 192);
     }
 
     private WriteDataThread mWriteDataThread = null;
+
     public void setWDT(WriteDataThread wdt)
     {
         mWriteDataThread = wdt;
@@ -70,12 +72,9 @@ public class GyroscopeListener implements SensorEventListener {
         if (event == null) return;
         if(prevtimestamp ==event.timestamp) return;
         prevtimestamp = event.timestamp;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
-        /*Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
-        event.timestamp = (new Date()).getTime()
-                + (event.timestamp - System.nanoTime()) / 1000000L;
+
+        event.timestamp = System.currentTimeMillis();
+
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);

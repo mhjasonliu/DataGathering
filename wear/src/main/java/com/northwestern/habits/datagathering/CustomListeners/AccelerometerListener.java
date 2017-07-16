@@ -6,6 +6,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.SystemClock;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
@@ -79,8 +80,7 @@ public class AccelerometerListener implements SensorEventListener {
         /*Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis()
                 + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
-        event.timestamp = (new Date()).getTime()
-                + (event.timestamp - System.nanoTime()) / 1000000L;
+        event.timestamp = System.currentTimeMillis();
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
