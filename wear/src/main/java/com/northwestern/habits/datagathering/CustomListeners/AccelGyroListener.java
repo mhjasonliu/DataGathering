@@ -22,7 +22,8 @@ public class AccelGyroListener implements SensorEventListener {
     private static final String TAG = "AccelGyroListener";
 
     private Context mContext;
-    private Sensor mSensor;
+    private Sensor mSensor1;
+    private Sensor mSensor2;
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccelGyroAccumulator;
@@ -34,8 +35,8 @@ public class AccelGyroListener implements SensorEventListener {
     public AccelGyroListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
-        mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mSensor1 = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensor2 = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mAccelGyroAccumulator = new DataAccumulator("AccelGyro", 192);
     }
 
@@ -48,7 +49,9 @@ public class AccelGyroListener implements SensorEventListener {
     public void registerListener() {
         if (!isRegistered) {
             Log.v(TAG, "registerListener...");
-            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_16HZ);
+            mManager.registerListener(this, mSensor1, SENSOR_DELAY_16HZ);
+            mManager.registerListener(this, mSensor2, SENSOR_DELAY_16HZ);
+
             isRegistered = true;
         }
     }
@@ -78,23 +81,20 @@ public class AccelGyroListener implements SensorEventListener {
         Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
         Map<String, Object> dataPoint = new HashMap<>();
+        dataPoint.put("Time", event.timestamp);
+        dataPoint.put("X", event.values[0]);
+        dataPoint.put("Y", event.values[1]);
+        dataPoint.put("Z", event.values[2]);
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-            dataPoint.put("Time", event.timestamp);
-            dataPoint.put("X", event.values[0]);
-            dataPoint.put("Y", event.values[1]);
-            dataPoint.put("Z", event.values[2]);
-            dataPoint.put("Type", 0);
+            dataPoint.put("T", 0);
         }
-        if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
-            dataPoint.put("Time", event.timestamp);
-            dataPoint.put("X", event.values[0]);
-            dataPoint.put("Y", event.values[1]);
-            dataPoint.put("Z", event.values[2]);
-            dataPoint.put("Type", 1);
+        else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            dataPoint.put("T", 1);
         }
-
+        else {
+            return;
+        }
 
         if (mAccelGyroAccumulator.putDataPoint(dataPoint, event.timestamp)) { // change
             // Accumulator is full
