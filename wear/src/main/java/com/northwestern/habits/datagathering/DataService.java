@@ -63,10 +63,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         startForeground(SERVICE_ID, notification);
 
         initSensorsAndRegister();
-        if (isCharging(this)) {
-            Log.v(TAG, "isCharging true" );
-            new SendDataTask(getBaseContext()).execute();
-        }
+//        if (isCharging(this)) {
+//            Log.v(TAG, "isCharging true" );
+//            new SendDataTask(getBaseContext()).execute();
+//        }
         return START_STICKY;
     }
 
@@ -113,42 +113,44 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     private void registerSensors(Set<String> sensors) {
         Log.d(TAG, "registerSensors count..." + sensors.size());
-        for (String sensor : sensors) {
-            Log.d(TAG, "registerSensors service..." + sensor);
-            switch (sensor) {
-                case Preferences.SENSOR_ACCEL:
-                    mAccelListener.registerListener();
-                    break;
-                case Preferences.SENSOR_GYRO:
-                    mGyroListener.registerListener();
-                    break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.registerListener();
-                    break;
-                default:
-                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-            }
-        }
+        mGyroListener.registerListener();
+//        for (String sensor : sensors) {
+//            Log.d(TAG, "registerSensors service..." + sensor);
+//            switch (sensor) {
+//                case Preferences.SENSOR_ACCEL:
+//                    mAccelListener.registerListener();
+//                    break;
+//                case Preferences.SENSOR_GYRO:
+//                    mGyroListener.registerListener();
+//                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.registerListener();
+//                    break;
+//                default:
+//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
+//            }
+//        }
     }
 
     private void unRegisterSensors(Set<String> sensors) {
         Log.d(TAG, "unRegisterSensors count..." + sensors.size());
-        for (String sensor : sensors) {
-            Log.d(TAG, "unRegisterSensors service..." + sensor);
-            switch (sensor) {
-                case Preferences.SENSOR_ACCEL:
-                    mAccelListener.unRegisterListener1();
-                    break;
-                case Preferences.SENSOR_GYRO:
-                    mGyroListener.unRegisterListener1();
-                    break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.unRegisterListener1();
-                    break;
-                default:
-                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-            }
-        }
+        mGyroListener.unRegisterListener1();
+//        for (String sensor : sensors) {
+//            Log.d(TAG, "unRegisterSensors service..." + sensor);
+//            switch (sensor) {
+//                case Preferences.SENSOR_ACCEL:
+//                    mAccelListener.unRegisterListener1();
+//                    break;
+//                case Preferences.SENSOR_GYRO:
+//                    mGyroListener.unRegisterListener1();
+//                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.unRegisterListener1();
+//                    break;
+//                default:
+//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
+//            }
+//        }
     }
 
     /**
@@ -167,54 +169,54 @@ public class DataService extends WearableListenerService implements Thread.Uncau
             initSensorsAndRegister();
         }
 
-        if (messageEvent != null) {
-            if (messageEvent.getPath().equals("/DataRequest")) {
-                SharedPreferences prefs = getSharedPreferences(Preferences.PREFERENCE_NAME, MODE_PRIVATE);
-                Set<String> activeSensors = new HashSet<>(prefs.getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-
-                String action = new String(messageEvent.getData());
-                switch (action) {
-                    case "Accelerometer1":
-                        Log.d(TAG, "Start accel requested.");
-                        mAccelListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_ACCEL);
-                        break;
-                    case "Accelerometer0":
-                        Log.e(TAG, "Stop accel requested.");
-                        mAccelListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_ACCEL);
-                        break;
-                    case "Gyroscope1":
-                        Log.d(TAG, "Start gyro requested.");
-                        mGyroListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_GYRO);
-                        break;
-                    case "Gyroscope0":
-                        Log.e(TAG, "Stop gyro requested.");
-                        mGyroListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_GYRO);
-                        break;
-                    case "HeartRate1":
-                        Log.d(TAG, "Start HeartRate1 requested.");
-                        mHeartListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_HEART);
-                        break;
-                    case "HeartRate0":
-                        Log.e(TAG, "Stop HeartRate1 requested.");
-                        mHeartListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_HEART);
-                        break;
-                    default:
-                        Log.w(TAG, "Unknown action received" + action);
-                }
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(Preferences.KEY_PHONE_ID, messageEvent.getSourceNodeId());
-                editor.putStringSet(Preferences.KEY_ACTIVE_SENSORS, activeSensors);
-                Log.v(TAG, "Active sensors: " + activeSensors);
-                editor.apply();
-                Log.v(TAG, getSharedPreferences(Preferences.PREFERENCE_NAME, 0).getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()).toString());
-            }
-        }
+//        if (messageEvent != null) {
+//            if (messageEvent.getPath().equals("/DataRequest")) {
+//                SharedPreferences prefs = getSharedPreferences(Preferences.PREFERENCE_NAME, MODE_PRIVATE);
+//                Set<String> activeSensors = new HashSet<>(prefs.getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
+//
+//                String action = new String(messageEvent.getData());
+//                switch (action) {
+//                    case "Accelerometer1":
+//                        Log.d(TAG, "Start accel requested.");
+//                        mAccelListener.registerListener();
+//                        activeSensors.add(Preferences.SENSOR_ACCEL);
+//                        break;
+//                    case "Accelerometer0":
+//                        Log.e(TAG, "Stop accel requested.");
+//                        mAccelListener.unRegisterListener();
+//                        activeSensors.remove(Preferences.SENSOR_ACCEL);
+//                        break;
+//                    case "Gyroscope1":
+//                        Log.d(TAG, "Start gyro requested.");
+//                        mGyroListener.registerListener();
+//                        activeSensors.add(Preferences.SENSOR_GYRO);
+//                        break;
+//                    case "Gyroscope0":
+//                        Log.e(TAG, "Stop gyro requested.");
+//                        mGyroListener.unRegisterListener();
+//                        activeSensors.remove(Preferences.SENSOR_GYRO);
+//                        break;
+//                    case "HeartRate1":
+//                        Log.d(TAG, "Start HeartRate1 requested.");
+//                        mHeartListener.registerListener();
+//                        activeSensors.add(Preferences.SENSOR_HEART);
+//                        break;
+//                    case "HeartRate0":
+//                        Log.e(TAG, "Stop HeartRate1 requested.");
+//                        mHeartListener.unRegisterListener();
+//                        activeSensors.remove(Preferences.SENSOR_HEART);
+//                        break;
+//                    default:
+//                        Log.w(TAG, "Unknown action received" + action);
+//                }
+//                SharedPreferences.Editor editor = prefs.edit();
+//                editor.putString(Preferences.KEY_PHONE_ID, messageEvent.getSourceNodeId());
+//                editor.putStringSet(Preferences.KEY_ACTIVE_SENSORS, activeSensors);
+//                Log.v(TAG, "Active sensors: " + activeSensors);
+//                editor.apply();
+//                Log.v(TAG, getSharedPreferences(Preferences.PREFERENCE_NAME, 0).getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()).toString());
+//            }
+//        }
     }
 
     private PendingIntent startIntent;
