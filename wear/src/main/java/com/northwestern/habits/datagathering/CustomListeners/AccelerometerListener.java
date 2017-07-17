@@ -11,7 +11,6 @@ import android.util.Log;
 import com.northwestern.habits.datagathering.DataAccumulator;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,7 +19,7 @@ import java.util.Map;
  * Created by William on 3/1/2017.
  */
 
-public class AccelerometerListener implements SensorEventListener {
+public class AccelerometerListener implements SensorEventListener, Thread.UncaughtExceptionHandler {
     private static final String TAG = "AccelerometerListener";
 
     private Context mContext;
@@ -76,11 +75,8 @@ public class AccelerometerListener implements SensorEventListener {
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
-        /*Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
-        event.timestamp = (new Date()).getTime()
-                + (event.timestamp - System.nanoTime()) / 1000000L;
+        Calendar c = Calendar.getInstance();
+        event.timestamp = c.getTimeInMillis();
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
@@ -112,9 +108,14 @@ public class AccelerometerListener implements SensorEventListener {
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        Log.v(TAG, "Accel+Accumulator was full " + accumulator.getCount());
+//        Log.v(TAG, "Accel+Accumulator was full " + accumulator.getCount());
         //new WriteDataTask(mContext, accumulator, "Accelerometer").execute();
         accumulator.type="Accelerometer";
         mWriteDataThread.SaveToFile(accumulator);
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        WriteDataThread.writeError(e, mContext);
     }
 }

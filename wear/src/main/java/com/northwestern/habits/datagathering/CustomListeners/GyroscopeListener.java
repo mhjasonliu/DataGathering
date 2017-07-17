@@ -11,7 +11,6 @@ import android.util.Log;
 import com.northwestern.habits.datagathering.DataAccumulator;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,9 +19,10 @@ import java.util.Map;
  * Created by William on 3/1/2017.
  */
 
-public class GyroscopeListener implements SensorEventListener {
+public class GyroscopeListener implements SensorEventListener, Thread.UncaughtExceptionHandler {
     private static final String TAG = "GyroscopeListener";
 
+    private Context mContext;
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
@@ -31,9 +31,10 @@ public class GyroscopeListener implements SensorEventListener {
     private long prevtimestamp= 0;
 
     public GyroscopeListener(Context context, SensorManager manager) {
+        mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 176);
+        mAccumulator = new DataAccumulator("Gyroscope", 192);
     }
 
     private WriteDataThread mWriteDataThread = null;
@@ -71,11 +72,9 @@ public class GyroscopeListener implements SensorEventListener {
         if(prevtimestamp ==event.timestamp) return;
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
-        /*Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis()
-                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;*/
-        event.timestamp = (new Date()).getTime()
-                + (event.timestamp - System.nanoTime()) / 1000000L;
+        Calendar c = Calendar.getInstance();
+        event.timestamp = c.getTimeInMillis();
+//                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
@@ -87,7 +86,7 @@ public class GyroscopeListener implements SensorEventListener {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("Gyroscope", 176);
+            mAccumulator = new DataAccumulator("Gyroscope", 192);
             DataAccumulator accumulator = new DataAccumulator("Gyroscope", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
@@ -105,6 +104,12 @@ public class GyroscopeListener implements SensorEventListener {
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
         accumulator.type="Gyroscope";
+//        Log.v(TAG, " count " + accumulator.getCount());
         mWriteDataThread.SaveToFile(accumulator);
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        WriteDataThread.writeError(e, mContext);
     }
 }
