@@ -87,7 +87,8 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
 
             LinkedList<String> properties = new LinkedList<String>();
             properties.addAll(firstPoint.keySet());
-            Collections.sort(properties);
+            if (!accumulator.type.equalsIgnoreCase("HeartRate"))
+                Collections.sort(properties);
             FileWriter writer = null;
             Log.v(TAG, "writing to : " + csv.getAbsolutePath());
             try {
