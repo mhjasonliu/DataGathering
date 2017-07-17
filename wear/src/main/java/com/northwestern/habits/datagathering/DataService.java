@@ -29,6 +29,7 @@ import java.util.Set;
 public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
 
+    //default constructor
     public DataService() {
     }
 
@@ -79,8 +80,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
      */
     static boolean isFirstTime = true;
     private void initSensorsAndRegister() {
-        // power connected 1
-        // power disconnected 0
         if (isCharging(this)) {
             isFirstTime = true;
             if (mManager == null) {
@@ -91,11 +90,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
             }
             unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                     .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-        } else
-        if (!isCharging(this)) {
+        } else {
             if (isFirstTime) {
                 isFirstTime = false;
-                Log.d(TAG, "************************* INIT SENSORS CALLED... *************************");
+                Log.d(TAG, "*************************INIT SENSORS CALLED*************************");
                 if (mManager == null) {
                     mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
                     mAccelListener = new AccelerometerListener(getBaseContext(), mManager);

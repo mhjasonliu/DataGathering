@@ -2,7 +2,6 @@ package com.northwestern.habits.datagathering.CustomListeners;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
@@ -11,45 +10,69 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 
 /**
  * Created by Y.Misal on 5/30/2017.
  */
 
-public class WriteDataThread extends AsyncTask<Void, Void, Void> {
+public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "WriteDataThread";
 
     volatile boolean mRunning = true;
     //set mRunning to false when terminating appln
     Queue<DataAccumulator> mQueue;
-    Object obj;
+    private final Object obj;
     private Context mContext;
 
-    public WriteDataThread(Context context)
-    {
+    public WriteDataThread(Context context) {
         mContext = context;
-        mQueue = new LinkedList<DataAccumulator>();
-        obj= new Object();
+        mQueue   = new LinkedList<DataAccumulator>();
+        obj      = new Object();
     }
 
-    public synchronized void SaveToFile(DataAccumulator acc)
-    {
-        synchronized (obj)
-        {
-            mQueue.add(acc);
-//            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
+    public synchronized void SaveToFile(DataAccumulator acc) {
+        synchronized (obj) {
+            try {
+                mQueue.add(acc);
+            } catch (IllegalStateException e) {
+                writeError(e, mContext);
+                e.printStackTrace();
+            }
+            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
         }
 
     }
 
-    private void SaveAccumulator(DataAccumulator accumulator)
-    {
+    @Override
+    protected Void doInBackground(Void... voids) {
+        while(mRunning) {
+            if(mQueue.size() > 0) {
+                DataAccumulator first = null;
+                synchronized (obj) {
+                    try {
+                        first = mQueue.remove();
+                    } catch (NoSuchElementException e) {
+                        writeError(e, mContext);
+                    }
+                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
+                }
+                //process first.
+                saveAccumulator(first);
+            }
+        }
+        return null;
+    }
+
+    private void saveAccumulator(DataAccumulator accumulator) {
 //        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
+        if (accumulator == null) return;
         long firstPointTime = accumulator.getFirstEntry();
 
         File folder = getFolder(firstPointTime, accumulator.type);
@@ -64,6 +87,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
 
             LinkedList<String> properties = new LinkedList<String>();
             properties.addAll(firstPoint.keySet());
+            Collections.sort(properties);
             FileWriter writer = null;
             Log.v(TAG, "writing to : " + csv.getAbsolutePath());
             try {
@@ -74,7 +98,8 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
                 }
 
                 writeDataSeries(writer, series, properties);
-                writeLogs( "Writing data to CSV file" + "_" + System.currentTimeMillis(), mContext );
+                String text = String.format("Writing %s data to CSV file", accumulator.type);
+//                writeLogs( text + "_" + System.currentTimeMillis(), mContext );
 
             } catch (ConcurrentModificationException | IOException e) {
                 writeError(e, mContext);
@@ -90,28 +115,6 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
             }
         }
     }
-    @Override
-    protected Void doInBackground(Void... voids) {
-        while(mRunning)
-        {
-            if(mQueue.size()>0)
-            {
-                DataAccumulator first;
-                synchronized (obj)
-                {
-                    first= mQueue.remove();
-//                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
-                }
-                //process first.
-                SaveAccumulator(first);
-            }
-            else
-            {
-
-            }
-        }
-        return null;
-    }
 
     public File getFolder(long timestamp, String type) {
         // Date for use in the folder path
@@ -121,9 +124,12 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         int month = date.get(Calendar.MONTH) + 1;
         int year = date.get(Calendar.YEAR);
         int hour = date.get(Calendar.HOUR_OF_DAY);
-        String hourst = (hour < 10)
+        /*String hourst = (hour < 10)
                 ? "0" + Integer.toString(hour) + "00"
-                : Integer.toString(hour) + "00";
+                : Integer.toString(hour) + "00";*/
+        String hourst = (hour < 10)
+                ? "0" + Integer.toString(hour)
+                : Integer.toString(hour);
         String dateString = Integer.toString(month) + "-"
                 + Integer.toString(day) + "-"
                 + Integer.toString(year);
@@ -204,12 +210,9 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
         File folder = new File(PATH);
         if (!folder.exists()) folder.mkdirs();
 
-        Calendar c = Calendar.getInstance();
         File errorReport = new File(folder.getPath()
                 + "/Logs_"
-                + c.get(Calendar.HOUR_OF_DAY)
-                + c.get(Calendar.MINUTE)
-                + c.get(Calendar.SECOND)
+                + System.currentTimeMillis()
                 + ".txt");
 
         FileWriter writer = null;
@@ -273,5 +276,10 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> {
                 }
             }
         }
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        writeError(e, mContext);
     }
 }

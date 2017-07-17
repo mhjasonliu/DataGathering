@@ -7,14 +7,12 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.ChannelApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 
 import java.io.Closeable;
 import java.io.File;
@@ -67,7 +65,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-        if (!isZippingData) { // Do not risk trying to send deleted files and vice versa
+        if (!isZippingData) { // Do not risk trying to zip same file at same time
             isZippingData = true;
             createZipFromData();
             isZippingData = false;
@@ -245,7 +243,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
             ChannelApi.OpenChannelResult result = Wearable.ChannelApi.openChannel(mGoogleApiClient, nodeId, path)
                     .await();//(22, TimeUnit.SECONDS);
             if (result.getStatus().isSuccess()) {
-                WriteDataThread.writeLogs( "Channel opened for file transmission" + "_" + System.currentTimeMillis(), mContext );
+//                WriteDataThread.writeLogs( "Channel opened for file transmission" + "_" + System.currentTimeMillis(), mContext );
                 final Channel channel = result.getChannel();
                 if (result.getStatus().isSuccess()) {
                     channel.addListener(mGoogleApiClient, new MyChannelListener());
@@ -299,7 +297,7 @@ public class SendDataTask extends AsyncTask<Void, Void, Void> {
                         folder.delete();
 //                        Toast.makeText(mContext, "File sent.", Toast.LENGTH_SHORT).show();
                         Log.v(TAG, "File successfully deleted " + folder.getAbsolutePath());
-                        WriteDataThread.writeLogs( "File transferred successfully" + "_" + System.currentTimeMillis(), mContext );
+//                        WriteDataThread.writeLogs( "File transferred successfully" + "_" + System.currentTimeMillis(), mContext );
                     } else {
                         Log.v(TAG, "File not exists " + folder.getAbsolutePath());
                     }

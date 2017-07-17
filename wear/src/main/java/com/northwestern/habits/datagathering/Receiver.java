@@ -30,7 +30,7 @@ public class Receiver extends BroadcastReceiver {
 
         String action = intent.getAction();
         if (action.equals(Intent.ACTION_POWER_CONNECTED)) { // power connected 1
-            WriteDataThread.writeLogs( "Wearable connected to power" + "_" + System.currentTimeMillis(), context );
+//            WriteDataThread.writeLogs( "Wearable connected to power" + "_" + System.currentTimeMillis(), context );
             Log.d(TAG, "1ACTION_POWER_CONNECTED...BFR");
             context.startActivity(new Intent(context, MainActivity.class));
         }
