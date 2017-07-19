@@ -84,9 +84,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
             isFirstTime = true;
             if (mManager == null) {
                 mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+//                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
                 mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+//                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
             }
             unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                     .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
@@ -96,16 +96,16 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 Log.d(TAG, "*************************INIT SENSORS CALLED*************************");
                 if (mManager == null) {
                     mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-                    mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+//                    mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
                     mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+//                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
                 }
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
                 WriteDataThread wdt = new WriteDataThread(getBaseContext());
-                mAccelListener.setWDT(wdt);
+//                mAccelListener.setWDT(wdt);
                 mGyroListener.setWDT(wdt);
-                mHeartListener.setWDT(wdt);
+//                mHeartListener.setWDT(wdt);
                 wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }

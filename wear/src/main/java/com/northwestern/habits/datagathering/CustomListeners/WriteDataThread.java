@@ -62,9 +62,9 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
                         writeError(e, mContext);
                     }
                     Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
+                    //process first.
+                    saveAccumulator(first);
                 }
-                //process first.
-                saveAccumulator(first);
             }
         }
         return null;
