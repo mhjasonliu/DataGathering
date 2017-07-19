@@ -28,6 +28,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_16HZ = 62000;
+    private int SENSOR_DELAY_20HZ = 50000;
     private long prevtimestamp= 0;
 
     public GyroscopeListener(Context context, SensorManager manager) {
@@ -47,7 +48,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener( this, mSensor, SENSOR_DELAY_16HZ );
+            mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ );
             isRegistered = true;
         }
     }

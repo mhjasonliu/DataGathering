@@ -98,14 +98,14 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                     mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
                     mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
                     mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+//                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
                 }
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
                 WriteDataThread wdt = new WriteDataThread(getBaseContext());
                 mAccelListener.setWDT(wdt);
                 mGyroListener.setWDT(wdt);
-                mHeartListener.setWDT(wdt);
+//                mHeartListener.setWDT(wdt);
                 wdt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
 //                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
@@ -123,9 +123,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 case Preferences.SENSOR_GYRO:
                     mGyroListener.registerListener();
                     break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.registerListener();
-                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.registerListener();
+//                    break;
                 default:
                     Log.e(TAG, "Unknown sensor requested: " + sensor);
             }
@@ -143,9 +143,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 case Preferences.SENSOR_GYRO:
                     mGyroListener.unRegisterListener1();
                     break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.unRegisterListener1();
-                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.unRegisterListener1();
+//                    break;
                 default:
                     Log.e(TAG, "Unknown sensor requested: " + sensor);
             }
@@ -158,7 +158,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
      */
     private AccelerometerListener mAccelListener;
     private GyroscopeListener mGyroListener;
-    private HeartRateListener mHeartListener;
+//    private HeartRateListener mHeartListener;
 
     /* ***************** MESSAGE RECEIVING *********************** */
     @Override
@@ -195,16 +195,16 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                         mGyroListener.unRegisterListener();
                         activeSensors.remove(Preferences.SENSOR_GYRO);
                         break;
-                    case "HeartRate1":
-                        Log.d(TAG, "Start HeartRate1 requested.");
-                        mHeartListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_HEART);
-                        break;
-                    case "HeartRate0":
-                        Log.e(TAG, "Stop HeartRate1 requested.");
-                        mHeartListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_HEART);
-                        break;
+//                    case "HeartRate1":
+//                        Log.d(TAG, "Start HeartRate1 requested.");
+//                        mHeartListener.registerListener();
+//                        activeSensors.add(Preferences.SENSOR_HEART);
+//                        break;
+//                    case "HeartRate0":
+//                        Log.e(TAG, "Stop HeartRate1 requested.");
+//                        mHeartListener.unRegisterListener();
+//                        activeSensors.remove(Preferences.SENSOR_HEART);
+//                        break;
                     default:
                         Log.w(TAG, "Unknown action received" + action);
                 }

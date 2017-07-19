@@ -27,8 +27,8 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccelAccumulator;
-    private int SENSOR_DELAY_16HZ = 62000;
-    private int SENSOR_DELAY_20HZ = 20000;
+//    private int SENSOR_DELAY_16HZ = 62000;
+    private int SENSOR_DELAY_20HZ = 50000;
     private long prevtimestamp= 0;
     private WriteDataThread mWriteDataThread = null;
 
@@ -48,7 +48,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     public void registerListener() {
         if (!isRegistered) {
             Log.v(TAG, "Accel+registerListener...");
-            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_16HZ);
+            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ);
             isRegistered = true;
         }
     }
