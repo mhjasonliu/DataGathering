@@ -80,17 +80,17 @@ public class DataService extends WearableListenerService implements Thread.Uncau
      */
     static boolean isFirstTime = true;
     private void initSensorsAndRegister() {
-        if (isCharging(this)) {
-            isFirstTime = true;
-            if (mManager == null) {
-                mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-//                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
-                mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-//                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
-            }
-            unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
-                    .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-        } else {
+//        if (isCharging(this)) {
+//            isFirstTime = true;
+//            if (mManager == null) {
+//                mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+////                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+//                mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
+////                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+//            }
+//            unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
+//                    .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
+//        } else {
             if (isFirstTime) {
                 isFirstTime = false;
                 Log.d(TAG, "*************************INIT SENSORS CALLED*************************");
@@ -106,9 +106,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 //                mAccelListener.setWDT(wdt);
                 mGyroListener.setWDT(wdt);
 //                mHeartListener.setWDT(wdt);
-                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                wdt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
             }
-        }
+//        }
     }
 
     private void registerSensors(Set<String> sensors) {
