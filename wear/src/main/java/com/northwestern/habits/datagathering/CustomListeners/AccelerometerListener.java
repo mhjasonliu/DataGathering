@@ -76,7 +76,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
+        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos())/1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
