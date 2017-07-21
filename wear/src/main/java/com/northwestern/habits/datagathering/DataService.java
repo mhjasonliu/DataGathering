@@ -60,10 +60,15 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         startForeground(SERVICE_ID, notification);
 
         initSensorsAndRegister();
+
+
 //        if (isCharging(this)) {
 //            Log.v(TAG, "isCharging true" );
 //            new SendDataTask(getBaseContext()).execute();
 //        }
+
+
+
         return START_STICKY;
     }
 
@@ -92,28 +97,31 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 isFirstTime = false;
                 Log.d(TAG, "*************************INIT SENSORS CALLED*************************");
 
-                WriteDataThread wdt = new WriteDataThread(getBaseContext());
-                mAccelListener.setWDT(wdt);
-                mGyroListener.setWDT(wdt);
-                mHeartListener.setWDT(wdt);
+
 
                 if (mManager == null) {
                     mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
                     mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
                     mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+//                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
                 }
+
+                WriteDataThread wdt = new WriteDataThread(getBaseContext());
+                mAccelListener.setWDT(wdt);
+                mGyroListener.setWDT(wdt);
+//                mHeartListener.setWDT(wdt);
+
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
 
-                wdt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+                wdt.start();
             }
     }
 
     private void registerSensors(Set<String> sensors) {
         mAccelListener.registerListener();
         mGyroListener.registerListener();
-        mHeartListener.registerListener();
+//        mHeartListener.registerListener();
 
 //        Log.d(TAG, "registerSensors count..." + sensors.size());
 //        for (String sensor : sensors) {
@@ -137,7 +145,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     private void unRegisterSensors(Set<String> sensors) {
         mAccelListener.unRegisterListener1();
         mGyroListener.unRegisterListener1();
-        mHeartListener.unRegisterListener1();
+//        mHeartListener.unRegisterListener1();
 //        Log.d(TAG, "unRegisterSensors count..." + sensors.size());
 //        for (String sensor : sensors) {
 //            Log.d(TAG, "unRegisterSensors service..." + sensor);

@@ -24,19 +24,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Created by Y.Misal on 5/30/2017.
  */
 
-public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thread.UncaughtExceptionHandler {
+public class WriteDataThread extends Thread implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "WriteDataThread";
 
-    volatile boolean mRunning = true;
     //set mRunning to false when terminating appln
-    ConcurrentLinkedQueue<DataAccumulator> mQueue;
-    private final Object obj;
+    private final ConcurrentLinkedQueue<DataAccumulator> mQueue;
     private Context mContext;
 
     public WriteDataThread(Context context) {
         mContext = context;
         mQueue   = new ConcurrentLinkedQueue<DataAccumulator>();
-        obj      = new Object();
     }
 
     public void SaveToFile(DataAccumulator acc) {
@@ -44,14 +41,14 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
     }
 
     @Override
-    protected Void doInBackground(Void... voids) {
-        while(mRunning) {
+    public void run() {
+        while (true) {
             if (!mQueue.isEmpty()) {
+                Log.w(TAG, "removing data from queue");
                 DataAccumulator first = mQueue.remove();
                 saveAccumulator(first);
             }
         }
-        return null;
     }
 
     private void saveAccumulator(DataAccumulator accumulator) {
