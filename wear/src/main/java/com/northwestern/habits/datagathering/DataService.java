@@ -23,6 +23,9 @@ import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 import java.util.HashSet;
 import java.util.Set;
 
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+
 public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
 
@@ -47,6 +50,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+        wakeLock.acquire();
+
         Log.d(TAG, "Starting WearableListenerService...");
 
         if (intent != null) {
