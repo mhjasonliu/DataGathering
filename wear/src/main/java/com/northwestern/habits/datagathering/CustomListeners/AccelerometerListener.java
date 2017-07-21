@@ -29,6 +29,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     private DataAccumulator mAccelAccumulator;
 //    private int SENSOR_DELAY_16HZ = 62000;
     private int SENSOR_DELAY_20HZ = 50000;
+    private int SENSOR_DELAY_100HZ = 10000;
     private long prevtimestamp= 0;
     private WriteDataThread mWriteDataThread = null;
 
@@ -48,7 +49,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     public void registerListener() {
         if (!isRegistered) {
             Log.v(TAG, "Accel+registerListener...");
-            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ);
+            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_100HZ);
             isRegistered = true;
         }
     }
@@ -71,12 +72,9 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     public void onSensorChanged(SensorEvent event) {
         // Handle new accel value
         if (event == null) return;
-        if(prevtimestamp == event.timestamp) return;
-        prevtimestamp = event.timestamp;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
 
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos())/1000000L;
+        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);

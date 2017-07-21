@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * Created by Y.Misal on 5/30/2017.
  */
@@ -27,43 +29,25 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
 
     volatile boolean mRunning = true;
     //set mRunning to false when terminating appln
-    Queue<DataAccumulator> mQueue;
+    ConcurrentLinkedQueue<DataAccumulator> mQueue;
     private final Object obj;
     private Context mContext;
 
     public WriteDataThread(Context context) {
         mContext = context;
-        mQueue   = new LinkedList<DataAccumulator>();
+        mQueue   = new ConcurrentLinkedQueue<DataAccumulator>();
         obj      = new Object();
     }
 
-    public synchronized void SaveToFile(DataAccumulator acc) {
-        synchronized (obj) {
-            try {
-                mQueue.add(acc);
-            } catch (IllegalStateException e) {
-                writeError(e, mContext);
-                e.printStackTrace();
-            }
-            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
-        }
-
+    public void SaveToFile(DataAccumulator acc) {
+        mQueue.add(acc);
     }
 
     @Override
     protected Void doInBackground(Void... voids) {
         while(mRunning) {
-            if(mQueue.size() > 0) {
-                DataAccumulator first = null;
-                synchronized (obj) {
-                    try {
-                        first = mQueue.remove();
-                    } catch (NoSuchElementException e) {
-                        writeError(e, mContext);
-                    }
-                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
-                }
-                //process first.
+            if (!mQueue.isEmpty()) {
+                DataAccumulator first = mQueue.remove();
                 saveAccumulator(first);
             }
         }

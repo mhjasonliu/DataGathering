@@ -28,13 +28,14 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_5HZ  = 200000;
+    private int SENSOR_DELAY_20HZ = 50000;
     private long prevtimestamp= 0;
 
     public HeartRateListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 15);
+        mAccumulator = new DataAccumulator("HeartRate", 192);
     }
 
     public boolean isRegistered() {
@@ -43,7 +44,7 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener( this, mSensor, SENSOR_DELAY_5HZ );
+            mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ );
             isRegistered = true;
         }
     }
@@ -65,12 +66,11 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     public void onSensorChanged(SensorEvent event) {
         // Handle new HEART value
         if (event == null) return;
-        if(prevtimestamp ==event.timestamp) return;
-        prevtimestamp = event.timestamp;
+
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos())/1000000L;
+
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
         dataPoint.put("Accuracy", event.accuracy);
@@ -80,7 +80,7 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("HeartRate", 15);
+            mAccumulator = new DataAccumulator("HeartRate", 192);
             DataAccumulator accumulator = new DataAccumulator("HeartRate", mAccumulator.getCount());
             while (oldDataIter.hasNext()) {
                 Map<String, Object> point = oldDataIter.next();
