@@ -1,6 +1,7 @@
 package com.northwestern.habits.datagathering.CustomListeners;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,6 +10,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.WriteData;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -31,7 +33,6 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     private int SENSOR_DELAY_20HZ = 50000;
     private int SENSOR_DELAY_100HZ = 10000;
     private int BUFFER_SIZE = 200;
-    private WriteDataThread mWriteDataThread = null;
 
     public AccelerometerListener(Context context, SensorManager manager) {
         mContext = context;
@@ -40,10 +41,6 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         mAccelAccumulator = new DataAccumulator("Accelerometer", BUFFER_SIZE);
     }
 
-    public void setWDT(WriteDataThread wdt)
-    {
-        mWriteDataThread = wdt;
-    }
     public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
@@ -102,11 +99,15 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
 //        Log.v(TAG, "Accel+Accumulator was full " + accumulator.getCount());
         //new WriteDataTask(mContext, accumulator, "Accelerometer").execute();
         accumulator.type="Accelerometer";
-        mWriteDataThread.SaveToFile(accumulator);
+
+        Intent intent = new Intent(getBaseContext(), WriteData.class);
+        intent.putExtra("buffer", accumulator.serialize());
+        intent.putExtra("type", "Accelerometer");
+
+        mContext.startService(intent);
     }
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        WriteDataThread.writeError(e, mContext);
     }
 }

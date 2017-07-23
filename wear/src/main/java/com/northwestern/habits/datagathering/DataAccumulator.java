@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 /**
@@ -44,6 +45,61 @@ public class DataAccumulator {
         }
     }
 
+    public String serialize(){
+
+        ListIterator<Map<String, Object>> bufferIter = this.dataArray.listIterator();
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        int sensorType = 0;
+
+        Map<String, Object> firstPoint = this.dataArray.getFirst();
+        for ( String key : firstPoint.keySet() ){
+            if(key.contains("acc")){
+                stringBuilder.append("Time,accX,accY,accZ\n");
+                sensorType = 1;
+                break;
+            }
+            if(key.contains("rot")){
+                stringBuilder.append("Time,rotX,rotY,rotZ\n");
+                sensorType = 2;
+                break;
+            }
+        }
+
+        while (bufferIter.hasNext()) {
+            Map<String, Object> point = bufferIter.next();
+
+            long timeLong = (long) point.get("Time");
+            float x;
+            float y;
+            float z;
+            if (sensorType == 1){
+                x = (float) point.get("accX");
+                y = (float) point.get("accY");
+                z = (float) point.get("accZ");
+            }
+            else {
+                x = (float) point.get("rotX");
+                y = (float) point.get("rotY");
+                z = (float) point.get("rotZ");
+            }
+
+            String timeString = Long.toString(timeLong);
+            String xString = Float.toString(x);
+            String yString = Float.toString(y);
+            String zString = Float.toString(z);
+
+            stringBuilder.append(timeString);
+            stringBuilder.append(xString);
+            stringBuilder.append(yString);
+            stringBuilder.append(zString);
+            stringBuilder.append("\n");
+        }
+
+        String bufferString = stringBuilder.toString();
+        return  bufferString;
+    }
 
     public long getFirstEntry() { return firstEntry; }
 
