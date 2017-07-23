@@ -33,7 +33,7 @@ public class DataAccumulator {
         this.lastEntry = 0;
     }
 
-    DataAccumulator(DataAccumulator buffer) {
+    public DataAccumulator(DataAccumulator buffer) {
         Iterator<Map<String, Object>> bufferIter = buffer.dataArray.listIterator();
         this.capacity = buffer.capacity;
         this.type = buffer.type;

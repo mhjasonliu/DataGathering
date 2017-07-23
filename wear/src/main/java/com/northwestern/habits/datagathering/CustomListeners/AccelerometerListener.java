@@ -30,14 +30,14 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
 //    private int SENSOR_DELAY_16HZ = 62000;
     private int SENSOR_DELAY_20HZ = 50000;
     private int SENSOR_DELAY_100HZ = 10000;
-    private long prevtimestamp= 0;
+    private int BUFFER_SIZE = 200;
     private WriteDataThread mWriteDataThread = null;
 
     public AccelerometerListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccelAccumulator = new DataAccumulator("Accelerometer", 192);
+        mAccelAccumulator = new DataAccumulator("Accelerometer", BUFFER_SIZE);
     }
 
     public void setWDT(WriteDataThread wdt)
@@ -86,16 +86,9 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
             // Accumulator is full
 
             // Start a fresh accumulator, preserving the old
-            Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
-            // change check is full
-            mAccelAccumulator = new DataAccumulator("Accelerometer", 192); // 1200
-            DataAccumulator accumulator = new DataAccumulator("Accelerometer", mAccelAccumulator.getCount());
-            while (oldDataIter.hasNext()) {
-                Map<String, Object> point = oldDataIter.next();
-                accumulator.putDataPoint(point, (long) point.get("Time"));
-            }
-
-            handleFullAccumulator(accumulator);
+            DataAccumulator old = new DataAccumulator(mAccelAccumulator);
+            mAccelAccumulator = new DataAccumulator("Accelerometer", BUFFER_SIZE); // 1200
+            handleFullAccumulator(old);
         }
     }
 
