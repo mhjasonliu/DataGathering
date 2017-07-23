@@ -22,7 +22,7 @@ import java.util.Queue;
  * Created by Y.Misal on 5/30/2017.
  */
 
-public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thread.UncaughtExceptionHandler {
+public class WriteDataThread extends Thread implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "WriteDataThread";
 
     volatile boolean mRunning = true;
@@ -32,9 +32,14 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
     private Context mContext;
 
     public WriteDataThread(Context context) {
+        super("WriteDataThread");
         mContext = context;
         mQueue   = new LinkedList<DataAccumulator>();
         obj      = new Object();
+    }
+
+    public void setStop() {
+        mRunning = false;
     }
 
     public synchronized void SaveToFile(DataAccumulator acc) {
@@ -50,8 +55,7 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
 
     }
 
-    @Override
-    protected Void doInBackground(Void... voids) {
+    public void run() {
         while(mRunning) {
             if(mQueue.size() > 0) {
                 DataAccumulator first = null;
@@ -67,7 +71,6 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
                 saveAccumulator(first);
             }
         }
-        return null;
     }
 
     private void saveAccumulator(DataAccumulator accumulator) {

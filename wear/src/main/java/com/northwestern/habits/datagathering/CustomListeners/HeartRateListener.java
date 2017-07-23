@@ -28,13 +28,15 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_5HZ  = 200000;
+    private int SENSOR_DELAY_10HZ = 100000;
+    private int BUFFER_SIZE = 20;
     private long prevtimestamp= 0;
 
     public HeartRateListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 15);
+        mAccumulator = new DataAccumulator("HeartRate", BUFFER_SIZE);
     }
 
     public boolean isRegistered() {
@@ -43,7 +45,7 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener( this, mSensor, SENSOR_DELAY_5HZ );
+            mManager.registerListener( this, mSensor, SENSOR_DELAY_10HZ );
             isRegistered = true;
         }
     }
@@ -79,14 +81,9 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
-            Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("HeartRate", 15);
-            DataAccumulator accumulator = new DataAccumulator("HeartRate", mAccumulator.getCount());
-            while (oldDataIter.hasNext()) {
-                Map<String, Object> point = oldDataIter.next();
-                accumulator.putDataPoint(point, (long) point.get("Time"));
-            }
-            handleFullAccumulator(accumulator);
+            DataAccumulator old = new DataAccumulator(mAccumulator);
+            mAccumulator = new DataAccumulator("HeartRate", BUFFER_SIZE); // 1200
+            handleFullAccumulator(old);
         }
     }
     private WriteDataThread mWriteDataThread = null;

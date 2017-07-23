@@ -29,13 +29,15 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_16HZ = 62000;
     private int SENSOR_DELAY_20HZ = 50000;
+    private int SENSOR_DELAY_100HZ = 10000;
+    private int BUFFER_SIZE = 200;
     private long prevtimestamp= 0;
 
     public GyroscopeListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 192);
+        mAccumulator = new DataAccumulator("Gyroscope", BUFFER_SIZE);
     }
 
     private WriteDataThread mWriteDataThread = null;
@@ -48,7 +50,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ );
+            mManager.registerListener( this, mSensor, SENSOR_DELAY_100HZ );
             isRegistered = true;
         }
     }
@@ -86,14 +88,9 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
-            Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("Gyroscope", 192);
-            DataAccumulator accumulator = new DataAccumulator("Gyroscope", mAccumulator.getCount());
-            while (oldDataIter.hasNext()) {
-                Map<String, Object> point = oldDataIter.next();
-                accumulator.putDataPoint(point, (long) point.get("Time"));
-            }
-            handleFullAccumulator(accumulator);
+            DataAccumulator old = new DataAccumulator(mAccumulator);
+            mAccumulator = new DataAccumulator("Gyroscope", BUFFER_SIZE); // 1200
+            handleFullAccumulator(old);
         }
     }
 
