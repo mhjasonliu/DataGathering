@@ -85,11 +85,6 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
             handleFullAccumulator(old);
         }
     }
-    private WriteDataThread mWriteDataThread = null;
-    public void setWDT(WriteDataThread wdt)
-    {
-        mWriteDataThread = wdt;
-    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -100,11 +95,10 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         // Check if connected to phone
         accumulator.type = "HeartRate";
 //        Log.v(TAG, " count " + accumulator.getCount());
-        mWriteDataThread.SaveToFile(accumulator);
     }
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        WriteDataThread.writeError(e, mContext);
+//        WriteDataThread.writeError(e, mContext);
     }
 }

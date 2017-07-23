@@ -2,8 +2,6 @@ package com.northwestern.habits.datagathering;
 
 import android.content.Context;
 
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
-
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,6 +44,7 @@ public class DataAccumulator {
         }
     }
 
+
     public long getFirstEntry() { return firstEntry; }
 
     public boolean putDataPoint(Map point, long time) {
@@ -67,33 +66,6 @@ public class DataAccumulator {
         if (dataSoFar == null) dataSoFar = new LinkedList<>();
         dataSoFar.addAll(dataToAdd);
         return dataSoFar;
-    }
-
-    public Map<Integer, List<Map<String, Object>>> splitIntoMinutes(Context con) {
-        int minute;
-        Calendar c = Calendar.getInstance();
-        Map<Integer, List<Map<String, Object>>> split = new HashMap<>();
-        for (Map datum : dataArray) {
-            try {
-                Object time = datum.get("Time");
-                if (time instanceof String) {
-                    time = Long.valueOf((String) time);
-                    WriteDataThread.writeError(
-                            new Exception("The time was a string rather than a long: "
-                                    + time.toString()), con);
-                }
-
-                c.setTimeInMillis((long) datum.get("Time"));
-            } catch (ClassCastException e) {
-                WriteDataThread.writeError(e, con);
-            }
-            minute = c.get(Calendar.MINUTE);
-            if (!split.containsKey(minute)) {
-                split.put(minute, new LinkedList<Map<String, Object>>());
-            }
-            split.get(minute).add(datum);
-        }
-        return split;
     }
 
     public int getCount() {

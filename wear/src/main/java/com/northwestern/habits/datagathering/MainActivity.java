@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.BODY_SENSORS, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST);
         }
 
-        Intent intent = new Intent(getApplicationContext(), DataService.class);
+        Intent intent = new Intent(getApplicationContext(), CollectData.class);
         startService(intent);
     }
 }

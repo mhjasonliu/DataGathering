@@ -8,6 +8,8 @@ import android.hardware.SensorManager;
 import android.os.SystemClock;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.content.Intent;
+
 
 import com.northwestern.habits.datagathering.DataAccumulator;
 
@@ -40,11 +42,6 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         mAccumulator = new DataAccumulator("Gyroscope", BUFFER_SIZE);
     }
 
-    private WriteDataThread mWriteDataThread = null;
-    public void setWDT(WriteDataThread wdt)
-    {
-        mWriteDataThread = wdt;
-    }
 
     public boolean isRegistered() { return isRegistered; }
 
@@ -100,12 +97,12 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
         accumulator.type="Gyroscope";
-//        Log.v(TAG, " count " + accumulator.getCount());
-        mWriteDataThread.SaveToFile(accumulator);
+
+        Intent intent = new Intent();
+
     }
 
-    @Override
     public void uncaughtException(Thread t, Throwable e) {
-        WriteDataThread.writeError(e, mContext);
+//        WriteDataThread.writeError(e, mContext);
     }
 }
