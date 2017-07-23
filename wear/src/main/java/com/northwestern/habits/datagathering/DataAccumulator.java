@@ -33,6 +33,19 @@ public class DataAccumulator {
         this.lastEntry = 0;
     }
 
+    DataAccumulator(DataAccumulator buffer) {
+        Iterator<Map<String, Object>> bufferIter = buffer.dataArray.listIterator();
+        this.capacity = buffer.capacity;
+        this.type = buffer.type;
+        this.firstEntry = buffer.firstEntry;
+        this.lastEntry = buffer.lastEntry;
+        this.dataArray = new LinkedList<>();
+        while (bufferIter.hasNext()) {
+            Map<String, Object> point = bufferIter.next();
+            this.putDataPoint(point, (long) point.get("Time"));
+        }
+    }
+
     public long getFirstEntry() { return firstEntry; }
 
     public boolean putDataPoint(Map point, long time) {
@@ -44,10 +57,6 @@ public class DataAccumulator {
         dataArray.add(point);
 
         return isFull();
-    }
-
-    public Iterator<Map<String, Object>> getIterator() {
-        return dataArray.listIterator();
     }
 
     public boolean isFull() {

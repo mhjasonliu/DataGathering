@@ -42,13 +42,7 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.BODY_SENSORS, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST);
         }
 
-        final AlarmManager localAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
-        final Runnable r = new Runnable() {
-            public void run() {
-                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 240000, localPendingIntent);
-            }
-        };
-        handler.postDelayed(r, 6000);
+        Intent intent = new Intent(getApplicationContext(), DataService.class);
+        startService(intent);
     }
 }
