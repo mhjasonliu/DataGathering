@@ -1,11 +1,9 @@
-package com.northwestern.habits.datagathering.CustomListeners;
+package com.northwestern.habits.datagathering;
 
 import android.app.IntentService;
+import android.content.Intent;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
-
-import com.northwestern.habits.datagathering.DataAccumulator;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,63 +14,57 @@ import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Queue;
 
 /**
- * Created by Y.Misal on 5/30/2017.
+ * An {@link IntentService} subclass for handling asynchronous task requests in
+ * a service on a separate handler thread.
+ * <p>
+ * helper methods.
  */
-
-public class WriteDataThread extends IntentService implements Thread.UncaughtExceptionHandler {
+public class WriteData extends IntentService {
     private static final String TAG = "WriteDataThread";
 
-    volatile boolean mRunning = true;
-    //set mRunning to false when terminating appln
-    Queue<DataAccumulator> mQueue;
-    private final Object obj;
+    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
+    private static final String ACTION_WRITE = "com.northwestern.habits.datagathering.action.WRITEBUFFER";
+    private static final String PARAM_BUFFER = "com.northwestern.habits.datagathering.extra.BUFFER";
+
     private Context mContext;
 
-
-    public WriteDataThread(Context context) {
-        mContext = context;
-        mQueue   = new LinkedList<DataAccumulator>();
-        obj      = new Object();
+    public WriteData() {
+        super("WriteData");
     }
 
-    public synchronized void SaveToFile(DataAccumulator acc) {
-        synchronized (obj) {
-            try {
-                mQueue.add(acc);
-            } catch (IllegalStateException e) {
-                writeError(e, mContext);
-                e.printStackTrace();
-            }
-            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
-        }
-
+    /**
+     * Starts this service to perform action Foo with the given parameters. If
+     * the service is already performing a task this action will be queued.
+     *
+     * @see IntentService
+     */
+    // TODO: Customize helper method
+    public static void startActionFoo(Context context, DataAccumulator acc) {
+        Intent intent = new Intent(context, WriteData.class);
+        intent.setAction(ACTION_WRITE);
+        intent.putExtra(PARAM_BUFFER, acc);
+        context.startService(intent);
     }
 
     @Override
-    protected Void doInBackground(Void... voids) {
-        while(mRunning) {
-            if(mQueue.size() > 0) {
-                DataAccumulator first = null;
-                synchronized (obj) {
-                    try {
-                        first = mQueue.remove();
-                    } catch (NoSuchElementException e) {
-                        writeError(e, mContext);
-                    }
-                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
-                }
-                //process first.
-                saveAccumulator(first);
+    protected void onHandleIntent(Intent intent) {
+        if (intent != null) {
+            final String action = intent.getAction();
+            if (ACTION_WRITE.equals(action)) {
+                final DataAccumulator buffer = intent.getParcelableExtra(PARAM_BUFFER);
+                handleActionWrite(buffer);
             }
         }
-        return null;
     }
 
-    private void saveAccumulator(DataAccumulator accumulator) {
+    /**
+     * Handle action Foo in the provided background thread with the provided
+     * parameters.
+     */
+
+    private void handleActionWrite(DataAccumulator accumulator) {
 //        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
         if (accumulator == null) return;
         long firstPointTime = accumulator.getFirstEntry();
@@ -205,42 +197,6 @@ public class WriteDataThread extends IntentService implements Thread.UncaughtExc
             }
         }
     }
-
-    public static void writeLogs(String str, Context context) {
-        String[] message = str.split("_");
-        String PATH = context.getExternalFilesDir(null) + "/WearData/LOGS/";
-        File folder = new File(PATH);
-        if (!folder.exists()) folder.mkdirs();
-
-        File errorReport = new File(folder.getPath()
-                + "/Logs_"
-                + System.currentTimeMillis()
-                + ".txt");
-
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(errorReport, true);
-            String string = "\n\n-----------------" + message[0] + "-----------------\n\n";
-            writer.write(string);
-            writer.write(message[1]);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.flush();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                try {
-                    writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
-    }
-
     public static void writeError(Throwable e, Context context) {
         Log.e(TAG, "WRITING ERROR TO DISK: \n");
         e.printStackTrace();
@@ -278,10 +234,5 @@ public class WriteDataThread extends IntentService implements Thread.UncaughtExc
                 }
             }
         }
-    }
-
-    @Override
-    public void uncaughtException(Thread t, Throwable e) {
-        writeError(e, mContext);
     }
 }

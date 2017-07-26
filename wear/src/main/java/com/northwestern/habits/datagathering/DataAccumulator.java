@@ -1,6 +1,8 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 
@@ -15,7 +17,7 @@ import java.util.Map;
  * Created by William on 1/29/2017.
  */
 
-public class DataAccumulator {
+public class DataAccumulator implements Parcelable{
 
     private int capacity = 0;
 
@@ -31,6 +33,19 @@ public class DataAccumulator {
         this.capacity = capacity;
         this.firstEntry = 0;
         this.lastEntry = 0;
+    }
+
+    public DataAccumulator(DataAccumulator buffer) {
+        Iterator<Map<String, Object>> bufferIter = buffer.dataArray.listIterator();
+        this.capacity = buffer.capacity;
+        this.type = buffer.type;
+        this.firstEntry = buffer.firstEntry;
+        this.lastEntry = buffer.lastEntry;
+        this.dataArray = new LinkedList<>();
+        while (bufferIter.hasNext()) {
+            Map<String, Object> point = bufferIter.next();
+            this.putDataPoint(point, (long) point.get("Time"));
+        }
     }
 
     public long getFirstEntry() { return firstEntry; }
@@ -91,4 +106,30 @@ public class DataAccumulator {
         return dataArray.size();
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(capacity);
+        dest.writeString(type);
+        dest.writeLong(firstEntry);
+        dest.writeLong(lastEntry);
+        dest.writeIterat
+    }
+
+    public static final Parcelable.Creator<DataAccumulator> CREATOR = new Parcelable.Creator<DataAccumulator>() {
+       public DataAccumulator createFromParcel(Parcel in) {
+           return new DataAccumulator(in);
+       }
+       public DataAccumulator[] newArray(int size) {
+           return new DataAccumulator[size];
+       }
+    };
+
+    private DataAccumulator(Parcel in) {
+
+    }
 }
