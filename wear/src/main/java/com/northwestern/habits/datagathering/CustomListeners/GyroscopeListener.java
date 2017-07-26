@@ -9,10 +9,12 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.DataThreads.GyroWriteDataThread;
+import com.northwestern.habits.datagathering.DataThreads.WriteDataMethods;
+import com.northwestern.habits.datagathering.DataThreads.WriteDataThread;
 
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -27,7 +29,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
-    private int SENSOR_DELAY_16HZ = 62000;
+    private int SENSOR_DELAY_16HZ = 62500;
     private long prevtimestamp= 0;
 
     public GyroscopeListener(Context context, SensorManager manager) {
@@ -37,8 +39,8 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         mAccumulator = new DataAccumulator("Gyroscope", 192);
     }
 
-    private WriteDataThread mWriteDataThread = null;
-    public void setWDT(WriteDataThread wdt)
+    private GyroWriteDataThread mWriteDataThread = null;
+    public void setWDT(GyroWriteDataThread wdt)
     {
         mWriteDataThread = wdt;
     }
@@ -59,11 +61,11 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         }
     }
 
-    public void unRegisterListener1() {
+    /*public void unRegisterListener1() {
         Log.v(TAG, "unregisterListenerG...");
         mManager.unregisterListener(this);
         isRegistered = false;
-    }
+    }*/
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -73,8 +75,8 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
-//                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+        event.timestamp = c.getTimeInMillis()
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
@@ -82,7 +84,16 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         dataPoint.put("rotY", event.values[1]);
         dataPoint.put("rotZ", event.values[2]);
 
-        if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
+        if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) { // change
+            // Accumulator is full
+
+            // Start a fresh accumulator, preserving the old
+            DataAccumulator old = new DataAccumulator(mAccumulator);
+            mAccumulator = new DataAccumulator("Gyroscope", 192); // 1200
+            handleFullAccumulator(old);
+        }
+
+        /*if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
@@ -93,7 +104,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
                 accumulator.putDataPoint(point, (long) point.get("Time"));
             }
             handleFullAccumulator(accumulator);
-        }
+        }*/
     }
 
     @Override
@@ -103,9 +114,13 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        accumulator.type="Gyroscope";
-//        Log.v(TAG, " count " + accumulator.getCount());
-        mWriteDataThread.SaveToFile(accumulator);
+        accumulator.type = "Gyroscope";
+        Log.v(TAG, accumulator.type + " " + accumulator.getCount());
+        WriteDataMethods.saveAccumulator(accumulator, mContext);
+//        mWriteDataThread.SaveToFile(accumulator);
+//        Intent intent = new Intent(mContext, WriteDataIService.class);
+//        intent.putExtra("buffer", accumulator);
+//        mContext.startService(intent);
     }
 
     @Override

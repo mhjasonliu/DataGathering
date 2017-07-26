@@ -13,7 +13,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
-import java.io.File;
 import java.util.Calendar;
 
 public class MainActivity extends Activity {
@@ -46,7 +45,7 @@ public class MainActivity extends Activity {
         final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
         final Runnable r = new Runnable() {
             public void run() {
-                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 240000, localPendingIntent);
+                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 60000, localPendingIntent);
             }
         };
         handler.postDelayed(r, 6000);

@@ -54,6 +54,13 @@
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
             </intent-filter>
         </receiver>
+        <service
+            android:name=".DataThreads.WriteDataIService"
+            android:enabled="true" >
+            <intent-filter>
+                <action android:name=".DataThreads.WriteDataIService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

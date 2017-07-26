@@ -1,21 +1,9 @@
 package com.northwestern.habits.datagathering;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.Toast;
-
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
-
-import java.util.Calendar;
 
 /**
  * Created by William on 2/25/2017
