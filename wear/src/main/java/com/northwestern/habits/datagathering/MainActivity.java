@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.view.WatchViewStub;
@@ -42,13 +43,22 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.BODY_SENSORS, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST);
         }
 
-        final AlarmManager localAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
-        final Runnable r = new Runnable() {
-            public void run() {
-                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 240000, localPendingIntent);
-            }
-        };
-        handler.postDelayed(r, 6000);
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+        wakeLock.acquire();
+
+        Intent intent = new Intent(this, DataService.class);
+        startService(intent);
+
+
+//        final AlarmManager localAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//        final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
+//        final Runnable r = new Runnable() {
+//            public void run() {
+//                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 240000, localPendingIntent);
+//            }
+//        };
+//        handler.postDelayed(r, 6000);
     }
 }

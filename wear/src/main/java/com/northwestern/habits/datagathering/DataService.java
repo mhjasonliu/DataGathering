@@ -110,7 +110,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         Log.d(TAG, "registerSensors count..." + sensors.size());
         mAccelListener.registerListener();
         mGyroListener.registerListener();
-//        mHeartListener.registerListener();
+        mHeartListener.registerListener();
 
 //        for (String sensor : sensors) {
 //            Log.d(TAG, "registerSensors service..." + sensor);
@@ -134,7 +134,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         Log.d(TAG, "unRegisterSensors count..." + sensors.size());
         mAccelListener.unRegisterListener1();
         mGyroListener.unRegisterListener1();
-//        mHeartListener.unRegisterListener1();
+        mHeartListener.unRegisterListener1();
 
 //        for (String sensor : sensors) {
 //            Log.d(TAG, "unRegisterSensors service..." + sensor);
