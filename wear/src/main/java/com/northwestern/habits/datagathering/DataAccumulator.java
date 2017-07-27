@@ -1,23 +1,22 @@
 package com.northwestern.habits.datagathering;
 
 import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by William on 1/29/2017.
  */
 
-public class DataAccumulator implements Parcelable{
+public class DataAccumulator {
 
     private int capacity = 0;
 
@@ -48,6 +47,38 @@ public class DataAccumulator implements Parcelable{
         }
     }
 
+    @Override
+    public String toString(){
+
+        // Parsing the keys
+        Map<String, Object> firstElement = dataArray.getFirst();
+        LinkedList<String> keys = new LinkedList<String>();
+        keys.addAll(firstElement.keySet());
+
+        Collections.sort(keys);
+
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(keys.toString());
+        stringBuilder.append("\n");
+
+        ListIterator<Map<String, Object>> bufferIter = this.dataArray.listIterator();
+
+        while (bufferIter.hasNext()) {
+            Map<String, Object> point = bufferIter.next();
+
+            for (String key:keys) {
+                stringBuilder.append(point.get(key).toString());
+                stringBuilder.append(",");
+            }
+            stringBuilder.append("\n");
+        }
+        stringBuilder.append("END OF BUFFER\n");
+
+        String bufferString = stringBuilder.toString();
+        return bufferString;
+    }
+
     public long getFirstEntry() { return firstEntry; }
 
     public boolean putDataPoint(Map point, long time) {
@@ -61,75 +92,11 @@ public class DataAccumulator implements Parcelable{
         return isFull();
     }
 
-    public Iterator<Map<String, Object>> getIterator() {
-        return dataArray.listIterator();
-    }
-
     public boolean isFull() {
         return dataArray.size() >= capacity;
     }
 
-    public static List<Map> pack(List<Map> dataSoFar, List<Map<String, Object>> dataToAdd) {
-        if (dataSoFar == null) dataSoFar = new LinkedList<>();
-        dataSoFar.addAll(dataToAdd);
-        return dataSoFar;
-    }
-
-    public Map<Integer, List<Map<String, Object>>> splitIntoMinutes(Context con) {
-        int minute;
-        Calendar c = Calendar.getInstance();
-        Map<Integer, List<Map<String, Object>>> split = new HashMap<>();
-        for (Map datum : dataArray) {
-            try {
-                Object time = datum.get("Time");
-                if (time instanceof String) {
-                    time = Long.valueOf((String) time);
-                    WriteDataThread.writeError(
-                            new Exception("The time was a string rather than a long: "
-                                    + time.toString()), con);
-                }
-
-                c.setTimeInMillis((long) datum.get("Time"));
-            } catch (ClassCastException e) {
-                WriteDataThread.writeError(e, con);
-            }
-            minute = c.get(Calendar.MINUTE);
-            if (!split.containsKey(minute)) {
-                split.put(minute, new LinkedList<Map<String, Object>>());
-            }
-            split.get(minute).add(datum);
-        }
-        return split;
-    }
-
     public int getCount() {
         return dataArray.size();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(capacity);
-        dest.writeString(type);
-        dest.writeLong(firstEntry);
-        dest.writeLong(lastEntry);
-        dest.writeIterat
-    }
-
-    public static final Parcelable.Creator<DataAccumulator> CREATOR = new Parcelable.Creator<DataAccumulator>() {
-       public DataAccumulator createFromParcel(Parcel in) {
-           return new DataAccumulator(in);
-       }
-       public DataAccumulator[] newArray(int size) {
-           return new DataAccumulator[size];
-       }
-    };
-
-    private DataAccumulator(Parcel in) {
-
     }
 }

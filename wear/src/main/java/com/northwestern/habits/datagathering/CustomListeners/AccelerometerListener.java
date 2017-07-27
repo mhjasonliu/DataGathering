@@ -100,11 +100,11 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         //new WriteDataTask(mContext, accumulator, "Accelerometer").execute();
         accumulator.type="Accelerometer";
 
-        Intent intent = new Intent(this, WriteDataThread.class);
-        intent.putExtra("buffer", accumulator.serialize());
-        intent.putExtra("type", "Accelerometer");
-
-        mContext.startService(intent);
+//        Intent intent = new Intent(this, WriteDataThread.class);
+//        intent.putExtra("buffer", accumulator.serialize());
+//        intent.putExtra("type", "Accelerometer");
+//
+//        mContext.startService(intent);
     }
 
     @Override

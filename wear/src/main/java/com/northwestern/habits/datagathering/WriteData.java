@@ -42,10 +42,10 @@ public class WriteData extends IntentService {
      */
     // TODO: Customize helper method
     public static void startActionFoo(Context context, DataAccumulator acc) {
-        Intent intent = new Intent(context, WriteData.class);
-        intent.setAction(ACTION_WRITE);
-        intent.putExtra(PARAM_BUFFER, acc);
-        context.startService(intent);
+//        Intent intent = new Intent(context, WriteData.class);
+//        intent.setAction(ACTION_WRITE);
+//        intent.putExtra(PARAM_BUFFER, acc);
+//        context.startService(intent);
     }
 
     @Override
@@ -73,41 +73,6 @@ public class WriteData extends IntentService {
 
         // Make csv
         File csv = getCsv(folder, firstPointTime);
-
-        Map<Integer, List<Map<String, Object>>> dataSplit = accumulator.splitIntoMinutes(mContext);
-
-        for (List<Map<String, Object>> series : dataSplit.values()) {
-            Map<String, Object> firstPoint = series.get(0);
-
-            LinkedList<String> properties = new LinkedList<String>();
-            properties.addAll(firstPoint.keySet());
-            Collections.sort(properties);
-            FileWriter writer = null;
-            Log.v(TAG, "writing to : " + csv.getAbsolutePath());
-            try {
-                if (!csv.exists()) {
-                    writer = writeProperties(properties, csv);
-                } else {
-                    writer = new FileWriter(csv, true);
-                }
-
-                writeDataSeries(writer, series, properties);
-                String text = String.format("Writing %s data to CSV file", accumulator.type);
-//                writeLogs( text + "_" + System.currentTimeMillis(), mContext );
-
-            } catch (ConcurrentModificationException | IOException e) {
-                writeError(e, mContext);
-            } finally {
-                if (writer != null) {
-                    try {
-                        writer.flush();
-                        writer.close();
-                    } catch (IOException e) {
-                        writeError(e, mContext);
-                    }
-                }
-            }
-        }
     }
 
     public File getFolder(long timestamp, String type) {

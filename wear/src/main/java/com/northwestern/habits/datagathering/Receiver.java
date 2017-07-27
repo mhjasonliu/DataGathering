@@ -13,8 +13,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
-
 import java.util.Calendar;
 
 /**

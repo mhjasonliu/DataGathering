@@ -20,7 +20,6 @@ import com.google.android.gms.wearable.WearableListenerService;
 import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListener;
 import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
 import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
 
 import java.util.Calendar;
 import java.util.HashSet;
@@ -102,11 +101,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 }
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-                WriteDataThread wdt = new WriteDataThread(getBaseContext());
-                mAccelListener.setWDT(wdt);
-                mGyroListener.setWDT(wdt);
-                mHeartListener.setWDT(wdt);
-                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//                WriteDataThread wdt = new WriteDataThread(getBaseContext());
+//                mAccelListener.setWDT(wdt);
+//                mGyroListener.setWDT(wdt);
+//                mHeartListener.setWDT(wdt);
+//                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
     }
@@ -221,7 +220,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         Log.v(TAG, "uncaughtException " + e.getMessage());
-        WriteDataThread.writeError(e, getBaseContext());
 
         if (startIntent != null) {
             AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
