@@ -97,8 +97,6 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        accumulator.type="Gyroscope";
-
         WriteData.requestWrite(mContext, accumulator);
 
     }

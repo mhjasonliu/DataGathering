@@ -29,6 +29,7 @@ public class WriteData extends IntentService {
     private static final String PARAM_CONTENT = "com.northwestern.habits.datagathering.extra.CONTENT";
     private static final String PARAM_TIME = "com.northwestern.habits.datagathering.extra.TIME";
     private static final String PARAM_TYPE = "com.northwestern.habits.datagathering.extra.TYPE";
+    private static final String PARAM_HEADER = "com.northwestern.habits.datagathering.extra.HEADER";
 
     public WriteData() {
         super("WriteData");
@@ -49,6 +50,7 @@ public class WriteData extends IntentService {
         intent.putExtra(PARAM_CONTENT, buf.toString());
         intent.putExtra(PARAM_TIME, buf.getFirstEntry());
         intent.putExtra(PARAM_TYPE, buf.getType());
+        intent.putExtra(PARAM_HEADER, buf.getHeader());
         context.startService(intent);
     }
 
@@ -60,7 +62,8 @@ public class WriteData extends IntentService {
                 String content = intent.getStringExtra(PARAM_CONTENT);
                 long time = intent.getLongExtra(PARAM_TIME, 1L);
                 String type = intent.getStringExtra(PARAM_TYPE);
-                handleActionWrite(content, time, type);
+                String header = intent.getStringExtra(PARAM_HEADER);
+                handleActionWrite(content, time, type, header);
             }
         }
     }
@@ -70,7 +73,7 @@ public class WriteData extends IntentService {
      * parameters.
      */
 
-    private void handleActionWrite(String content, long time, String type) {
+    private void handleActionWrite(String content, long time, String type, String header) {
         File folder = getFolder(time, type);
 
         // Make csv
@@ -81,7 +84,7 @@ public class WriteData extends IntentService {
         try {
             FileWriter csvwriter = new FileWriter(csv, true);
             if (!csv.exists()) {
-                csvwriter.write
+                csvwriter.write(header);
             }
             csvwriter.write(content);
             csvwriter.flush();

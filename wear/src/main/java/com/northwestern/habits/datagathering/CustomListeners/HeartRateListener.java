@@ -82,7 +82,7 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             DataAccumulator old = new DataAccumulator(mAccumulator);
-            mAccumulator = new DataAccumulator("HearRate", BUFFER_SIZE); // 1200
+            mAccumulator = new DataAccumulator("HeartRate", BUFFER_SIZE);
             handleFullAccumulator(old);
         }
     }
@@ -93,16 +93,10 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     }
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
-        // Check if connected to phone
-        accumulator.type = "HeartRate";
-//        Log.v(TAG, " count " + accumulator.getCount());
-//        mWriteDataThread.SaveToFile(accumulator);
+        WriteData.requestWrite(mContext, accumulator);
     }
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-
-        WriteData.requestWrite(mContext, mAccumulator);
-//        WriteDataThread.writeError(e, mContext);
     }
 }

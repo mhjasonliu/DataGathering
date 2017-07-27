@@ -95,18 +95,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     }
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
-        // Check if connected to phone
-//        Log.v(TAG, "Accel+Accumulator was full " + accumulator.getCount());
-        //new WriteDataTask(mContext, accumulator, "Accelerometer").execute();
-        accumulator.type="Accelerometer";
-
         WriteData.requestWrite(mContext, accumulator);
-
-//        Intent intent = new Intent(this, WriteDataThread.class);
-//        intent.putExtra("buffer", accumulator.serialize());
-//        intent.putExtra("type", "Accelerometer");
-//
-//        mContext.startService(intent);
     }
 
     @Override

@@ -24,6 +24,7 @@ public class DataAccumulator {
     private long firstEntry;
     private long lastEntry;
     private String type;
+    private String[] keys;
 
     public DataAccumulator(String type, int capacity) {
         super();
@@ -40,6 +41,7 @@ public class DataAccumulator {
         this.type = buffer.type;
         this.firstEntry = buffer.firstEntry;
         this.lastEntry = buffer.lastEntry;
+        this.keys = buffer.keys;
         this.dataArray = new LinkedList<>();
         while (bufferIter.hasNext()) {
             Map<String, Object> point = bufferIter.next();
@@ -49,22 +51,21 @@ public class DataAccumulator {
 
     public String getType() {return type;}
 
+    public String getHeader() {
+        StringBuilder builder = new StringBuilder();
+        for (String key:keys) {
+            builder.append(key);
+            builder.append(",");
+        }
+        builder.append("\n");
+        return builder.toString();
+    }
+
     @Override
     public String toString(){
 
-        // Parsing the keys
-        Map<String, Object> firstElement = dataArray.getFirst();
-        LinkedList<String> keys = new LinkedList<String>();
-        keys.addAll(firstElement.keySet());
-
-        Collections.sort(keys);
-
-
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(keys.toString());
-        stringBuilder.append("\n");
-
-        ListIterator<Map<String, Object>> bufferIter = this.dataArray.listIterator();
+        ListIterator<Map<String, Object>> bufferIter = dataArray.listIterator();
 
         while (bufferIter.hasNext()) {
             Map<String, Object> point = bufferIter.next();
@@ -86,15 +87,18 @@ public class DataAccumulator {
         if (firstEntry == 0) {
             firstEntry = time;
         }
+
+        if (keys == null) {
+            LinkedList<String> keys = new LinkedList<String>();
+            keys.addAll(point.keySet());
+            Collections.sort(keys);
+        }
+
         dataArray.add(point);
         return isFull();
     }
 
     public boolean isFull() {
         return dataArray.size() >= capacity;
-    }
-
-    public int getCount() {
-        return dataArray.size();
     }
 }
