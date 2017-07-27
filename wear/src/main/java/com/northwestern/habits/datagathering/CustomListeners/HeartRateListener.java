@@ -69,10 +69,10 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         if (event == null) return;
         if(prevtimestamp ==event.timestamp) return;
         prevtimestamp = event.timestamp;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
         dataPoint.put("Accuracy", event.accuracy);

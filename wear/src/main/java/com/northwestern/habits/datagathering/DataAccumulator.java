@@ -24,7 +24,7 @@ public class DataAccumulator {
     private long firstEntry;
     private long lastEntry;
     private String type;
-    private String[] keys;
+    private LinkedList<String> keys;
 
     public DataAccumulator(String type, int capacity) {
         super();
@@ -89,7 +89,7 @@ public class DataAccumulator {
         }
 
         if (keys == null) {
-            LinkedList<String> keys = new LinkedList<String>();
+            keys = new LinkedList<String>();
             keys.addAll(point.keySet());
             Collections.sort(keys);
         }

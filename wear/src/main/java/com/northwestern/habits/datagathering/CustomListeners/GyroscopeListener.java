@@ -70,10 +70,10 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     public void onSensorChanged(SensorEvent event) {
         // Handle new gyro value
         if (event == null) return;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+
         Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+
         Map<String, Object> dataPoint = new HashMap<>();
         dataPoint.put("Time", event.timestamp);
         dataPoint.put("rotX", event.values[0]);

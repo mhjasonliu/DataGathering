@@ -82,10 +82,14 @@ public class WriteData extends IntentService {
         Log.w(TAG, csv.toString());
 
         try {
-            FileWriter csvwriter = new FileWriter(csv, true);
             if (!csv.exists()) {
-                csvwriter.write(header);
+                FileWriter headerwriter = new FileWriter(csv, true);
+                headerwriter.write(header);
+                Log.w(TAG, header);
+                headerwriter.flush();
+                headerwriter.close();
             }
+            FileWriter csvwriter = new FileWriter(csv, true);
             csvwriter.write(content);
             csvwriter.flush();
             csvwriter.close();
