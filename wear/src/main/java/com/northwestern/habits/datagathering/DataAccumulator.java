@@ -53,9 +53,11 @@ public class DataAccumulator {
 
     public String getHeader() {
         StringBuilder builder = new StringBuilder();
+        String prefix = "";
         for (String key:keys) {
+            builder.append(prefix);
             builder.append(key);
-            builder.append(",");
+            prefix = ",";
         }
         builder.append("\n");
         return builder.toString();
@@ -70,9 +72,11 @@ public class DataAccumulator {
         while (bufferIter.hasNext()) {
             Map<String, Object> point = bufferIter.next();
 
+            String prefix = "";
             for (String key:keys) {
+                stringBuilder.append(prefix);
                 stringBuilder.append(point.get(key).toString());
-                stringBuilder.append(",");
+                prefix = ",";
             }
             stringBuilder.append("\n");
         }

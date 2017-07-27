@@ -29,9 +29,9 @@ public class DataAccumulatorTest {
 
         String out = buf.toString();
         String header = buf.getHeader();
-        assertTrue(out.equals("1499999923,0.1,0.4,0.9,\n"));
+        assertTrue(out.equals("1499999923,0.1,0.4,0.9\n"));
 
-        assertTrue(header.equals("Time,accX,accY,accZ,\n"));
+        assertTrue(header.equals("Time,accX,accY,accZ\n"));
 
     }
 
