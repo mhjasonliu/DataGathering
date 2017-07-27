@@ -108,42 +108,50 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     private void registerSensors(Set<String> sensors) {
         Log.d(TAG, "registerSensors count..." + sensors.size());
-        for (String sensor : sensors) {
-            Log.d(TAG, "registerSensors service..." + sensor);
-            switch (sensor) {
-                case Preferences.SENSOR_ACCEL:
-                    mAccelListener.registerListener();
-                    break;
-                case Preferences.SENSOR_GYRO:
-                    mGyroListener.registerListener();
-                    break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.registerListener();
-                    break;
-                default:
-                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-            }
-        }
+        mAccelListener.registerListener();
+        mGyroListener.registerListener();
+        mHeartListener.registerListener();
+
+//        for (String sensor : sensors) {
+//            Log.d(TAG, "registerSensors service..." + sensor);
+//            switch (sensor) {
+//                case Preferences.SENSOR_ACCEL:
+//                    mAccelListener.registerListener();
+//                    break;
+//                case Preferences.SENSOR_GYRO:
+//                    mGyroListener.registerListener();
+//                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.registerListener();
+//                    break;
+//                default:
+//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
+//            }
+//        }
     }
 
     private void unRegisterSensors(Set<String> sensors) {
         Log.d(TAG, "unRegisterSensors count..." + sensors.size());
-        for (String sensor : sensors) {
-            Log.d(TAG, "unRegisterSensors service..." + sensor);
-            switch (sensor) {
-                case Preferences.SENSOR_ACCEL:
-                    mAccelListener.unRegisterListener1();
-                    break;
-                case Preferences.SENSOR_GYRO:
-                    mGyroListener.unRegisterListener1();
-                    break;
-                case Preferences.SENSOR_HEART:
-                    mHeartListener.unRegisterListener1();
-                    break;
-                default:
-                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-            }
-        }
+        mAccelListener.unRegisterListener1();
+        mGyroListener.unRegisterListener1();
+        mHeartListener.unRegisterListener1();
+
+//        for (String sensor : sensors) {
+//            Log.d(TAG, "unRegisterSensors service..." + sensor);
+//            switch (sensor) {
+//                case Preferences.SENSOR_ACCEL:
+//                    mAccelListener.unRegisterListener1();
+//                    break;
+//                case Preferences.SENSOR_GYRO:
+//                    mGyroListener.unRegisterListener1();
+//                    break;
+//                case Preferences.SENSOR_HEART:
+//                    mHeartListener.unRegisterListener1();
+//                    break;
+//                default:
+//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
+//            }
+//        }
     }
 
     /**

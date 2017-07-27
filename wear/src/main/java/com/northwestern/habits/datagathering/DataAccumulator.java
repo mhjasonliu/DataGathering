@@ -23,7 +23,7 @@ public class DataAccumulator {
     private LinkedList<Map<String, Object>> dataArray = new LinkedList<>();
     private long firstEntry;
     private long lastEntry;
-    public String type;
+    private String type;
 
     public DataAccumulator(String type, int capacity) {
         super();
@@ -75,7 +75,6 @@ public class DataAccumulator {
             }
             stringBuilder.append("\n");
         }
-        stringBuilder.append("END OF BUFFER\n");
 
         String bufferString = stringBuilder.toString();
         return bufferString;
@@ -87,10 +86,7 @@ public class DataAccumulator {
         if (firstEntry == 0) {
             firstEntry = time;
         }
-
-        lastEntry = time;
         dataArray.add(point);
-
         return isFull();
     }
 

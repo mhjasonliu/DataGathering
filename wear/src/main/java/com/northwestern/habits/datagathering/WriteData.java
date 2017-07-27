@@ -30,8 +30,6 @@ public class WriteData extends IntentService {
     private static final String PARAM_TIME = "com.northwestern.habits.datagathering.extra.TIME";
     private static final String PARAM_TYPE = "com.northwestern.habits.datagathering.extra.TYPE";
 
-    private Context mContext;
-
     public WriteData() {
         super("WriteData");
     }
@@ -45,7 +43,7 @@ public class WriteData extends IntentService {
     // TODO: Customize helper method
     public static void requestWrite(Context context, DataAccumulator buf) {
         Log.w(TAG, "request writing");
-        
+
         Intent intent = new Intent(context, WriteData.class);
         intent.setAction(ACTION_WRITE);
         intent.putExtra(PARAM_CONTENT, buf.toString());
@@ -77,8 +75,14 @@ public class WriteData extends IntentService {
 
         // Make csv
         File csv = getCsv(folder, time);
+
+        Log.w(TAG, csv.toString());
+
         try {
             FileWriter csvwriter = new FileWriter(csv, true);
+            if (!csv.exists()) {
+                csvwriter.write
+            }
             csvwriter.write(content);
             csvwriter.flush();
             csvwriter.close();
@@ -95,9 +99,7 @@ public class WriteData extends IntentService {
         int month = date.get(Calendar.MONTH) + 1;
         int year = date.get(Calendar.YEAR);
         int hour = date.get(Calendar.HOUR_OF_DAY);
-        /*String hourst = (hour < 10)
-                ? "0" + Integer.toString(hour) + "00"
-                : Integer.toString(hour) + "00";*/
+
         String hourst = (hour < 10)
                 ? "0" + Integer.toString(hour)
                 : Integer.toString(hour);
@@ -105,7 +107,7 @@ public class WriteData extends IntentService {
                 + Integer.toString(day) + "-"
                 + Integer.toString(year);
 
-        String PATH = mContext.getExternalFilesDir(null) + "/WearData/" + type + "/" + dateString + "/" + hourst;
+        String PATH = this.getExternalFilesDir(null) + "/WearData/" + type + "/" + dateString + "/" + hourst;
 
         File folder = new File(PATH);
         boolean bret= folder.mkdirs();
