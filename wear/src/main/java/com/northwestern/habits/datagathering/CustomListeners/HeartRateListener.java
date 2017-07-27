@@ -9,6 +9,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.WriteData;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -100,6 +101,8 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
+
+        WriteData.requestWrite(mContext, mAccumulator);
 //        WriteDataThread.writeError(e, mContext);
     }
 }

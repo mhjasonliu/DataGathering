@@ -43,7 +43,9 @@ public class WriteData extends IntentService {
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionFoo(Context context, DataAccumulator buf) {
+    public static void requestWrite(Context context, DataAccumulator buf) {
+        Log.w(TAG, "request writing");
+        
         Intent intent = new Intent(context, WriteData.class);
         intent.setAction(ACTION_WRITE);
         intent.putExtra(PARAM_CONTENT, buf.toString());

@@ -12,6 +12,7 @@ import android.content.Intent;
 
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.WriteData;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -98,7 +99,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         // Check if connected to phone
         accumulator.type="Gyroscope";
 
-        Intent intent = new Intent();
+        WriteData.requestWrite(mContext, accumulator);
 
     }
 
