@@ -26,7 +26,9 @@ public class WriteData extends IntentService {
 
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     private static final String ACTION_WRITE = "com.northwestern.habits.datagathering.action.WRITEBUFFER";
-    private static final String PARAM_BUFFER = "com.northwestern.habits.datagathering.extra.BUFFER";
+    private static final String PARAM_CONTENT = "com.northwestern.habits.datagathering.extra.CONTENT";
+    private static final String PARAM_TIME = "com.northwestern.habits.datagathering.extra.TIME";
+    private static final String PARAM_TYPE = "com.northwestern.habits.datagathering.extra.TYPE";
 
     private Context mContext;
 
@@ -41,11 +43,13 @@ public class WriteData extends IntentService {
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionFoo(Context context, DataAccumulator acc) {
-//        Intent intent = new Intent(context, WriteData.class);
-//        intent.setAction(ACTION_WRITE);
-//        intent.putExtra(PARAM_BUFFER, acc);
-//        context.startService(intent);
+    public static void startActionFoo(Context context, DataAccumulator buf) {
+        Intent intent = new Intent(context, WriteData.class);
+        intent.setAction(ACTION_WRITE);
+        intent.putExtra(PARAM_CONTENT, buf.toString());
+        intent.putExtra(PARAM_TIME, buf.getFirstEntry());
+        intent.putExtra(PARAM_TYPE, buf.getType());
+        context.startService(intent);
     }
 
     @Override
@@ -53,8 +57,10 @@ public class WriteData extends IntentService {
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_WRITE.equals(action)) {
-                final DataAccumulator buffer = intent.getParcelableExtra(PARAM_BUFFER);
-                handleActionWrite(buffer);
+                String content = intent.getStringExtra(PARAM_CONTENT);
+                long time = intent.getLongExtra(PARAM_TIME, 1L);
+                String type = intent.getStringExtra(PARAM_TYPE);
+                handleActionWrite(content, time, type);
             }
         }
     }
@@ -64,15 +70,19 @@ public class WriteData extends IntentService {
      * parameters.
      */
 
-    private void handleActionWrite(DataAccumulator accumulator) {
-//        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
-        if (accumulator == null) return;
-        long firstPointTime = accumulator.getFirstEntry();
-
-        File folder = getFolder(firstPointTime, accumulator.type);
+    private void handleActionWrite(String content, long time, String type) {
+        File folder = getFolder(time, type);
 
         // Make csv
-        File csv = getCsv(folder, firstPointTime);
+        File csv = getCsv(folder, time);
+        try {
+            FileWriter csvwriter = new FileWriter(csv, true);
+            csvwriter.write(content);
+            csvwriter.flush();
+            csvwriter.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public File getFolder(long timestamp, String type) {
@@ -113,91 +123,5 @@ public class WriteData extends IntentService {
         int minute = c.get(Calendar.MINUTE);
         String fName = hourst.concat("_" + Integer.toString(minute) + ".csv");
         return new File(folder.getPath(), fName);
-    }
-
-    public FileWriter writeProperties(List<String> properties, File csv)
-            throws IOException {
-//        Log.v(TAG, "writing to not exist: " + csv.getName());
-        if (!csv.exists()) {
-            // Make the file
-            if (!csv.createNewFile()) {
-                writeError(new IOException("Failed to create csv " + csv.toString()), mContext);
-            }
-
-            FileWriter csvWriter = new FileWriter(csv.getPath(), true);
-            for (int i = 0; i < properties.size(); i++) {
-                csvWriter.append(properties.get(i));
-                if (i == properties.size() - 1) {
-                    csvWriter.append("\n");
-                } else {
-                    csvWriter.append(",");
-                }
-            }
-            return csvWriter;
-        } else {
-            return new FileWriter(csv.getPath(), true);
-        }
-    }
-
-    public void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
-                                List<String> properties) {
-        boolean newLine = true;
-        for (Map<String, Object> datum :
-                dataList) {
-            for (String property :
-                    properties) {
-                try {
-                    if (!newLine) csvWriter.append(",");
-                    csvWriter.append(datum.get(property).toString());
-                    newLine = false;
-                } catch (IOException e) {
-                    writeError(e, mContext);
-                }
-            }
-            try {
-                csvWriter.append("\n");
-                newLine = true;
-            } catch (IOException e) {
-                writeError(e, mContext);
-            }
-        }
-    }
-    public static void writeError(Throwable e, Context context) {
-        Log.e(TAG, "WRITING ERROR TO DISK: \n");
-        e.printStackTrace();
-
-        String PATH = context.getExternalFilesDir(null) + "/WearData/ERRORS/";
-        File folder = new File(PATH);
-        if (!folder.exists()) folder.mkdirs();
-
-        Calendar c = Calendar.getInstance();
-        File errorReport = new File(folder.getPath()
-                + "/Exception_"
-                + c.get(Calendar.HOUR_OF_DAY)
-                + c.get(Calendar.MINUTE)
-                + c.get(Calendar.SECOND)
-                + ".txt");
-
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(errorReport, true);
-            writer.write("\n\n-----------------BEGINNING OF EXCEPTION-----------------\n\n");
-            writer.write(e.toString());
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.flush();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                try {
-                    writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
     }
 }

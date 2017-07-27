@@ -47,6 +47,8 @@ public class DataAccumulator {
         }
     }
 
+    public String getType() {return type;}
+
     @Override
     public String toString(){
 
