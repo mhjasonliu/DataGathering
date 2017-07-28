@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -28,6 +29,7 @@ import java.util.Set;
 public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
     private int ONGOING_NOTIFICATION_ID = 003;
+    private PowerManager.WakeLock wakeLock;
 
     //default constructor
     public DataService() {
@@ -51,6 +53,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Starting WearableListenerService...");
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+        wakeLock.acquire();
 
         if (intent != null) {
             startIntent = PendingIntent.getActivity(getBaseContext(), 0,
@@ -238,6 +245,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     @Override
     public void onDestroy() {
+        stopForeground(true);
+        if(wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+
         unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                 .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
     }
