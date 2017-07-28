@@ -3,6 +3,7 @@ package com.northwestern.habits.datagathering;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,7 @@ public class MainActivity extends Activity {
 
     private TextView mTextView;
     private int REQUEST = 101;
+    private int ONGOING_NOTIFICATION_ID = 003;
 
     final Handler handler = new Handler();
 

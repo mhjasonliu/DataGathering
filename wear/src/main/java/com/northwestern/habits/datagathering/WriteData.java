@@ -132,7 +132,7 @@ public class WriteData extends IntentService {
         c.setTimeInMillis(timestamp);
         String hourst = Integer.toString(c.get(Calendar.HOUR_OF_DAY));
         int minute = c.get(Calendar.MINUTE);
-        String fName = hourst.concat("_" + Integer.toString(minute) + ".csv");
+        String fName = hourst.concat("_" + String.format("%02d",minute) + ".csv");
         return new File(folder.getPath(), fName);
     }
 }

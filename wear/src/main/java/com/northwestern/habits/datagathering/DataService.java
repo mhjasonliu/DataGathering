@@ -27,6 +27,7 @@ import java.util.Set;
 
 public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
+    private int ONGOING_NOTIFICATION_ID = 003;
 
     //default constructor
     public DataService() {
@@ -218,6 +219,27 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 Log.v(TAG, getSharedPreferences(Preferences.PREFERENCE_NAME, 0).getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()).toString());
             }
         }
+    }
+
+    @Override
+    public void onCreate() {
+        Intent notificationIntent = new Intent(this, DataService.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle("Collecting data")
+                .setContentText("HABits")
+                .setContentIntent(pendingIntent)
+                .build();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+
+    @Override
+    public void onDestroy() {
+        unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
+                .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
     }
 
     private PendingIntent startIntent;
