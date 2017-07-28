@@ -10,19 +10,19 @@ import android.content.SharedPreferences;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.northwestern.habits.datagathering.CustomListeners.AccelerometerListener;
 import com.northwestern.habits.datagathering.CustomListeners.GyroscopeListener;
 import com.northwestern.habits.datagathering.CustomListeners.HeartRateListener;
-import com.northwestern.habits.datagathering.CustomListeners.WriteDataThread;
+import com.northwestern.habits.datagathering.DataThreads.GyroWriteDataThread;
+import com.northwestern.habits.datagathering.DataThreads.HeartWriteDataThread;
+import com.northwestern.habits.datagathering.DataThreads.SingletonDataTread;
+import com.northwestern.habits.datagathering.DataThreads.WriteDataThread;
 
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -65,7 +65,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         initSensorsAndRegister();
         if (isCharging(this)) {
             Log.v(TAG, "isCharging true" );
-            new SendDataTask(getBaseContext()).execute();
+            SingletonDataTread.getInstance().getAccelDT(getBaseContext()).cancel(true);
+            SingletonDataTread.getInstance().getGyroDt(getBaseContext()).cancel(true);
+            SingletonDataTread.getInstance().getHeartDT(getBaseContext()).cancel(true);
+            SingletonDataTread.getInstance().getSendDataTask(getBaseContext()).execute();
+//            new SendDataTask(getBaseContext()).execute(); //executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         return START_STICKY;
     }
@@ -96,17 +100,39 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                 Log.d(TAG, "*************************INIT SENSORS CALLED*************************");
                 if (mManager == null) {
                     mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-                    mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+                    mAccelListener = new AccelerometerListener(getApplicationContext(), mManager);
                     mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
                     mHeartListener = new HeartRateListener(getBaseContext(), mManager);
                 }
+//                SingletonDataTread.getInstance().getWriteMethodDT(getApplicationContext());
+                mAccelListener.setWDT((WriteDataThread) SingletonDataTread.getInstance()
+                        .getAccelDT(getBaseContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
+                mGyroListener.setWDT((GyroWriteDataThread) SingletonDataTread.getInstance()
+                        .getGyroDt(getBaseContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
+                mHeartListener.setWDT((HeartWriteDataThread) SingletonDataTread.getInstance()
+                        .getHeartDT(getBaseContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
+
+                /*mAccelListener.setWDT(SingletonDataTread.getInstance()
+                        .getAccelDT(getBaseContext()));//.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
+                mGyroListener.setWDT(SingletonDataTread.getInstance()
+                        .getAccelDT(getBaseContext()));//.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
+                mHeartListener.setWDT(SingletonDataTread.getInstance()
+                        .getAccelDT(getBaseContext()));//.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
+                SingletonDataTread.getInstance()
+                        .getAccelDT(getBaseContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);*/
+//                WriteDataThread wdt = new WriteDataThread(getBaseContext());
+//                mAccelListener.setWDT(wdt);
+//                mGyroListener.setWDT(wdt);
+//                mHeartListener.setWDT(wdt);
+//                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
                         .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-                WriteDataThread wdt = new WriteDataThread(getBaseContext());
+
+                /*WriteDataThread wdt = new WriteDataThread(getBaseContext());
                 mAccelListener.setWDT(wdt);
                 mGyroListener.setWDT(wdt);
                 mHeartListener.setWDT(wdt);
-                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                wdt.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);*/
             }
         }
     }
@@ -129,6 +155,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
                     Log.e(TAG, "Unknown sensor requested: " + sensor);
             }
         }
+        // sensors not registered first time it will forcefully register here.
+        if (sensors.size() <= 0) {
+            mAccelListener.registerListener();
+            mGyroListener.registerListener();
+        }
     }
 
     private void unRegisterSensors(Set<String> sensors) {
@@ -137,13 +168,13 @@ public class DataService extends WearableListenerService implements Thread.Uncau
             Log.d(TAG, "unRegisterSensors service..." + sensor);
             switch (sensor) {
                 case Preferences.SENSOR_ACCEL:
-                    mAccelListener.unRegisterListener1();
+                    mAccelListener.unRegisterListener();
                     break;
                 case Preferences.SENSOR_GYRO:
-                    mGyroListener.unRegisterListener1();
+                    mGyroListener.unRegisterListener();
                     break;
                 case Preferences.SENSOR_HEART:
-                    mHeartListener.unRegisterListener1();
+                    mHeartListener.unRegisterListener();
                     break;
                 default:
                     Log.e(TAG, "Unknown sensor requested: " + sensor);

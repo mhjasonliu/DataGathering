@@ -9,10 +9,12 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.DataThreads.GyroWriteDataThread;
+import com.northwestern.habits.datagathering.DataThreads.WriteDataThread;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -27,18 +29,18 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
-    private int SENSOR_DELAY_16HZ = 62000;
+    private int SENSOR_DELAY_16HZ = 62500;
     private long prevtimestamp= 0;
 
     public GyroscopeListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", 192);
+        mAccumulator = new DataAccumulator("Gyroscope", 1500);
     }
 
-    private WriteDataThread mWriteDataThread = null;
-    public void setWDT(WriteDataThread wdt)
+    private GyroWriteDataThread mWriteDataThread = null;
+    public void setWDT(GyroWriteDataThread wdt)
     {
         mWriteDataThread = wdt;
     }
@@ -59,12 +61,13 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         }
     }
 
-    public void unRegisterListener1() {
+    /*public void unRegisterListener1() {
         Log.v(TAG, "unregisterListenerG...");
         mManager.unregisterListener(this);
         isRegistered = false;
-    }
+    }*/
 
+    int curMin= -1;
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Handle new gyro value
@@ -73,16 +76,59 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
-//                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        long timeInMillis = c.getTimeInMillis()
+              + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+        //get minute value
+        c.setTimeInMillis(timeInMillis);
+        int minute = (c.get(Calendar.MINUTE));
         Map<String, Object> dataPoint = new HashMap<>();
-        dataPoint.put("Time", event.timestamp);
+        dataPoint.put("Time", timeInMillis);
         dataPoint.put("rotX", event.values[0]);
         dataPoint.put("rotY", event.values[1]);
         dataPoint.put("rotZ", event.values[2]);
 
-        if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
+        if(minute!= curMin)
+        {
+            //data available for new minute.
+            if(curMin==-1)
+            {
+                //this is first time.
+                mAccumulator.putDataPoint(dataPoint, timeInMillis);
+            }
+            else
+            {
+                //this is new minute.
+                DataAccumulator old = new DataAccumulator(mAccumulator);
+                mAccumulator = new DataAccumulator("Gyroscope", 1500); // 1200
+                mAccumulator.putDataPoint(dataPoint, timeInMillis);
+                mWriteDataThread.mQueue.add(old);
+                Log.v(TAG, "Gyro mQueue.add() size " + mWriteDataThread.mQueue.size());
+            }
+            curMin= minute;
+        }
+        else
+        {
+            mAccumulator.putDataPoint(dataPoint, timeInMillis);
+        }
+//        Log.v(TAG, "G+millis "+timeInMillis);
+        //event.timestamp = c.getTimeInMillis()
+          //      + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+
+
+        /*if (mAccumulator.putDataPoint(dataPoint, timeInMillis)) { // change
+            // Accumulator is full
+
+            // Start a fresh accumulator, preserving the old
+            DataAccumulator old = new DataAccumulator(mAccumulator);
+            mAccumulator = new DataAccumulator("Gyroscope", 1020); // 1200
+            //handleFullAccumulator(old);
+            //mWriteDataThread.SaveToFile(old);
+            mWriteDataThread.mQueue.add(old);
+            Log.v(TAG, "queue size after adding " + mWriteDataThread.mQueue.size() + " recently added ");
+        }*/
+
+        /*if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
             Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
@@ -93,7 +139,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
                 accumulator.putDataPoint(point, (long) point.get("Time"));
             }
             handleFullAccumulator(accumulator);
-        }
+        }*/
     }
 
     @Override
@@ -103,9 +149,15 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-        accumulator.type="Gyroscope";
-//        Log.v(TAG, " count " + accumulator.getCount());
+        accumulator.type = "Gyroscope";
+        Log.v(TAG, accumulator.type + " " + accumulator.getCount());
+//        WriteDataMethods.saveAccumulator(accumulator, mContext);
+
         mWriteDataThread.SaveToFile(accumulator);
+
+//        Intent intent = new Intent(mContext, WriteDataIService.class);
+//        intent.putExtra("buffer", accumulator);
+//        mContext.startService(intent);
     }
 
     @Override

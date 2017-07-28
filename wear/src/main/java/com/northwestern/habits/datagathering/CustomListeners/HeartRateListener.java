@@ -9,10 +9,11 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.DataThreads.HeartWriteDataThread;
+import com.northwestern.habits.datagathering.DataThreads.WriteDataThread;
 
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -34,7 +35,7 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mAccumulator = new DataAccumulator("HeartRate", 15);
+        mAccumulator = new DataAccumulator("HeartRate", 1500);
     }
 
     public boolean isRegistered() {
@@ -48,6 +49,9 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         }
     }
 
+    private HeartWriteDataThread mWriteDataThread = null;
+    public void setWDT(HeartWriteDataThread wdt) { mWriteDataThread = wdt; }
+
     public void unRegisterListener() {
         if (isRegistered) {
             mManager.unregisterListener(this);
@@ -55,12 +59,13 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         }
     }
 
-    public void unRegisterListener1() {
+    /*public void unRegisterListener1() {
         Log.v(TAG, "unregisterListenerH...");
         mManager.unregisterListener(this);
         isRegistered = false;
-    }
+    }*/
 
+    int curMin = -1;
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Handle new HEART value
@@ -69,30 +74,39 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+        long timeInMillis = c.getTimeInMillis()
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+        //get minute value
+        c.setTimeInMillis(timeInMillis);
+        int minute = (c.get(Calendar.MINUTE));
         Map<String, Object> dataPoint = new HashMap<>();
-        dataPoint.put("Time", event.timestamp);
+        dataPoint.put("Time", timeInMillis);
         dataPoint.put("Accuracy", event.accuracy);
         dataPoint.put("Rate", event.values[0]);
 
-        if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
-            // Accumulator is full
-            // Start a fresh accumulator, preserving the old
-            Iterator<Map<String, Object>> oldDataIter = mAccumulator.getIterator();
-            mAccumulator = new DataAccumulator("HeartRate", 15);
-            DataAccumulator accumulator = new DataAccumulator("HeartRate", mAccumulator.getCount());
-            while (oldDataIter.hasNext()) {
-                Map<String, Object> point = oldDataIter.next();
-                accumulator.putDataPoint(point, (long) point.get("Time"));
+        if(minute!= curMin)
+        {
+            //data available for new minute.
+            if(curMin==-1)
+            {
+                //this is first time.
+                mAccumulator.putDataPoint(dataPoint, timeInMillis);
             }
-            handleFullAccumulator(accumulator);
+            else
+            {
+                //this is new minute.
+                DataAccumulator old = new DataAccumulator(mAccumulator);
+                mAccumulator = new DataAccumulator("HeartRate", 1500); // 1200
+                mAccumulator.putDataPoint(dataPoint, timeInMillis);
+                mWriteDataThread.mQueue.add(old);
+                Log.v(TAG, "Heart mQueue.add() size " + mWriteDataThread.mQueue.size());
+            }
+            curMin= minute;
         }
-    }
-    private WriteDataThread mWriteDataThread = null;
-    public void setWDT(WriteDataThread wdt)
-    {
-        mWriteDataThread = wdt;
+        else
+        {
+            mAccumulator.putDataPoint(dataPoint, timeInMillis);
+        }
     }
 
     @Override
@@ -103,8 +117,14 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
         accumulator.type = "HeartRate";
-//        Log.v(TAG, " count " + accumulator.getCount());
+//        Log.v(TAG, accumulator.type + " " + accumulator.getCount());
+//        WriteDataMethods.saveAccumulator(accumulator, mContext);
+
         mWriteDataThread.SaveToFile(accumulator);
+
+//        Intent intent = new Intent(mContext, WriteDataIService.class);
+//        intent.putExtra("buffer", accumulator);
+//        mContext.startService(intent);
     }
 
     @Override

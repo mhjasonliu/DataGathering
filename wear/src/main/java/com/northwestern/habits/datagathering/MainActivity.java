@@ -13,7 +13,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
-import java.io.File;
 import java.util.Calendar;
 
 public class MainActivity extends Activity {

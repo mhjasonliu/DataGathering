@@ -9,10 +9,10 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
+import com.northwestern.habits.datagathering.DataThreads.WriteDataThread;
 
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -26,9 +26,8 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
-    private DataAccumulator mAccelAccumulator;
-    private int SENSOR_DELAY_16HZ = 62000;
-    private int SENSOR_DELAY_20HZ = 20000;
+    private DataAccumulator mAccumulator;
+    private int SENSOR_DELAY_16HZ = 62500;
     private long prevtimestamp= 0;
     private WriteDataThread mWriteDataThread = null;
 
@@ -36,7 +35,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccelAccumulator = new DataAccumulator("Accelerometer", 192);
+        mAccumulator = new DataAccumulator("Accelerometer", 1500);
     }
 
     public void setWDT(WriteDataThread wdt)
@@ -61,12 +60,13 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         }
     }
 
-    public void unRegisterListener1() {
+    /*public void unRegisterListener1() {
         Log.v(TAG, "unregisterListenerA...");
         mManager.unregisterListener(this);
         isRegistered = false;
-    }
+    }*/
 
+    int curMin= -1;
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Handle new accel value
@@ -74,30 +74,37 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         if(prevtimestamp == event.timestamp) return;
         prevtimestamp = event.timestamp;
 //        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
-
+//        Calendar c = Calendar.getInstance();
+//        event.timestamp = c.getTimeInMillis();
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis();
-//        Log.v(TAG, event.sensor.getName() + "+Accumulator at " + event.timestamp);
+
+        long timeInMillis = c.getTimeInMillis()
+                + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+        //get minute value
+        c.setTimeInMillis(timeInMillis);
+        int minute = (c.get(Calendar.MINUTE));
         Map<String, Object> dataPoint = new HashMap<>();
-        dataPoint.put("Time", event.timestamp);
+        dataPoint.put("Time", timeInMillis);
         dataPoint.put("accX", event.values[0]);
         dataPoint.put("accY", event.values[1]);
         dataPoint.put("accZ", event.values[2]);
 
-        if (mAccelAccumulator.putDataPoint(dataPoint, event.timestamp)) { // change
-            // Accumulator is full
-
-            // Start a fresh accumulator, preserving the old
-            Iterator<Map<String, Object>> oldDataIter = mAccelAccumulator.getIterator();
-            // change check is full
-            mAccelAccumulator = new DataAccumulator("Accelerometer", 192); // 1200
-            DataAccumulator accumulator = new DataAccumulator("Accelerometer", mAccelAccumulator.getCount());
-            while (oldDataIter.hasNext()) {
-                Map<String, Object> point = oldDataIter.next();
-                accumulator.putDataPoint(point, (long) point.get("Time"));
+        if(minute != curMin) {
+            //data available for new minute.
+            if(curMin==-1) {
+                //this is first time.
+                mAccumulator.putDataPoint(dataPoint, timeInMillis);
+            } else {
+                //this is new minute.
+                DataAccumulator old = new DataAccumulator(mAccumulator);
+                mAccumulator = new DataAccumulator("Accelerometer", 1500); // 1200
+                mAccumulator.putDataPoint(dataPoint, timeInMillis);
+                mWriteDataThread.mQueue.add(old);
+                Log.v(TAG, "Accel mQueue.add() size " + mWriteDataThread.mQueue.size());
             }
-
-            handleFullAccumulator(accumulator);
+            curMin= minute;
+        } else {
+            mAccumulator.putDataPoint(dataPoint, timeInMillis);
         }
     }
 
@@ -108,10 +115,16 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
         // Check if connected to phone
-//        Log.v(TAG, "Accel+Accumulator was full " + accumulator.getCount());
+        Log.v(TAG, accumulator.type + " " + accumulator.getCount());
         //new WriteDataTask(mContext, accumulator, "Accelerometer").execute();
-        accumulator.type="Accelerometer";
+        accumulator.type = "Accelerometer";
+//        WriteDataMethods.saveAccumulator(accumulator, mContext);
+
         mWriteDataThread.SaveToFile(accumulator);
+
+//        Intent intent = new Intent(mContext.getApplicationContext(), WriteDataIService.class);
+//        intent.putExtra("buffer", accumulator);
+//        mContext.getApplicationContext().startService(intent);
     }
 
     @Override

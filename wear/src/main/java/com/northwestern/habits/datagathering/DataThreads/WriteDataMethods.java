@@ -1,7 +1,6 @@
-package com.northwestern.habits.datagathering.CustomListeners;
+package com.northwestern.habits.datagathering.DataThreads;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.northwestern.habits.datagathering.DataAccumulator;
@@ -15,72 +14,50 @@ import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Created by Y.Misal on 5/30/2017.
+ * Created by Y.Misal on 7/26/2017.
  */
 
-public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thread.UncaughtExceptionHandler {
-    private static final String TAG = "WriteDataThread";
-
-    volatile boolean mRunning = true;
-    //set mRunning to false when terminating appln
-    Queue<DataAccumulator> mQueue;
-    private final Object obj;
+public class WriteDataMethods implements Thread.UncaughtExceptionHandler {
+    private static final String TAG = "WriteDataMethods";
     private Context mContext;
+    private final Object mAccelObj;
+    private static ConcurrentLinkedQueue<DataAccumulator> mQueue = null;
 
-    public WriteDataThread(Context context) {
+    public WriteDataMethods(Context context) {
         mContext = context;
-        mQueue   = new LinkedList<DataAccumulator>();
-        obj      = new Object();
+        mAccelObj = new Object();
+        mQueue    = new ConcurrentLinkedQueue<>();
     }
 
-    public synchronized void SaveToFile(DataAccumulator acc) {
-        synchronized (obj) {
-            try {
-                mQueue.add(acc);
-            } catch (IllegalStateException e) {
-                writeError(e, mContext);
-                e.printStackTrace();
-            }
-            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+acc.type);
+    public static void addToQueue(DataAccumulator accumulator, Context context) {
+        try {
+            mQueue.add(accumulator);
+            Log.v(TAG, "current queue size " + mQueue.size() + " recently added "+accumulator.type+" & size "+accumulator.getCount());
+        } catch (IllegalStateException e) {
+            writeError(e, context);
+            e.printStackTrace();
         }
-
-    }
-
-    @Override
-    protected Void doInBackground(Void... voids) {
-        while(mRunning) {
-            if(mQueue.size() > 0) {
-                DataAccumulator first = null;
-                synchronized (obj) {
-                    try {
-                        first = mQueue.remove();
-                    } catch (NoSuchElementException e) {
-                        writeError(e, mContext);
-                    }
-                    Log.v(TAG, "queue size after remove " + mQueue.size()+" removed type:"+first.type);
-                }
-                //process first.
-                saveAccumulator(first);
-            }
+        if(mQueue.size() > 0) {
+            DataAccumulator accumulator1 = mQueue.remove();
+            Log.v(TAG, "queue size after remove " + mQueue.size() + " removed type:" + accumulator1.type);
+            saveAccumulator(accumulator1, context);
         }
-        return null;
     }
 
-    private void saveAccumulator(DataAccumulator accumulator) {
+    public static void saveAccumulator(DataAccumulator accumulator, Context context) {
 //        Log.v(TAG, "Got Acc to save " + accumulator.type+ " count:"+accumulator.getCount());
         if (accumulator == null) return;
         long firstPointTime = accumulator.getFirstEntry();
 
-        File folder = getFolder(firstPointTime, accumulator.type);
+        File folder = getFolder(firstPointTime, accumulator.type, context);
 
         // Make csv
         File csv = getCsv(folder, firstPointTime);
 
-        Map<Integer, List<Map<String, Object>>> dataSplit = accumulator.splitIntoMinutes(mContext);
+        Map<Integer, List<Map<String, Object>>> dataSplit = accumulator.splitIntoMinutes(context);
 
         for (List<Map<String, Object>> series : dataSplit.values()) {
             Map<String, Object> firstPoint = series.get(0);
@@ -93,31 +70,31 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
             Log.v(TAG, "writing to : " + csv.getAbsolutePath());
             try {
                 if (!csv.exists()) {
-                    writer = writeProperties(properties, csv);
+                    writer = writeProperties(properties, csv, context);
                 } else {
                     writer = new FileWriter(csv, true);
                 }
 
-                writeDataSeries(writer, series, properties);
+                writeDataSeries(writer, series, properties, context);
                 String text = String.format("Writing %s data to CSV file", accumulator.type);
 //                writeLogs( text + "_" + System.currentTimeMillis(), mContext );
 
             } catch (ConcurrentModificationException | IOException e) {
-                writeError(e, mContext);
+                writeError(e, context);
             } finally {
                 if (writer != null) {
                     try {
                         writer.flush();
                         writer.close();
                     } catch (IOException e) {
-                        writeError(e, mContext);
+                        writeError(e, context);
                     }
                 }
             }
         }
     }
 
-    public File getFolder(long timestamp, String type) {
+    public static File getFolder(long timestamp, String type, Context context) {
         // Date for use in the folder path
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(timestamp);
@@ -135,35 +112,39 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
                 + Integer.toString(day) + "-"
                 + Integer.toString(year);
 
-        String PATH = mContext.getExternalFilesDir(null) + "/WearData/" + type + "/" + dateString + "/" + hourst;
+        String PATH = context.getExternalFilesDir(null) + "/WearData/" + type + "/" + dateString + "/" + hourst;
 
         File folder = new File(PATH);
         boolean bret= folder.mkdirs();
         if (bret) {
             //folder.mkdirs();
-            Log.v(TAG, "directory " + folder.getPath() + " Succeeded ");
+            Log.v(TAG, "directory " + folder.getPath() + " Succeeded type " + type);
         } else {
-            Log.v(TAG, "directory " + folder.getPath() + " FAILED ");
+            Log.v(TAG, "directory " + folder.getPath() + " FAILED type " + type);
         }
         return folder;
     }
 
-    public File getCsv(File folder, long timestamp) {
+    public static File getCsv(File folder, long timestamp) {
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(timestamp);
         String hourst = Integer.toString(c.get(Calendar.HOUR_OF_DAY));
-        int minute = c.get(Calendar.MINUTE);
-        String fName = hourst.concat("_" + Integer.toString(minute) + ".csv");
+        int minute = (c.get(Calendar.MINUTE));
+        String minute1 = (minute < 10)
+                ? "0" + Integer.toString(minute)
+                : Integer.toString(minute);
+        String fName = hourst.concat("_" + minute1 + ".csv");
+        Log.v(TAG, "writing to getCsv(): " + fName);
         return new File(folder.getPath(), fName);
     }
 
-    public FileWriter writeProperties(List<String> properties, File csv)
+    public static FileWriter writeProperties(List<String> properties, File csv, Context context)
             throws IOException {
 //        Log.v(TAG, "writing to not exist: " + csv.getName());
         if (!csv.exists()) {
             // Make the file
             if (!csv.createNewFile()) {
-                writeError(new IOException("Failed to create csv " + csv.toString()), mContext);
+                writeError(new IOException("Failed to create csv " + csv.toString()), context);
             }
 
             FileWriter csvWriter = new FileWriter(csv.getPath(), true);
@@ -181,8 +162,8 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
         }
     }
 
-    public void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
-                                List<String> properties) {
+    public static void writeDataSeries(FileWriter csvWriter, List<Map<String, Object>> dataList,
+                                 List<String> properties, Context context) {
         boolean newLine = true;
         for (Map<String, Object> datum :
                 dataList) {
@@ -193,19 +174,19 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
                     csvWriter.append(datum.get(property).toString());
                     newLine = false;
                 } catch (IOException e) {
-                    writeError(e, mContext);
+                    writeError(e, context);
                 }
             }
             try {
                 csvWriter.append("\n");
                 newLine = true;
             } catch (IOException e) {
-                writeError(e, mContext);
+                writeError(e, context);
             }
         }
     }
 
-    public static void writeLogs(String str, Context context) {
+    public static void writeLogs(String str, Context context, Context context1) {
         String[] message = str.split("_");
         String PATH = context.getExternalFilesDir(null) + "/WearData/LOGS/";
         File folder = new File(PATH);
@@ -283,4 +264,5 @@ public class WriteDataThread extends AsyncTask<Void, Void, Void> implements Thre
     public void uncaughtException(Thread t, Throwable e) {
         writeError(e, mContext);
     }
+
 }
