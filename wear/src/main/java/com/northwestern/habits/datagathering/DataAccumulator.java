@@ -49,6 +49,19 @@ public class DataAccumulator {
         }
     }
 
+    private String concatenate(LinkedList<String> elements) {
+        StringBuilder builder = new StringBuilder();
+
+        String prefix = "";
+        for (String element:elements) {
+            builder.append(prefix);
+            builder.append(element);
+            prefix = ",";
+        }
+        builder.append("\n");
+        return builder.toString();
+    }
+
     public String getType() {return type;}
 
     public String getHeader() {

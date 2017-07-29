@@ -46,7 +46,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     public void registerListener() {
         if (!isRegistered) {
             Log.v(TAG, "Accel+registerListener...");
-            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_100HZ);
+            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ);
             isRegistered = true;
         }
     }

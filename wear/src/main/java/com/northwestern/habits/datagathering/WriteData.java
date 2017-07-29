@@ -41,10 +41,7 @@ public class WriteData extends IntentService {
      *
      * @see IntentService
      */
-    // TODO: Customize helper method
     public static void requestWrite(Context context, DataAccumulator buf) {
-        Log.w(TAG, "request writing");
-
         Intent intent = new Intent(context, WriteData.class);
         intent.setAction(ACTION_WRITE);
         intent.putExtra(PARAM_CONTENT, buf.toString());
@@ -79,7 +76,7 @@ public class WriteData extends IntentService {
         // Make csv
         File csv = getCsv(folder, time);
 
-        Log.w(TAG, csv.toString());
+        Log.v(TAG, csv.toString());
 
         try {
             if (!csv.exists()) {

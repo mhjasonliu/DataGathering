@@ -19,17 +19,15 @@ import java.util.Calendar;
  * Created by William on 2/25/2017
  */
 
-public class Receiver extends BroadcastReceiver {
-    private static final String TAG = "Wear+Receiver";
+public class RestartReceiver extends BroadcastReceiver {
+    private static final String TAG = "RestartReceiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "Starting BroadcastReceiver...");
 
         String action = intent.getAction();
-        if (action.equals(Intent.ACTION_POWER_CONNECTED)) { // power connected 1
-//            WriteDataThread.writeLogs( "Wearable connected to power" + "_" + System.currentTimeMillis(), context );
-            Log.d(TAG, "1ACTION_POWER_CONNECTED...BFR");
+        if (action.equals(Intent.ACTION_BOOT_COMPLETED)) { // power connected 1
             context.startActivity(new Intent(context, MainActivity.class));
         }
     }

@@ -23,7 +23,6 @@ public class MainActivity extends Activity {
 
     private TextView mTextView;
     private int REQUEST = 101;
-    private int ONGOING_NOTIFICATION_ID = 003;
 
     final Handler handler = new Handler();
 
@@ -47,15 +46,5 @@ public class MainActivity extends Activity {
 
         Intent intent = new Intent(this, DataService.class);
         startService(intent);
-
-
-//        final AlarmManager localAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//        final PendingIntent localPendingIntent = PendingIntent.getService(this , 0, new Intent(this, DataService.class), 0);
-//        final Runnable r = new Runnable() {
-//            public void run() {
-//                localAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(), 240000, localPendingIntent);
-//            }
-//        };
-//        handler.postDelayed(r, 6000);
     }
 }
