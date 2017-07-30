@@ -3,11 +3,13 @@ package com.northwestern.habits.datagathering;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -27,7 +29,7 @@ public class WriteData extends IntentService {
 
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     private static final String ACTION_WRITE_BUFFER = "com.northwestern.habits.datagathering.action.WRITEBUFFER";
-    private static final String ACTION_WRITE_BUFFER_ERROR = "com.northwestern.habits.datagathering.action.WRITEERROR";
+    private static final String ACTION_WRITE_ERROR = "com.northwestern.habits.datagathering.action.WRITEERROR";
 
     private static final String PARAM_CONTENT = "com.northwestern.habits.datagathering.extra.CONTENT";
     private static final String PARAM_TIME = "com.northwestern.habits.datagathering.extra.TIME";
@@ -56,6 +58,15 @@ public class WriteData extends IntentService {
         context.startService(intent);
     }
 
+    public static void logError(Context context, Throwable error) {
+        Bundle extras = new Bundle();
+        extras.putSerializable("exception", error);
+
+        Intent intent = new Intent();
+        intent.putExtras(extras);
+        context.startService(intent);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
@@ -67,13 +78,52 @@ public class WriteData extends IntentService {
                 String header = intent.getStringExtra(PARAM_HEADER);
                 handleActionWrite(content, time, type, header);
             }
+            if (ACTION_WRITE_ERROR.equals(action)) {
+                Bundle extras = intent.getExtras();
+                Throwable error = (Throwable) extras.getSerializable("exception");
+                handleActionLogError(error);
+            }
         }
     }
 
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
+    private void handleActionLogError(Throwable error) {
+        Log.e(TAG, "WRITING ERROR TO DISK: \n");
+        e.printStackTrace();
+
+        String PATH = context.getExternalFilesDir(null) + "/WearData/ERRORS/";
+        File folder = new File(PATH);
+        if (!folder.exists()) folder.mkdirs();
+
+        Calendar c = Calendar.getInstance();
+        File errorReport = new File(folder.getPath()
+                + "/Exception_"
+                + c.get(Calendar.HOUR_OF_DAY)
+                + c.get(Calendar.MINUTE)
+                + c.get(Calendar.SECOND)
+                + ".txt");
+
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(errorReport, true);
+            writer.write("\n\n-----------------BEGINNING OF EXCEPTION-----------------\n\n");
+            writer.write(e.toString());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.flush();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                try {
+                    writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }
 
     private void handleActionWrite(String content, long time, String type, String header) {
         File folder = getFolder(time, type);
@@ -129,4 +179,5 @@ public class WriteData extends IntentService {
         String fName = hourst.concat("_" + String.format(Locale.US,"%02d",minute) + ".csv");
         return new File(folder.getPath(), fName);
     }
+
 }
