@@ -22,7 +22,6 @@ public class DataAccumulator {
 
     private LinkedList<Map<String, Object>> dataArray = new LinkedList<>();
     private long firstEntry;
-    private long lastEntry;
     private String type;
     private LinkedList<String> keys;
 
@@ -32,34 +31,19 @@ public class DataAccumulator {
         this.type = type;
         this.capacity = capacity;
         this.firstEntry = 0;
-        this.lastEntry = 0;
+        this.keys = null;
     }
 
     public DataAccumulator(DataAccumulator buffer) {
-        Iterator<Map<String, Object>> bufferIter = buffer.dataArray.listIterator();
         this.capacity = buffer.capacity;
         this.type = buffer.type;
         this.firstEntry = buffer.firstEntry;
-        this.lastEntry = buffer.lastEntry;
         this.keys = buffer.keys;
+
         this.dataArray = new LinkedList<>();
-        while (bufferIter.hasNext()) {
-            Map<String, Object> point = bufferIter.next();
+        for(Map<String, Object> point:buffer.dataArray) {
             this.putDataPoint(point, (long) point.get("Time"));
         }
-    }
-
-    private String concatenate(LinkedList<String> elements) {
-        StringBuilder builder = new StringBuilder();
-
-        String prefix = "";
-        for (String element:elements) {
-            builder.append(prefix);
-            builder.append(element);
-            prefix = ",";
-        }
-        builder.append("\n");
-        return builder.toString();
     }
 
     public String getType() {return type;}
@@ -80,11 +64,7 @@ public class DataAccumulator {
     public String toString(){
 
         StringBuilder stringBuilder = new StringBuilder();
-        ListIterator<Map<String, Object>> bufferIter = dataArray.listIterator();
-
-        while (bufferIter.hasNext()) {
-            Map<String, Object> point = bufferIter.next();
-
+        for (Map<String,Object> point: dataArray) {
             String prefix = "";
             for (String key:keys) {
                 stringBuilder.append(prefix);
@@ -94,20 +74,18 @@ public class DataAccumulator {
             stringBuilder.append("\n");
         }
 
-        String bufferString = stringBuilder.toString();
-        return bufferString;
+        return stringBuilder.toString();
     }
 
     public long getFirstEntry() { return firstEntry; }
 
-    public boolean putDataPoint(Map point, long time) {
+    public boolean putDataPoint(Map<String, Object> point, long time) {
         if (firstEntry == 0) {
             firstEntry = time;
         }
 
         if (keys == null) {
-            keys = new LinkedList<String>();
-            keys.addAll(point.keySet());
+            keys = new LinkedList<>(point.keySet());
             Collections.sort(keys);
         }
 
