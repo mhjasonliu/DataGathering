@@ -37,10 +37,6 @@ public class DataService extends Service implements Thread.UncaughtExceptionHand
     private GyroscopeListener mGyroListener;
     private HeartRateListener mHeartListener;
 
-    //default constructor
-    public DataService() {
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -67,6 +63,7 @@ public class DataService extends Service implements Thread.UncaughtExceptionHand
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Starting WearableListenerService...");
+        Toast.makeText(this, "Start collecting", Toast.LENGTH_LONG).show();
 
         if (!wakeLock.isHeld()) {
             wakeLock.acquire();
