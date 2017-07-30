@@ -27,7 +27,7 @@ public class RestartReceiver extends BroadcastReceiver {
         Log.d(TAG, "Starting BroadcastReceiver...");
 
         String action = intent.getAction();
-        if (action.equals(Intent.ACTION_BOOT_COMPLETED)) { // power connected 1
+        if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
             context.startActivity(new Intent(context, MainActivity.class));
         }
     }
