@@ -88,9 +88,9 @@ public class WriteData extends IntentService {
 
     private void handleActionLogError(Throwable error) {
         Log.e(TAG, "WRITING ERROR TO DISK: \n");
-        e.printStackTrace();
+        error.printStackTrace();
 
-        String PATH = context.getExternalFilesDir(null) + "/WearData/ERRORS/";
+        String PATH = this.getExternalFilesDir(null) + "/WearData/ERRORS/";
         File folder = new File(PATH);
         if (!folder.exists()) folder.mkdirs();
 
@@ -106,7 +106,7 @@ public class WriteData extends IntentService {
         try {
             writer = new FileWriter(errorReport, true);
             writer.write("\n\n-----------------BEGINNING OF EXCEPTION-----------------\n\n");
-            writer.write(e.toString());
+            writer.write(error.toString());
         } catch (IOException e1) {
             e1.printStackTrace();
         } finally {

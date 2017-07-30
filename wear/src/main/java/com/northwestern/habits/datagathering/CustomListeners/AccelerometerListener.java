@@ -100,5 +100,6 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
+        WriteData.logError(mContext, e);
     }
 }

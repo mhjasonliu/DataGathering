@@ -99,6 +99,6 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     }
 
     public void uncaughtException(Thread t, Throwable e) {
-//        WriteDataThread.writeError(e, mContext);
+        WriteData.logError(mContext, e);
     }
 }

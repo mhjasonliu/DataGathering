@@ -94,5 +94,6 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
+        WriteData.logError(mContext, e);
     }
 }

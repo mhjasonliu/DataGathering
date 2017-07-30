@@ -31,6 +31,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     private int ONGOING_NOTIFICATION_ID = 003;
     private PowerManager.WakeLock wakeLock;
 
+    private AccelerometerListener mAccelListener;
+    private GyroscopeListener mGyroListener;
+    private HeartRateListener mHeartListener;
+
     //default constructor
     public DataService() {
     }
@@ -51,6 +55,35 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     }
 
     @Override
+    public void onCreate() {
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+
+        Intent notificationIntent = new Intent(this, DataService.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle("Collecting data")
+                .setContentText("HABits")
+                .setContentIntent(pendingIntent)
+                .build();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    @Override
+    public void onDestroy() {
+        stopForeground(true);
+        if(wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+
+        unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
+                .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Starting WearableListenerService...");
 
@@ -58,11 +91,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
             wakeLock.acquire();
         }
 
-        if (intent != null) {
-            startIntent = PendingIntent.getActivity(getBaseContext(), 0,
-                    new Intent(intent), flags);
-        }
-        Thread.setDefaultUncaughtExceptionHandler(this);
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle("Data Gathering Wear Data")
                 .setContentText("Gathering wear data in foreground service").build();
@@ -107,14 +135,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         mGyroListener.unRegisterListener1();
         mHeartListener.unRegisterListener1();
     }
-
-    /**
-     * Custom implementation of SensorEventListener specific to what we want to do with
-     * accelerometer data.
-     */
-    private AccelerometerListener mAccelListener;
-    private GyroscopeListener mGyroListener;
-    private HeartRateListener mHeartListener;
 
     /* ***************** MESSAGE RECEIVING *********************** */
     @Override
@@ -174,45 +194,11 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         }
     }
 
-    @Override
-    public void onCreate() {
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "MyWakelockTag");
-
-        Intent notificationIntent = new Intent(this, DataService.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-        Notification notification = new Notification.Builder(this)
-                .setContentTitle("Collecting data")
-                .setContentText("HABits")
-                .setContentIntent(pendingIntent)
-                .build();
-
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
-    }
 
 
-    @Override
-    public void onDestroy() {
-        stopForeground(true);
-        if(wakeLock.isHeld()) {
-            wakeLock.release();
-        }
-
-        unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
-                .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-    }
-
-    private PendingIntent startIntent;
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         Log.v(TAG, "uncaughtException " + e.getMessage());
-
-        if (startIntent != null) {
-            AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 2000, startIntent);
-        }
-        System.exit(2);
+        WriteData.logError(this, e);
     }
 }
