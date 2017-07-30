@@ -40,14 +40,18 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        if (mSensor == null) {
+
+        }
+
         mAccumulator = new DataAccumulator(TYPE, BUFFER_SIZE);
     }
 
     public void registerListener() {
         if (!isRegistered) {
             Log.v(TAG, "Accel+registerListener...");
-            boolean bret= mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ);
-            isRegistered = true;
+            isRegistered= mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ);
         }
     }
 
@@ -57,12 +61,6 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
             mManager.unregisterListener(this);
             isRegistered = false;
         }
-    }
-
-    public void unRegisterListener1() {
-        Log.v(TAG, "unregisterListenerA...");
-        mManager.unregisterListener(this);
-        isRegistered = false;
     }
 
     @Override

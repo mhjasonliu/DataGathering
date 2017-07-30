@@ -3,6 +3,7 @@ package com.northwestern.habits.datagathering;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -10,6 +11,7 @@ import android.content.SharedPreferences;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
+import android.os.IBinder;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -26,7 +28,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DataService extends WearableListenerService implements Thread.UncaughtExceptionHandler {
+public class DataService extends Service implements Thread.UncaughtExceptionHandler {
     private static final String TAG = "DataService";
     private int ONGOING_NOTIFICATION_ID = 003;
     private PowerManager.WakeLock wakeLock;
@@ -39,19 +41,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     public DataService() {
     }
 
-    private static final int SERVICE_ID = 5345;
-
-    /**
-     * Returns whether or not the wear is charging
-     * @param context from which to access the battery manager
-     * @return boolean
-     */
-    public static boolean isCharging(Context context) {
-        // Check for charging
-        Intent i = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        assert i != null;
-        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        return (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
@@ -59,17 +51,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "MyWakelockTag");
-
-        Intent notificationIntent = new Intent(this, DataService.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-        Notification notification = new Notification.Builder(this)
-                .setContentTitle("Collecting data")
-                .setContentText("HABits")
-                .setContentIntent(pendingIntent)
-                .build();
-
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
     }
 
     @Override
@@ -94,7 +75,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle("Data Gathering Wear Data")
                 .setContentText("Gathering wear data in foreground service").build();
-        startForeground(SERVICE_ID, notification);
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
 
         initSensorsAndRegister();
 
@@ -131,70 +112,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     private void unRegisterSensors(Set<String> sensors) {
         Log.d(TAG, "unRegisterSensors count..." + sensors.size());
-        mAccelListener.unRegisterListener1();
-        mGyroListener.unRegisterListener1();
-        mHeartListener.unRegisterListener1();
+        mAccelListener.unRegisterListener();
+        mGyroListener.unRegisterListener();
+        mHeartListener.unRegisterListener();
     }
-
-    /* ***************** MESSAGE RECEIVING *********************** */
-    @Override
-    public void onMessageReceived(MessageEvent messageEvent) {
-        Log.d(TAG, "onMessageReceived " + messageEvent.getSourceNodeId());
-        if (mManager == null) {
-            initSensorsAndRegister();
-        }
-
-        if (messageEvent != null) {
-            if (messageEvent.getPath().equals("/DataRequest")) {
-                SharedPreferences prefs = getSharedPreferences(Preferences.PREFERENCE_NAME, MODE_PRIVATE);
-                Set<String> activeSensors = new HashSet<>(prefs.getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-
-                String action = new String(messageEvent.getData());
-                switch (action) {
-                    case "Accelerometer1":
-                        Log.d(TAG, "Start accel requested.");
-                        mAccelListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_ACCEL);
-                        break;
-                    case "Accelerometer0":
-                        Log.e(TAG, "Stop accel requested.");
-                        mAccelListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_ACCEL);
-                        break;
-                    case "Gyroscope1":
-                        Log.d(TAG, "Start gyro requested.");
-                        mGyroListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_GYRO);
-                        break;
-                    case "Gyroscope0":
-                        Log.e(TAG, "Stop gyro requested.");
-                        mGyroListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_GYRO);
-                        break;
-                    case "HeartRate1":
-                        Log.d(TAG, "Start HeartRate1 requested.");
-                        mHeartListener.registerListener();
-                        activeSensors.add(Preferences.SENSOR_HEART);
-                        break;
-                    case "HeartRate0":
-                        Log.e(TAG, "Stop HeartRate1 requested.");
-                        mHeartListener.unRegisterListener();
-                        activeSensors.remove(Preferences.SENSOR_HEART);
-                        break;
-                    default:
-                        Log.w(TAG, "Unknown action received" + action);
-                }
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(Preferences.KEY_PHONE_ID, messageEvent.getSourceNodeId());
-                editor.putStringSet(Preferences.KEY_ACTIVE_SENSORS, activeSensors);
-                Log.v(TAG, "Active sensors: " + activeSensors);
-                editor.apply();
-                Log.v(TAG, getSharedPreferences(Preferences.PREFERENCE_NAME, 0).getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()).toString());
-            }
-        }
-    }
-
-
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {

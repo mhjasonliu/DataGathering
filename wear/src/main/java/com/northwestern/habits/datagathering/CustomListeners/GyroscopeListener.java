@@ -47,8 +47,7 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
 
     public void registerListener() {
         if (!isRegistered) {
-            mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ );
-            isRegistered = true;
+            isRegistered =  mManager.registerListener( this, mSensor, SENSOR_DELAY_20HZ );
         }
     }
 
@@ -59,11 +58,6 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         }
     }
 
-    public void unRegisterListener1() {
-        Log.v(TAG, "unregisterListenerG...");
-        mManager.unregisterListener(this);
-        isRegistered = false;
-    }
 
     @Override
     public void onSensorChanged(SensorEvent event) {

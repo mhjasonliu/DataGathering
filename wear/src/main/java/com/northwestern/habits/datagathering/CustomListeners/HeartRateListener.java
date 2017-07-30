@@ -53,12 +53,6 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         }
     }
 
-    public void unRegisterListener1() {
-        Log.v(TAG, "unregisterListenerH...");
-        mManager.unregisterListener(this);
-        isRegistered = false;
-    }
-
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Handle new HEART value
