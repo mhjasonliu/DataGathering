@@ -36,15 +36,14 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
     private int SENSOR_DELAY_100HZ = 10000;
     private int BUFFER_SIZE = 200;
 
+    private String TYPE = "Gyroscope";
+
     public GyroscopeListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mAccumulator = new DataAccumulator("Gyroscope", BUFFER_SIZE);
+        mAccumulator = new DataAccumulator(TYPE, BUFFER_SIZE);
     }
-
-
-    public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
         if (!isRegistered) {
@@ -72,31 +71,29 @@ public class GyroscopeListener implements SensorEventListener, Thread.UncaughtEx
         if (event == null) return;
 
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+        long time_ms = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
 
         Map<String, Object> dataPoint = new HashMap<>();
-        dataPoint.put("Time", event.timestamp);
+        dataPoint.put("Time", time_ms);
         dataPoint.put("rotX", event.values[0]);
         dataPoint.put("rotY", event.values[1]);
         dataPoint.put("rotZ", event.values[2]);
 
-        if (mAccumulator.putDataPoint(dataPoint, event.timestamp)) {
+        if (mAccumulator.putDataPoint(dataPoint, time_ms)) {
             // Accumulator is full
             // Start a fresh accumulator, preserving the old
 
             DataAccumulator old = new DataAccumulator(mAccumulator);
-            mAccumulator = new DataAccumulator("Gyroscope", BUFFER_SIZE);
+            mAccumulator = new DataAccumulator(TYPE, BUFFER_SIZE);
             handleFullAccumulator(old);
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Handle change of accuracy if necessary
     }
 
     private void handleFullAccumulator(DataAccumulator accumulator) {
-        // Check if connected to phone
         WriteData.requestWrite(mContext, accumulator);
 
     }

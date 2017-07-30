@@ -28,20 +28,20 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     private Sensor mSensor;
     private SensorManager mManager;
     private boolean isRegistered = false;
-    private DataAccumulator mAccelAccumulator;
+    private DataAccumulator mAccumulator;
     //    private int SENSOR_DELAY_16HZ = 62000;
     private int SENSOR_DELAY_20HZ = 50000;
     private int SENSOR_DELAY_100HZ = 10000;
     private int BUFFER_SIZE = 200;
 
+    private String TYPE = "Accelerometer";
+
     public AccelerometerListener(Context context, SensorManager manager) {
         mContext = context;
         mManager = manager;
         mSensor = mManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mAccelAccumulator = new DataAccumulator("Accelerometer", BUFFER_SIZE);
+        mAccumulator = new DataAccumulator(TYPE, BUFFER_SIZE);
     }
-
-    public boolean isRegistered() { return isRegistered; }
 
     public void registerListener() {
         if (!isRegistered) {
@@ -71,20 +71,20 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
         if (event == null) return;
 
         Calendar c = Calendar.getInstance();
-        event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
+        long time_ms = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
 
         Map<String, Object> dataPoint = new HashMap<>();
-        dataPoint.put("Time", event.timestamp);
+        dataPoint.put("Time", time_ms);
         dataPoint.put("accX", event.values[0]);
         dataPoint.put("accY", event.values[1]);
         dataPoint.put("accZ", event.values[2]);
 
-        if (mAccelAccumulator.putDataPoint(dataPoint, event.timestamp)) { // change
+        if (mAccumulator.putDataPoint(dataPoint, time_ms)) { // change
             // Accumulator is full
 
             // Start a fresh accumulator, preserving the old
-            DataAccumulator old = new DataAccumulator(mAccelAccumulator);
-            mAccelAccumulator = new DataAccumulator("Accelerometer", BUFFER_SIZE); // 1200
+            DataAccumulator old = new DataAccumulator(mAccumulator);
+            mAccumulator = new DataAccumulator(TYPE, BUFFER_SIZE); // 1200
             handleFullAccumulator(old);
         }
     }

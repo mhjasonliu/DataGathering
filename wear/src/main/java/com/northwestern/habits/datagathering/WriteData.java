@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -25,11 +26,15 @@ public class WriteData extends IntentService {
     private static final String TAG = "WriteDataThread";
 
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_WRITE = "com.northwestern.habits.datagathering.action.WRITEBUFFER";
+    private static final String ACTION_WRITE_BUFFER = "com.northwestern.habits.datagathering.action.WRITEBUFFER";
+    private static final String ACTION_WRITE_BUFFER_ERROR = "com.northwestern.habits.datagathering.action.WRITEERROR";
+
     private static final String PARAM_CONTENT = "com.northwestern.habits.datagathering.extra.CONTENT";
     private static final String PARAM_TIME = "com.northwestern.habits.datagathering.extra.TIME";
     private static final String PARAM_TYPE = "com.northwestern.habits.datagathering.extra.TYPE";
     private static final String PARAM_HEADER = "com.northwestern.habits.datagathering.extra.HEADER";
+
+    private static final String PARAM_ERROR = "com.northwestern.habits.datagathering.extra.ERROR";
 
     public WriteData() {
         super("WriteData");
@@ -43,7 +48,7 @@ public class WriteData extends IntentService {
      */
     public static void requestWrite(Context context, DataAccumulator buf) {
         Intent intent = new Intent(context, WriteData.class);
-        intent.setAction(ACTION_WRITE);
+        intent.setAction(ACTION_WRITE_BUFFER);
         intent.putExtra(PARAM_CONTENT, buf.toString());
         intent.putExtra(PARAM_TIME, buf.getFirstEntry());
         intent.putExtra(PARAM_TYPE, buf.getType());
@@ -55,7 +60,7 @@ public class WriteData extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_WRITE.equals(action)) {
+            if (ACTION_WRITE_BUFFER.equals(action)) {
                 String content = intent.getStringExtra(PARAM_CONTENT);
                 long time = intent.getLongExtra(PARAM_TIME, 1L);
                 String type = intent.getStringExtra(PARAM_TYPE);
@@ -72,24 +77,22 @@ public class WriteData extends IntentService {
 
     private void handleActionWrite(String content, long time, String type, String header) {
         File folder = getFolder(time, type);
-
-        // Make csv
         File csv = getCsv(folder, time);
-
         Log.v(TAG, csv.toString());
 
         try {
             if (!csv.exists()) {
-                FileWriter headerwriter = new FileWriter(csv, true);
-                headerwriter.write(header);
+                FileWriter header_writer = new FileWriter(csv, true);
+                header_writer.write(header);
                 Log.w(TAG, header);
-                headerwriter.flush();
-                headerwriter.close();
+                header_writer.flush();
+                header_writer.close();
             }
-            FileWriter csvwriter = new FileWriter(csv, true);
-            csvwriter.write(content);
-            csvwriter.flush();
-            csvwriter.close();
+
+            FileWriter csv_writer = new FileWriter(csv, true);
+            csv_writer.write(content);
+            csv_writer.flush();
+            csv_writer.close();
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -115,12 +118,6 @@ public class WriteData extends IntentService {
 
         File folder = new File(PATH);
         boolean bret= folder.mkdirs();
-        if (bret) {
-            //folder.mkdirs();
-            Log.v(TAG, "directory " + folder.getPath() + " Succeeded ");
-        } else {
-            Log.v(TAG, "directory " + folder.getPath() + " FAILED ");
-        }
         return folder;
     }
 
@@ -129,7 +126,7 @@ public class WriteData extends IntentService {
         c.setTimeInMillis(timestamp);
         String hourst = Integer.toString(c.get(Calendar.HOUR_OF_DAY));
         int minute = c.get(Calendar.MINUTE);
-        String fName = hourst.concat("_" + String.format("%02d",minute) + ".csv");
+        String fName = hourst.concat("_" + String.format(Locale.US,"%02d",minute) + ".csv");
         return new File(folder.getPath(), fName);
     }
 }

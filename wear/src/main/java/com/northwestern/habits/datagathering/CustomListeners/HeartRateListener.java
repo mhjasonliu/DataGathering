@@ -39,10 +39,6 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
         mAccumulator = new DataAccumulator("HeartRate", BUFFER_SIZE);
     }
 
-    public boolean isRegistered() {
-        return isRegistered;
-    }
-
     public void registerListener() {
         if (!isRegistered) {
             mManager.registerListener( this, mSensor, SENSOR_DELAY_5HZ );

@@ -54,10 +54,9 @@ public class DataService extends WearableListenerService implements Thread.Uncau
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Starting WearableListenerService...");
 
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "MyWakelockTag");
-        wakeLock.acquire();
+        if (!wakeLock.isHeld()) {
+            wakeLock.acquire();
+        }
 
         if (intent != null) {
             startIntent = PendingIntent.getActivity(getBaseContext(), 0,
@@ -70,10 +69,7 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         startForeground(SERVICE_ID, notification);
 
         initSensorsAndRegister();
-//        if (isCharging(this)) {
-//            Log.v(TAG, "isCharging true" );
-//            new SendDataTask(getBaseContext()).execute();
-//        }
+
         return START_STICKY;
     }
 
@@ -85,33 +81,17 @@ public class DataService extends WearableListenerService implements Thread.Uncau
      * Update every time you register/unregister outside of
      * activity lifecycle
      */
-    static boolean isFirstTime = true;
     private void initSensorsAndRegister() {
         Log.d(TAG, "*************************INIT SENSORS CALLED*************************");
 
-//        if (isCharging(this)) {
-//            isFirstTime = true;
-//            if (mManager == null) {
-//                mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-//                mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
-//                mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-//                mHeartListener = new HeartRateListener(getBaseContext(), mManager);
-//            }
-//            unRegisterSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
-//                    .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-//        } else {
-            if (isFirstTime) {
-                isFirstTime = false;
-                if (mManager == null) {
-                    mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-                    mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
-                    mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
-                    mHeartListener = new HeartRateListener(getBaseContext(), mManager);
-                }
-                registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
-                        .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
-            }
-//        }
+        if (mManager == null) {
+            mManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+            mAccelListener = new AccelerometerListener(getBaseContext(), mManager);
+            mGyroListener = new GyroscopeListener(getBaseContext(), mManager);
+            mHeartListener = new HeartRateListener(getBaseContext(), mManager);
+        }
+        registerSensors(getSharedPreferences(Preferences.PREFERENCE_NAME, 0)
+                .getStringSet(Preferences.KEY_ACTIVE_SENSORS, new HashSet<String>()));
     }
 
     private void registerSensors(Set<String> sensors) {
@@ -119,23 +99,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         mAccelListener.registerListener();
         mGyroListener.registerListener();
         mHeartListener.registerListener();
-
-//        for (String sensor : sensors) {
-//            Log.d(TAG, "registerSensors service..." + sensor);
-//            switch (sensor) {
-//                case Preferences.SENSOR_ACCEL:
-//                    mAccelListener.registerListener();
-//                    break;
-//                case Preferences.SENSOR_GYRO:
-//                    mGyroListener.registerListener();
-//                    break;
-//                case Preferences.SENSOR_HEART:
-//                    mHeartListener.registerListener();
-//                    break;
-//                default:
-//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-//            }
-//        }
     }
 
     private void unRegisterSensors(Set<String> sensors) {
@@ -143,23 +106,6 @@ public class DataService extends WearableListenerService implements Thread.Uncau
         mAccelListener.unRegisterListener1();
         mGyroListener.unRegisterListener1();
         mHeartListener.unRegisterListener1();
-
-//        for (String sensor : sensors) {
-//            Log.d(TAG, "unRegisterSensors service..." + sensor);
-//            switch (sensor) {
-//                case Preferences.SENSOR_ACCEL:
-//                    mAccelListener.unRegisterListener1();
-//                    break;
-//                case Preferences.SENSOR_GYRO:
-//                    mGyroListener.unRegisterListener1();
-//                    break;
-//                case Preferences.SENSOR_HEART:
-//                    mHeartListener.unRegisterListener1();
-//                    break;
-//                default:
-//                    Log.e(TAG, "Unknown sensor requested: " + sensor);
-//            }
-//        }
     }
 
     /**
@@ -230,6 +176,10 @@ public class DataService extends WearableListenerService implements Thread.Uncau
 
     @Override
     public void onCreate() {
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+
         Intent notificationIntent = new Intent(this, DataService.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
