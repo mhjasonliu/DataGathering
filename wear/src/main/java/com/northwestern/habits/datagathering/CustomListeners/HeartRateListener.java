@@ -29,8 +29,7 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
     private int SENSOR_DELAY_5HZ  = 200000;
-    private long prevtimestamp= 0;
-    private int BUFFER_SIZE = 20;
+    private int BUFFER_SIZE = 100;
 
     public HeartRateListener(Context context, SensorManager manager) {
         mContext = context;
@@ -57,8 +56,6 @@ public class HeartRateListener implements SensorEventListener, Thread.UncaughtEx
     public void onSensorChanged(SensorEvent event) {
         // Handle new HEART value
         if (event == null) return;
-        if(prevtimestamp ==event.timestamp) return;
-        prevtimestamp = event.timestamp;
 
         Calendar c = Calendar.getInstance();
         event.timestamp = c.getTimeInMillis() + (event.timestamp - SystemClock.elapsedRealtimeNanos()) / 1000000L;
