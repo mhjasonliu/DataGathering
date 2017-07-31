@@ -29,9 +29,7 @@ public class AccelerometerListener implements SensorEventListener, Thread.Uncaug
     private SensorManager mManager;
     private boolean isRegistered = false;
     private DataAccumulator mAccumulator;
-    //    private int SENSOR_DELAY_16HZ = 62000;
     private int SENSOR_DELAY_20HZ = 50000;
-    private int SENSOR_DELAY_100HZ = 10000;
     private int BUFFER_SIZE = 200;
 
     private String TYPE = "Accelerometer";
