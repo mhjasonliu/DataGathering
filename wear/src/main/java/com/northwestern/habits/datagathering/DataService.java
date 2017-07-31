@@ -51,6 +51,7 @@ public class DataService extends Service implements Thread.UncaughtExceptionHand
 
     @Override
     public void onDestroy() {
+        Log.w(TAG, "destroying the service");
         Toast.makeText(this, "Stop collecting", Toast.LENGTH_LONG).show();
         stopForeground(true);
         if(wakeLock.isHeld()) {
